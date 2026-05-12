@@ -41,7 +41,7 @@ class Activity extends Model
         return $this->hasMany(Registration::class);
     }
 
-    public function attendance()
+    public function attendances()
     {
         return $this->hasMany(Attendance::class);
     }
