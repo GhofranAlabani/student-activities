@@ -23,7 +23,6 @@ return new class extends Migration
             $table->time('end_time')->nullable();
             $table->integer('max_participants')->nullable();
             $table->integer('points')->default(0);
-            $table->foreignId('created_by')->nullable()->constrained('users')->cascadeOnDelete();
             $table->enum('status', ['مفتوح','مغلق','منتهي','ملغي'])->default('مفتوح');
             $table->enum('priority', ['عادي','مهم','مميز'])->default('عادي');
             $table->boolean('certificate')->default(false);

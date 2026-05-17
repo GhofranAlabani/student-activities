@@ -26,6 +26,18 @@ class Activity extends Model
         'online_link',
     ];
 
+    // ✅ العلاقة المطلوبة التي كانت مفقودة وتسبب الخطأ
+    public function activityType()
+    {
+        return $this->belongsTo(ActivityType::class, 'type_id');
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'registrations', 'activity_id', 'student_id');
+    }
+
+    // (اختياري) يمكنك الاحتفاظ بها كاسم بديل أو حذفها لعدم التكرار
     public function type()
     {
         return $this->belongsTo(ActivityType::class, 'type_id');

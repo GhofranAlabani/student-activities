@@ -37,16 +37,8 @@ class AuthenticatedSessionController extends Controller
             return redirect('/login');
         }
 
-        // 🎯 التوجيه حسب الدور
-        if ($user->role === 'student') {
-            return redirect('/student/dashboard');
-        }
-
-        if ($user->role === 'supervisor') {
-            return redirect('/supervisor/dashboard');
-        }
-
-        // fallback (احتياطي)
+        // 🎯 التوجيه لصفحة واحدة للجميع (لأن المسارات الأخرى غير موجودة بعد)
+        // يمكنك تعديل هذا لاحقاً عندما تنشئ لوحات تحكم خاصة لكل دور
         return redirect('/dashboard');
     }
 

@@ -14,7 +14,7 @@ class ActivityReportController extends Controller
             ->latest()
             ->get();
 
-        return response()->json($reports);
+        return view('reports.index', compact('reports'));
     }
 
     public function store(Request $request)
@@ -26,7 +26,7 @@ class ActivityReportController extends Controller
             'outcomes'           => 'nullable|string',
         ]);
 
-        $report = ActivityReport::create([
+        ActivityReport::create([
             'activity_id'        => $request->activity_id,
             'submitted_by'       => Auth::id(),
             'summary'            => $request->summary,
@@ -34,19 +34,20 @@ class ActivityReportController extends Controller
             'outcomes'           => $request->outcomes,
         ]);
 
-        return response()->json($report, 201);
+        return back()->with('success', 'تم إرسال التقرير بنجاح ✅');
     }
 
     public function show(ActivityReport $activityReport)
     {
-        return response()->json(
-            $activityReport->load(['activity', 'submittedBy'])
-        );
+        $activityReport->load(['activity', 'submittedBy']);
+
+        return view('reports.show', compact('activityReport'));
     }
 
     public function destroy(ActivityReport $activityReport)
     {
         $activityReport->delete();
-        return response()->json(['message' => 'تم الحذف بنجاح']);
+
+        return back()->with('success', 'تم حذف التقرير بنجاح ');
     }
 }

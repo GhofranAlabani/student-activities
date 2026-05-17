@@ -10,11 +10,8 @@ return new class extends Migration
     {
         Schema::create('registrations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('activity_id')->constrained()->cascadeOnDelete();
-            $table->enum('status', ['pending', 'approved', 'cancelled'])->default('pending');
-            $table->timestamp('registered_at')->useCurrent();
-            $table->unique(['user_id', 'activity_id']);
+            $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('activity_id')->constrained('activities')->cascadeOnDelete();
             $table->timestamps();
         });
     }
