@@ -5,8 +5,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\ActivityReportController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\StudentDashboardController;
-use App\Http\Controllers\SupervisorDashboardController;
+use App\Http\Controllers\AdminDashboardController;
 
 // ========================
 // 🏠 الصفحة الرئيسية
@@ -16,27 +15,28 @@ Route::get('/', function () {
 });
 
 // ========================
-// 📊 لوحة التحكم العامة (للمستخدم العادي)
+//  لوحات التحكم (حسب الصلاحية)
 // ========================
+
+// لوحة التحكم العامة (للمستخدم العادي)
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// ========================
 // 🎓 لوحة تحكم الطالب
-// ========================
 Route::get('/student/dashboard', function () {
-    // ملاحظة: يمكنك إنشاء view خاص لاحقاً باسم 'student.dashboard'
     return view('dashboard'); 
 })->middleware(['auth'])->name('student.dashboard');
 
-// ========================
-// 👨‍🏫 لوحة تحكم المشرف
-// ========================
+// 👨🏫 لوحة تحكم المشرف
 Route::get('/supervisor/dashboard', function () {
-    // ملاحظة: يمكنك إنشاء view خاص لاحقاً باسم 'supervisor.dashboard'
     return view('dashboard');
 })->middleware(['auth'])->name('supervisor.dashboard');
+
+// 👑 لوحة تحكم المدير (الجديدة)
+Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('admin.dashboard');
 
 // ========================
 // 📚 مسارات الأنشطة (عامة)
@@ -70,6 +70,6 @@ Route::middleware('auth')->group(function () {
 });
 
 // ========================
-// 🔐 مسارات المصادقة (تسجيل الدخول، الخروج، إلخ)
+//  مسارات المصادقة (تسجيل الدخول، الخروج، إلخ)
 // ========================
 require __DIR__.'/auth.php';
