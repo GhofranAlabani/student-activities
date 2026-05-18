@@ -3,122 +3,69 @@
 namespace App\Http\Controllers;
 
 use App\Models\Activity;
-use App\Models\Registration;
-use App\Models\PointsHistory;
-use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class RegistrationController extends Controller
 {
-    // =========================
-    // 📌 تسجيل طالب في نشاط
-    // =========================
-    public function register($activity_id)
+    public function store($activityId)
     {
-        $user = Auth::user();
+        try {
+            $activity = Activity::findOrFail($activityId);
+            $user = Auth::user();
 
-        // 🎓 التأكد أنه طالب
-        if ($user->role !== 'student') {
-            abort(403, 'Only students can register');
+            // التحقق من أن النشاط متاح
+            if ($activity->status !== 'active') {
+                return redirect()->back()->with('error', 'هذا النشاط غير متاح للتسجيل');
+            }
+
+            // التحقق من العدد
+            if ($activity->max_participants && $activity->users()->count() >= $activity->max_participants) {
+                return redirect()->back()->with('error', 'عذراً، اكتمل عدد المشاركين');
+            }
+
+            // التحقق من عدم التسجيل المسبق
+            $alreadyRegistered = DB::table('registrations')
+                ->where('student_id', $user->id)
+                ->where('activity_id', $activity->id)
+                ->exists();
+
+            if ($alreadyRegistered) {
+                return redirect()->back()->with('error', 'أنت مسجل مسبقاً في هذا النشاط');
+            }
+
+            // التسجيل في قاعدة البيانات
+            DB::table('registrations')->insert([
+                'student_id' => $user->id,
+                'activity_id' => $activity->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // إضافة النقاط إذا موجودة
+            if ($activity->points) {
+                $user->increment('points', $activity->points);
+            }
+
+            return redirect()->back()->with('success', '🎉 تم التسجيل في النشاط بنجاح!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'حدث خطأ أثناء التسجيل. حاول مرة أخرى.');
         }
-
-        // 🎯 جلب النشاط
-        $activity = Activity::findOrFail($activity_id);
-
-        // ❌ منع التسجيل المكرر
-        $exists = Registration::where('user_id', $user->id)
-            ->where('activity_id', $activity_id)
-            ->first();
-
-        if ($exists) {
-            return back()->with('error', 'You are already registered');
-        }
-
-        // 🚫 التحقق من امتلاء النشاط
-        $registeredCount = Registration::where('activity_id', $activity_id)
-            ->where('status', 'approved')
-            ->count();
-
-        if ($activity->max_participants && $registeredCount >= $activity->max_participants) {
-            return back()->with('error', 'Activity is full');
-        }
-
-        // 🧾 إنشاء التسجيل (pending)
-        $registration = Registration::create([
-            'user_id' => $user->id,
-            'activity_id' => $activity_id,
-            'status' => 'pending'
-        ]);
-
-        // 🔔 إشعار للطالب
-        Notification::create([
-            'user_id' => $user->id,
-            'title' => 'Registration Submitted',
-            'message' => 'Your registration for ' . $activity->title . ' is pending approval',
-            'type' => 'registration'
-        ]);
-
-        return back()->with('success', 'Registration submitted successfully');
     }
 
-    // =========================
-    // ✔️ قبول التسجيل (مشرف)
-    // =========================
-    public function approve($id)
+    public function destroy($activityId)
     {
-        $registration = Registration::findOrFail($id);
+        try {
+            DB::table('registrations')
+                ->where('student_id', Auth::id())
+                ->where('activity_id', $activityId)
+                ->delete();
 
-        $registration->status = 'approved';
-        $registration->save();
-
-        $user = $registration->user;
-        $activity = $registration->activity;
-
-        // 🎯 إضافة نقاط للمستخدم
-        $user->points += $activity->points;
-        $user->save();
-
-        // 📊 تسجيل النقاط في التاريخ
-        PointsHistory::create([
-            'user_id' => $user->id,
-            'activity_id' => $activity->id,
-            'points' => $activity->points,
-            'reason' => 'Approved registration in activity'
-        ]);
-
-        // 🔔 إشعار
-        Notification::create([
-            'user_id' => $user->id,
-            'title' => 'Registration Approved',
-            'message' => 'You have been approved for ' . $activity->title,
-            'type' => 'registration'
-        ]);
-
-        return back()->with('success', 'Registration approved');
-    }
-
-    // =========================
-    // ❌ رفض التسجيل (مشرف)
-    // =========================
-    public function reject($id)
-    {
-        $registration = Registration::findOrFail($id);
-
-        $registration->status = 'rejected';
-        $registration->save();
-
-        $user = $registration->user;
-        $activity = $registration->activity;
-
-        // 🔔 إشعار
-        Notification::create([
-            'user_id' => $user->id,
-            'title' => 'Registration Rejected',
-            'message' => 'Your registration for ' . $activity->title . ' was rejected',
-            'type' => 'registration'
-        ]);
-
-        return back()->with('error', 'Registration rejected');
+            return redirect()->back()->with('success', 'تم إلغاء التسجيل بنجاح');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'حدث خطأ أثناء إلغاء التسجيل');
+        }
     }
 }

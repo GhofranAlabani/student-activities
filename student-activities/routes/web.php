@@ -15,28 +15,65 @@ Route::get('/', function () {
 });
 
 // ========================
-//  لوحات التحكم (حسب الصلاحية)
+// 📊 لوحات التحكم (حسب الصلاحية)
 // ========================
 
-// لوحة التحكم العامة (للمستخدم العادي)
+// لوحة تحكم المدير
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    // التحقق من أن المستخدم أدمن
+    if (!auth()->check() || auth()->user()->role !== 'admin') {
+        // إذا مو أدمن، وجهه للوحة الطالب
+        return redirect('/student/dashboard');
+    }
+    
+    $totalActivities = \App\Models\Activity::count();
+    $totalStudents = \App\Models\User::count();
+    $totalRegistrations = \Illuminate\Support\Facades\DB::table('registrations')->count() ?? 0;
+    
+    return view('dashboard', compact('totalActivities', 'totalStudents', 'totalRegistrations'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// 🎓 لوحة تحكم الطالب
+// لوحة تحكم الطالب
 Route::get('/student/dashboard', function () {
-    return view('dashboard'); 
+    return view('dashboard', [
+        'totalActivities' => \App\Models\Activity::count(),
+        'totalStudents' => \App\Models\User::count(),
+        'totalRegistrations' => 0
+    ]);
 })->middleware(['auth'])->name('student.dashboard');
 
-// 👨🏫 لوحة تحكم المشرف
+// لوحة تحكم المشرف
 Route::get('/supervisor/dashboard', function () {
-    return view('dashboard');
+    return view('dashboard', [
+        'totalActivities' => \App\Models\Activity::count(),
+        'totalStudents' => \App\Models\User::count(),
+        'totalRegistrations' => 0
+    ]);
 })->middleware(['auth'])->name('supervisor.dashboard');
 
-// 👑 لوحة تحكم المدير (الجديدة)
+// ========================
+// 👑 مسارات المدير (Admin)
+// ========================
+
+// لوحة تحكم المدير (مسار بديل)
 Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
     ->middleware(['auth'])
     ->name('admin.dashboard');
+
+// عرض الطلاب المسجلين في نشاط معين (للأدمن فقط)
+Route::get('/admin/activity/{id}/registrations', [AdminDashboardController::class, 'showRegistrations'])
+    ->middleware(['auth'])
+    ->name('admin.registrations');
+
+// عرض كل الطلاب (للأدمن فقط)
+Route::get('/admin/students', [AdminDashboardController::class, 'showAllStudents'])
+    ->middleware(['auth'])
+    ->name('admin.students');
+
+// عرض كل التسجيلات (للأدمن فقط)
+Route::get('/admin/all-registrations', [AdminDashboardController::class, 'allRegistrations'])
+    ->middleware(['auth'])
+    ->name('admin.all-registrations');
 
 // ========================
 // 📚 مسارات الأنشطة (عامة)
@@ -70,6 +107,6 @@ Route::middleware('auth')->group(function () {
 });
 
 // ========================
-//  مسارات المصادقة (تسجيل الدخول، الخروج، إلخ)
+// 🔐 مسارات المصادقة
 // ========================
 require __DIR__.'/auth.php';

@@ -36,4 +36,34 @@ class AdminDashboardController extends Controller
             'totalRegistrations' => $totalRegistrations
         ]);
     }
+        /**
+     * عرض الطلاب المسجلين في نشاط معين
+     */
+    public function showRegistrations($id)
+    {
+        
+            if (!auth()->check() || auth()->user()->role !== 'admin') {
+                 abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة.');
+    
+                 }
+        $activity = \App\Models\Activity::with(['users', 'activityType'])->findOrFail($id);
+        $students = $activity->users; // الطلاب المسجلين في هذا النشاط
+        
+        return view('admin.registrations', compact('activity', 'students'));
+    }
+
+    /**
+     * عرض كل التسجيلات
+     */
+    public function allRegistrations()
+    {
+        $registrations = \DB::table('registrations')
+            ->join('users', 'registrations.user_id', '=', 'users.id')
+            ->join('activities', 'registrations.activity_id', '=', 'activities.id')
+            ->select('users.name as student_name', 'users.email', 'activities.title as activity_title', 'registrations.created_at')
+            ->orderBy('registrations.created_at', 'desc')
+            ->get();
+        
+        return view('admin.all-registrations', compact('registrations'));
+    }
 }

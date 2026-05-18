@@ -22,26 +22,23 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle login request
      */
-    public function store(LoginRequest $request): RedirectResponse
-    {
-        // 🔐 تسجيل الدخول والتحقق من البيانات
-        $request->authenticate();
+    public function store(LoginRequest $request)
+{
+    $request->authenticate();
+    $request->session()->regenerate();
 
-        // 🔄 إعادة إنشاء session للحماية
-        $request->session()->regenerate();
+    $user = auth()->user();
 
-        // 👤 جلب المستخدم الحالي
-        $user = Auth::user();
-
-        if (!$user) {
-            return redirect('/login');
-        }
-
-        // 🎯 التوجيه لصفحة واحدة للجميع (لأن المسارات الأخرى غير موجودة بعد)
-        // يمكنك تعديل هذا لاحقاً عندما تنشئ لوحات تحكم خاصة لكل دور
+    if ($user->role === 'admin') {
         return redirect('/dashboard');
     }
+    
+    if ($user->role === 'supervisor') {
+        return redirect('/supervisor/dashboard');
+    }
 
+    return redirect('/student/dashboard');
+}
     /**
      * Logout
      */

@@ -49,7 +49,7 @@
     <div class="bg-gradient-to-r from-indigo-600 to-purple-600 py-10 mb-8">
         <div class="container mx-auto px-4">
             <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-8">
-                📚 اكتشف الأنشطة المتاحة
+                 اكتشف الأنشطة المتاحة
             </h2>
 
             <!-- Search & Filter Form -->
@@ -78,7 +78,7 @@
                     </div>
                     
                     <button type="submit" class="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold shadow-md">
-                        <i class="fas fa-filter ml-2"></i> تصفية
+                        <i class="fas fa-filter ml-2"></i> فلترة
                     </button>
                 </form>
             </div>
@@ -165,19 +165,32 @@
                                 @endif
                             </div>
                             
-                            <div class="flex gap-3">
-                                <a href="{{ route('activities.show', $activity->id) }}" class="flex-1 bg-indigo-600 text-white text-center py-2.5 rounded-lg hover:bg-indigo-700 transition font-semibold shadow-sm text-sm">
+                            <!-- الأزرار - التعديل هنا 🔧 -->
+                            <div class="flex flex-col gap-3">
+                                <!-- زر التفاصيل -->
+                                <a href="{{ route('activities.show', $activity->id) }}" class="w-full bg-indigo-600 text-white text-center py-2.5 rounded-lg hover:bg-indigo-700 transition font-semibold shadow-sm text-sm">
                                     <i class="fas fa-eye ml-1"></i> التفاصيل
                                 </a>
+                                
+                                <!-- زر عرض المسجلين (للأدمن فقط) 🔒 -->
+                                @if(auth()->check() && auth()->user()->role === 'admin')
+                                    <a href="{{ route('admin.registrations', $activity->id) }}" class="w-full bg-green-600 text-white text-center py-2.5 rounded-lg hover:bg-green-700 transition font-semibold shadow-sm text-sm">
+                                        <i class="fas fa-users ml-1"></i> عرض المسجلين
+                                    </a>
+                                @endif
+                                
+                                <!-- زر التسجيل (للمستخدمين المسجلين) -->
                                 @auth
-                                    <form action="{{ route('activities.register', $activity->id) }}" method="POST" class="flex-1">
+                                    <form action="{{ route('activities.register', $activity->id) }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="w-full bg-green-600 text-white py-2.5 rounded-lg hover:bg-green-700 transition font-semibold shadow-sm text-sm">
+                                        <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-lg hover:bg-emerald-700 transition font-semibold shadow-sm text-sm">
                                             <i class="fas fa-check ml-1"></i> سجل الآن
                                         </button>
                                     </form>
                                 @endauth
                             </div>
+                            <!-- نهاية الأزرار -->
+                            
                         </div>
                     </div>
                 @endforeach
