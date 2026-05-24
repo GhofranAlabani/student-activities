@@ -71,4 +71,80 @@ class ActivityController extends Controller
             return back()->with('success', 'تمت إضافة النشاط للمفضلة');
         }
     }
+public function create()
+    {
+        return view('activities.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'activity_type_id' => 'required|exists:activity_types,id',
+            'date' => 'required|date',
+            'status' => 'required|in:active,inactive,completed',
+            'max_participants' => 'nullable|integer|min:1',
+            'points' => 'nullable|integer|min:0',
+            'location' => 'nullable|string|max:255',
+            'time' => 'nullable',
+            'end_time' => 'nullable',
+            'online_link' => 'nullable|url',
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        $data = $request->all();
+        $data['created_by'] = auth()->id();
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('activities', 'public');
+        }
+
+        Activity::create($data);
+
+        return redirect()->route('activities.index')->with('success', 'تمت إضافة النشاط بنجاح');
+    }
+
+    public function edit($id)
+    {
+        $activity = Activity::findOrFail($id);
+        return view('activities.edit', compact('activity'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $activity = Activity::findOrFail($id);
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'activity_type_id' => 'required|exists:activity_types,id',
+            'date' => 'required|date',
+            'status' => 'required|in:active,inactive,completed',
+            'max_participants' => 'nullable|integer|min:1',
+            'points' => 'nullable|integer|min:0',
+            'location' => 'nullable|string|max:255',
+            'time' => 'nullable',
+            'end_time' => 'nullable',
+            'online_link' => 'nullable|url',
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        $data = $request->all();
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('activities', 'public');
+        }
+
+        $activity->update($data);
+
+        return redirect()->route('activities.index')->with('success', 'تم تعديل النشاط بنجاح');
+    }
+
+    public function destroy($id)
+    {
+        $activity = Activity::findOrFail($id);
+        $activity->delete();
+        return redirect()->route('activities.index')->with('success', 'تم حذف النشاط بنجاح');
+    }
 }

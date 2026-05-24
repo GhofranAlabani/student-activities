@@ -35,7 +35,7 @@ Route::get('/dashboard', function () {
 
 // لوحة تحكم الطالب
 Route::get('/student/dashboard', function () {
-    return view('dashboard', [
+    return view('student.dashboard', [
         'totalActivities' => \App\Models\Activity::count(),
         'totalStudents' => \App\Models\User::count(),
         'totalRegistrations' => 0
@@ -110,3 +110,27 @@ Route::middleware('auth')->group(function () {
 // 🔐 مسارات المصادقة
 // ========================
 require __DIR__.'/auth.php';
+Route::middleware('auth')->group(function () {
+    Route::get('/student/my-activities', function () {
+        $activities = auth()->user()->activities()->paginate(9);
+        return view('student.my-activities', compact('activities'));
+    })->name('student.my-activities');
+
+    Route::get('/student/favorites', function () {
+        $favorites = auth()->user()->favorites()->get();
+        return view('student.favorites', compact('favorites'));
+    })->name('student.favorites');
+
+    Route::delete('/activities/unregister/{id}', function ($id) {
+        auth()->user()->activities()->detach($id);
+        return back()->with('success', '?? ???????');
+    })->name('activities.unregister');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/activities/create', [App\Http\Controllers\ActivityController::class, 'create'])->name('activities.create');
+    Route::post('/activities', [App\Http\Controllers\ActivityController::class, 'store'])->name('activities.store');
+    Route::get('/activities/{id}/edit', [App\Http\Controllers\ActivityController::class, 'edit'])->name('activities.edit');
+    Route::put('/activities/{id}', [App\Http\Controllers\ActivityController::class, 'update'])->name('activities.update');
+    Route::delete('/activities/{id}', [App\Http\Controllers\ActivityController::class, 'destroy'])->name('activities.destroy');
+});
