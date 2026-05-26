@@ -15,7 +15,6 @@
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <!-- Sidebar -->
     <aside class="w-64 bg-white shadow-xl hidden md:flex flex-col z-10 border-l border-gray-100">
         <div class="p-6 bg-indigo-600 text-center shadow-lg">
             <div class="w-16 h-16 bg-white rounded-full mx-auto flex items-center justify-center mb-3 shadow-md">
@@ -33,7 +32,7 @@
             <a href="{{ route('admin.students') }}" class="sidebar-link active flex items-center p-3 rounded-xl transition duration-200">
                 <i class="fas fa-users ml-3 text-lg"></i> الطلاب
             </a>
-            <a href="#" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
+            <a href="{{ route('profile.edit') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
                 <i class="fas fa-cog ml-3 text-lg"></i> الإعدادات
             </a>
         </nav>
@@ -47,7 +46,6 @@
         </div>
     </aside>
 
-    <!-- Main -->
     <div class="flex-1 flex flex-col overflow-hidden">
         <header class="bg-white shadow-sm p-4 flex justify-between items-center">
             <h1 class="font-bold text-xl text-indigo-700">إدارة الطلاب</h1>
@@ -59,6 +57,12 @@
         <main class="flex-1 overflow-y-auto p-6 md:p-8">
             <div class="max-w-7xl mx-auto">
 
+                @if(session('success'))
+                    <div class="bg-green-50 border border-green-200 text-green-700 px-5 py-4 rounded-xl mb-6 flex items-center gap-3">
+                        <i class="fas fa-check-circle text-green-500"></i> {{ session('success') }}
+                    </div>
+                @endif
+
                 <!-- Stats -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
@@ -66,7 +70,7 @@
                             <i class="fas fa-user-graduate text-indigo-600 text-2xl"></i>
                         </div>
                         <div>
-                            <p class="text-gray-500 text-sm">إجمالي الطلاب</p>
+                            <p class="text-gray-500 text-sm">إجمالي المستخدمين</p>
                             <p class="text-3xl font-extrabold text-gray-800">{{ $students->total() }}</p>
                         </div>
                     </div>
@@ -75,17 +79,17 @@
                             <i class="fas fa-user-check text-green-600 text-2xl"></i>
                         </div>
                         <div>
-                            <p class="text-gray-500 text-sm">طلاب نشطون</p>
+                            <p class="text-gray-500 text-sm">طلاب</p>
                             <p class="text-3xl font-extrabold text-gray-800">{{ $activeStudents ?? $students->total() }}</p>
                         </div>
                     </div>
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-                        <div class="bg-yellow-100 p-4 rounded-full">
-                            <i class="fas fa-star text-yellow-500 text-2xl"></i>
+                        <div class="bg-purple-100 p-4 rounded-full">
+                            <i class="fas fa-user-shield text-purple-600 text-2xl"></i>
                         </div>
                         <div>
-                            <p class="text-gray-500 text-sm">متوسط النقاط</p>
-                            <p class="text-3xl font-extrabold text-gray-800">{{ $avgPoints ?? 0 }}</p>
+                            <p class="text-gray-500 text-sm">مدراء</p>
+                            <p class="text-3xl font-extrabold text-gray-800">{{ \App\Models\User::where('role', 'admin')->count() }}</p>
                         </div>
                     </div>
                 </div>
@@ -96,7 +100,7 @@
                         <div class="flex-1 relative">
                             <input type="text" name="search" value="{{ request('search') }}"
                                 placeholder="ابحث بالاسم أو البريد الإلكتروني..."
-                                class="w-full pr-10 pl-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition font-cairo">
+                                class="w-full pr-10 pl-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
                             <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                         </div>
                         <button type="submit" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold">
@@ -118,12 +122,12 @@
                                 <thead class="bg-gray-50 border-b border-gray-200">
                                     <tr>
                                         <th class="px-6 py-4 text-right font-bold text-gray-600 text-sm">#</th>
-                                        <th class="px-6 py-4 text-right font-bold text-gray-600 text-sm">الطالب</th>
+                                        <th class="px-6 py-4 text-right font-bold text-gray-600 text-sm">المستخدم</th>
                                         <th class="px-6 py-4 text-right font-bold text-gray-600 text-sm">البريد الإلكتروني</th>
-                                        <th class="px-6 py-4 text-right font-bold text-gray-600 text-sm">النقاط</th>
+                                        <th class="px-6 py-4 text-right font-bold text-gray-600 text-sm">الصلاحية</th>
                                         <th class="px-6 py-4 text-right font-bold text-gray-600 text-sm">الأنشطة</th>
                                         <th class="px-6 py-4 text-right font-bold text-gray-600 text-sm">تاريخ التسجيل</th>
-                                        <th class="px-6 py-4 text-right font-bold text-gray-600 text-sm">الإجراءات</th>
+                                        <th class="px-6 py-4 text-right font-bold text-gray-600 text-sm">تغيير الصلاحية</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
@@ -132,7 +136,7 @@
                                             <td class="px-6 py-4 text-gray-500 text-sm">{{ $students->firstItem() + $index }}</td>
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                                    <div class="w-10 h-10 {{ $student->role === 'admin' ? 'bg-purple-500' : 'bg-indigo-500' }} rounded-full flex items-center justify-center text-white font-bold text-sm">
                                                         {{ substr($student->name, 0, 1) }}
                                                     </div>
                                                     <span class="font-semibold text-gray-800">{{ $student->name }}</span>
@@ -140,10 +144,15 @@
                                             </td>
                                             <td class="px-6 py-4 text-gray-600 text-sm">{{ $student->email }}</td>
                                             <td class="px-6 py-4">
-                                                <span class="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-bold border border-yellow-100">
-                                                    <i class="fas fa-star text-yellow-500 ml-1"></i>
-                                                    {{ $student->points ?? 0 }}
-                                                </span>
+                                                @if($student->role === 'admin')
+                                                    <span class="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm font-bold border border-purple-100">
+                                                        <i class="fas fa-user-shield ml-1"></i> مدير
+                                                    </span>
+                                                @else
+                                                    <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold border border-indigo-100">
+                                                        <i class="fas fa-user-graduate ml-1"></i> طالب
+                                                    </span>
+                                                @endif
                                             </td>
                                             <td class="px-6 py-4">
                                                 <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold border border-indigo-100">
@@ -154,10 +163,16 @@
                                                 {{ $student->created_at->format('Y/m/d') }}
                                             </td>
                                             <td class="px-6 py-4">
-                                                <a href="{{ route('admin.student.show', $student->id) }}"
-                                                    class="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-indigo-100 transition">
-                                                    <i class="fas fa-eye ml-1"></i> عرض
-                                                </a>
+                                                <form method="POST" action="{{ route('admin.user.role', $student->id) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <select name="role" onchange="this.form.submit()"
+                                                        class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                                                        <option value="student" {{ $student->role === 'student' ? 'selected' : '' }}>طالب</option>
+                                                        <option value="admin" {{ $student->role === 'admin' ? 'selected' : '' }}>مدير</option>
+                                                        <option value="supervisor" {{ $student->role === 'supervisor' ? 'selected' : '' }}>مشرف</option>
+                                                    </select>
+                                                </form>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -170,7 +185,7 @@
                     @else
                         <div class="p-16 text-center">
                             <i class="fas fa-user-slash text-6xl text-gray-200 mb-4"></i>
-                            <p class="text-gray-500 text-xl font-semibold">لا يوجد طلاب مطابقون للبحث</p>
+                            <p class="text-gray-500 text-xl font-semibold">لا يوجد مستخدمون مطابقون للبحث</p>
                         </div>
                     @endif
                 </div>

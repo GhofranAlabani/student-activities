@@ -17,7 +17,6 @@
 
     <!-- الشريط الجانبي (Sidebar) -->
     <aside class="w-64 bg-white shadow-xl hidden md:flex flex-col z-10 border-l border-gray-100">
-        <!-- رأس الشريط -->
         <div class="p-6 bg-indigo-600 text-center shadow-lg">
             <div class="w-16 h-16 bg-white rounded-full mx-auto flex items-center justify-center mb-3 shadow-md">
                 <i class="fas fa-user-graduate text-3xl text-indigo-600"></i>
@@ -25,15 +24,14 @@
             <h2 class="text-xl font-bold text-white">لوحة الطالب</h2>
         </div>
         
-        <!-- روابط التنقل -->
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
             <a href="{{ route('student.dashboard') }}" class="sidebar-link active flex items-center p-3 rounded-xl transition duration-200">
                 <i class="fas fa-home ml-3 text-lg"></i> الرئيسية
             </a>
-            <a href="#" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
+            <a href="{{ route('student.my-activities') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
                 <i class="fas fa-calendar-check ml-3 text-lg"></i> أنشطتي
             </a>
-            <a href="#" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
+            <a href="{{ route('student.favorites') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
                 <i class="fas fa-heart ml-3 text-lg"></i> المفضلة
             </a>
             <a href="{{ route('profile.edit') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
@@ -41,7 +39,6 @@
             </a>
         </nav>
 
-        <!-- زر الخروج -->
         <div class="p-4 border-t border-gray-100">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
@@ -55,7 +52,6 @@
     <!-- المحتوى الرئيسي -->
     <div class="flex-1 flex flex-col overflow-hidden relative">
         
-        <!-- الهيدر العلوي -->
         <header class="bg-white shadow-sm p-4 flex justify-between items-center">
             <h1 class="font-bold text-xl text-indigo-700 md:hidden">الطالب</h1>
             <div class="flex items-center gap-4 mr-auto">
@@ -71,11 +67,9 @@
             </div>
         </header>
 
-        <!-- المحتوى -->
         <main class="flex-1 overflow-y-auto p-6">
             <div class="max-w-6xl mx-auto">
                 
-                <!-- الترحيب -->
                 <div class="mb-8">
                     <h1 class="text-3xl font-bold text-gray-800">
                         مرحباً بك يا {{ auth()->user()->name }} 🎓
@@ -83,9 +77,7 @@
                     <p class="text-gray-600 mt-2">تصفح أنشطتك ومتابعة تقدمك</p>
                 </div>
 
-                <!-- البطاقات -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <!-- بطاقة المفضلة -->
                     <div class="bg-gradient-to-r from-pink-500 to-rose-600 p-6 rounded-2xl shadow-lg text-white">
                         <div class="flex items-center justify-between">
                             <div>
@@ -98,7 +90,6 @@
                         </div>
                     </div>
 
-                    <!-- بطاقة النقاط -->
                     <div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-6 rounded-2xl shadow-lg text-white">
                         <div class="flex items-center justify-between">
                             <div>
@@ -111,7 +102,6 @@
                         </div>
                     </div>
 
-                    <!-- بطاقة الأنشطة -->
                     <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-2xl shadow-lg text-white">
                         <div class="flex items-center justify-between">
                             <div>
@@ -125,13 +115,12 @@
                     </div>
                 </div>
 
-                <!-- الأزرار السريعة -->
                 <div class="flex flex-wrap gap-4">
                     <a href="{{ route('activities.index') }}" class="inline-block bg-indigo-600 text-white px-8 py-4 rounded-xl hover:bg-indigo-700 transition font-bold shadow-lg">
                         <i class="fas fa-search ml-2"></i>
                         تصفح الأنشطة
                     </a>
-                    <a href="#" class="inline-block bg-white border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-xl hover:bg-indigo-50 transition font-bold">
+                    <a href="{{ route('student.my-activities') }}" class="inline-block bg-white border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-xl hover:bg-indigo-50 transition font-bold">
                         <i class="fas fa-calendar-alt ml-2"></i>
                         أنشطتي المسجلة
                     </a>

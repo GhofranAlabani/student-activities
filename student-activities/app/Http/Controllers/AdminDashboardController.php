@@ -9,52 +9,35 @@ use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
-    /**
-     * عرض لوحة تحكم المدير
-     */
     public function index()
     {
-        // 1️⃣ حساب عدد الأنشطة الكلية
         $totalActivities = Activity::count();
-
-        // 2️⃣ حساب عدد الطلاب (المستخدمين)
         $totalStudents = User::count(); 
-
-        // 3️⃣ حساب عدد التسجيلات (مع حماية في حال عدم وجود الجدول)
         $totalRegistrations = 0;
         try {
             $totalRegistrations = DB::table('registrations')->count();
         } catch (\Exception $e) {
-            // إذا كان جدول التسجيلات غير موجود، نرجع 0 بدون أخطاء
             $totalRegistrations = 0;
         }
 
-        // ✅ إرسال البيانات للعرض (استخدمنا أسماء المتغيرات كنصوص بين علامات تنصيص)
-        return view('dashboard', [
+        return view('admin.dashboard', [
             'totalActivities' => $totalActivities,
             'totalStudents' => $totalStudents,
             'totalRegistrations' => $totalRegistrations
         ]);
     }
-        /**
-     * عرض الطلاب المسجلين في نشاط معين
-     */
+
     public function showRegistrations($id)
     {
-        
-            if (!auth()->check() || auth()->user()->role !== 'admin') {
-                 abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة.');
-    
-                 }
+        if (!auth()->check() || auth()->user()->role !== 'admin') {
+            abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة.');
+        }
         $activity = \App\Models\Activity::with(['users', 'activityType'])->findOrFail($id);
-        $students = $activity->users; // الطلاب المسجلين في هذا النشاط
+        $students = $activity->users;
         
         return view('admin.registrations', compact('activity', 'students'));
     }
 
-    /**
-     * عرض كل التسجيلات
-     */
     public function allRegistrations()
     {
         $registrations = \DB::table('registrations')
@@ -65,5 +48,21 @@ class AdminDashboardController extends Controller
             ->get();
         
         return view('admin.all-registrations', compact('registrations'));
+    }
+
+    public function showAllStudents(Request $request)
+    {
+        $query = User::with('activities');
+        
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+        
+        $students = $query->latest()->paginate(15);
+        
+        return view('admin.students', compact('students'));
     }
 }
