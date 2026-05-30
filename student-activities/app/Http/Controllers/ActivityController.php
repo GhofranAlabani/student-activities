@@ -83,7 +83,7 @@ public function create()
             'description' => 'required|string',
             'activity_type_id' => 'required|exists:activity_types,id',
             'date' => 'required|date',
-            'status' => 'required|in:active,inactive,completed',
+            'status' =>'required|in:مفتوح,مغلق,منتهي,ملغي',
             'max_participants' => 'nullable|integer|min:1',
             'points' => 'nullable|integer|min:0',
             'location' => 'nullable|string|max:255',
@@ -94,7 +94,7 @@ public function create()
         ]);
 
         $data = $request->all();
-        $data['created_by'] = auth()->id();
+       
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('activities', 'public');
@@ -120,7 +120,7 @@ public function create()
             'description' => 'required|string',
             'activity_type_id' => 'required|exists:activity_types,id',
             'date' => 'required|date',
-            'status' => 'required|in:active,inactive,completed',
+            'status' => 'required|in:مفتوح,مغلق,منتهي,ملغي',
             'max_participants' => 'nullable|integer|min:1',
             'points' => 'nullable|integer|min:0',
             'location' => 'nullable|string|max:255',

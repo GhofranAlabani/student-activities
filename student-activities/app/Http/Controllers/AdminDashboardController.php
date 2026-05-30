@@ -10,23 +10,39 @@ use Illuminate\Support\Facades\DB;
 class AdminDashboardController extends Controller
 {
     public function index()
-    {
-        $totalActivities = Activity::count();
-        $totalStudents = User::count(); 
+{
+    $totalActivities = Activity::count();
+    $totalStudents = User::count();
+    $totalRegistrations = 0;
+    try {
+        $totalRegistrations = DB::table('registrations')->count();
+    } catch (\Exception $e) {
         $totalRegistrations = 0;
-        try {
-            $totalRegistrations = DB::table('registrations')->count();
-        } catch (\Exception $e) {
-            $totalRegistrations = 0;
-        }
-
-        return view('admin.dashboard', [
-            'totalActivities' => $totalActivities,
-            'totalStudents' => $totalStudents,
-            'totalRegistrations' => $totalRegistrations
-        ]);
     }
 
+    // بيانات الرسوم البيانية
+    $activitiesByType = \App\Models\ActivityType::withCount('activities')->get();
+    
+    $registrationsByMonth = DB::table('registrations')
+        ->selectRaw('MONTH(created_at) as month, COUNT(*) as total')
+        ->whereYear('created_at', date('Y'))
+        ->groupBy('month')
+        ->orderBy('month')
+        ->get();
+
+    $activitiesByStatus = Activity::selectRaw('status, COUNT(*) as total')
+        ->groupBy('status')
+        ->get();
+
+    return view('admin.dashboard', compact(
+        'totalActivities',
+        'totalStudents', 
+        'totalRegistrations',
+        'activitiesByType',
+        'registrationsByMonth',
+        'activitiesByStatus'
+    ));
+}
     public function showRegistrations($id)
     {
         if (!auth()->check() || auth()->user()->role !== 'admin') {

@@ -115,7 +115,7 @@
                             @else
                                 <i class="fas fa-calendar-alt text-6xl text-white/20"></i>
                             @endif
-                            @if($activity->status === 'active')
+                            @if($activity->status === '?????')
                                 <span class="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
                                     متاح للتسجيل
                                 </span>
