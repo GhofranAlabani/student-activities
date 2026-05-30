@@ -52,10 +52,18 @@
     <!-- Main -->
     <div class="flex-1 flex flex-col overflow-hidden">
         <header class="bg-white shadow-sm p-4 flex justify-between items-center">
-            <h1 class="font-bold text-xl text-indigo-700">
-                <i class="fas fa-heart text-pink-500 ml-2"></i>
-                الأنشطة المفضلة
-            </h1>
+    <div class="flex items-center gap-3">
+        <!-- زر الرجوع -->
+        <a href="{{ route('student.dashboard') }}" 
+           class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
+            <i class="fas fa-arrow-right"></i>
+            <span class="font-semibold">رجوع</span>
+        </a>
+        <h1 class="font-bold text-xl text-indigo-700">
+            <i class="fas fa-heart text-pink-500 ml-2"></i>
+            الأنشطة المفضلة
+        </h1>
+    </div>
             <div class="flex items-center gap-3">
                 <span class="text-gray-500 bg-gray-50 px-4 py-2 rounded-full text-sm border border-gray-100">
                     <i class="fas fa-calendar-alt ml-1 text-indigo-500"></i> {{ now()->format('Y/m/d') }}

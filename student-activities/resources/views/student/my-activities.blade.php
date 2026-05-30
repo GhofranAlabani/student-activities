@@ -52,7 +52,15 @@
     <!-- Main -->
     <div class="flex-1 flex flex-col overflow-hidden">
         <header class="bg-white shadow-sm p-4 flex justify-between items-center">
-            <h1 class="font-bold text-xl text-indigo-700">أنشطتي المسجلة</h1>
+            <div class="flex items-center gap-3">
+                <!-- زر الرجوع -->
+                <a href="{{ route('student.dashboard') }}" 
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
+                    <i class="fas fa-arrow-right"></i>
+                    <span class="font-semibold">رجوع</span>
+                </a>
+                <h1 class="font-bold text-xl text-indigo-700">أنشطتي المسجلة</h1>
+            </div>
             <div class="flex items-center gap-3">
                 <span class="text-gray-500 bg-gray-50 px-4 py-2 rounded-full text-sm border border-gray-100">
                     <i class="fas fa-calendar-alt ml-1 text-indigo-500"></i> {{ now()->format('Y/m/d') }}
@@ -72,15 +80,19 @@
                     </div>
                 @endif
 
-                <!-- Summary -->
+                <!-- ✅ Summary - مصحح ليعمل مع Collection و Paginator -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
                     <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-5 rounded-2xl text-white shadow-lg">
                         <p class="text-indigo-100 text-sm mb-1">إجمالي الأنشطة</p>
-                        <p class="text-4xl font-extrabold">{{ $activities->total() }}</p>
+                        {{-- استخدام count() آمن للجميع --}}
+                        <p class="text-4xl font-extrabold">{{ count($activities) }}</p>
                     </div>
                     <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-5 rounded-2xl text-white shadow-lg">
                         <p class="text-emerald-100 text-sm mb-1">أنشطة نشطة</p>
-                        <p class="text-4xl font-extrabold">{{ $activities->where('status', 'active')->count() }}</p>
+                        {{-- استخدام collect() لضمان الفلترة الصحيحة --}}
+                        <p class="text-4xl font-extrabold">
+                            {{ collect($activities)->where('status', 'active')->count() }}
+                        </p>
                     </div>
                     <div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-5 rounded-2xl text-white shadow-lg">
                         <p class="text-yellow-100 text-sm mb-1">مجموع النقاط المكتسبة</p>
@@ -89,7 +101,7 @@
                 </div>
 
                 <!-- Activities -->
-                @if($activities->count() > 0)
+                @if(count($activities) > 0)
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         @foreach($activities as $activity)
                             <div class="activity-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -138,7 +150,8 @@
                                         @endif
                                         <div class="flex items-center gap-2">
                                             <i class="fas fa-clock text-gray-400 w-3"></i>
-                                            <span>سجلت في: {{ $activity->pivot->created_at->format('Y/m/d') }}</span>
+                                            {{-- التحقق من وجود pivot قبل الوصول للخاصية --}}
+                                            <span>سجلت في: {{ $activity->pivot?->created_at?->format('Y/m/d') ?? 'غير معروف' }}</span>
                                         </div>
                                     </div>
 
@@ -162,7 +175,10 @@
                     </div>
 
                     <div class="mt-8 flex justify-center">
-                        {{ $activities->links() }}
+                        {{-- عرض روابط التنقل فقط إذا كانت موجودة --}}
+                        @if(method_exists($activities, 'links'))
+                            {{ $activities->links() }}
+                        @endif
                     </div>
                 @else
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">

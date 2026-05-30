@@ -26,12 +26,12 @@
                 <div class="flex gap-4 items-center">
                     <a href="{{ route('activities.index') }}" class="text-gray-700 hover:text-indigo-600 font-semibold">الأنشطة</a>
                     @auth
-                        <a href="/dashboard" class="text-gray-700 hover:text-indigo-600 font-semibold">لوحة التحكم</a>
+                        <a href="{{ route('student.dashboard') }}" class="text-gray-700 hover:text-indigo-600 font-semibold">لوحة التحكم</a>
                         <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold">
                             {{ substr(auth()->user()->name, 0, 1) }}
                         </div>
                     @else
-                        <a href="/login" class="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition">تسجيل الدخول</a>
+                        <a href="{{ route('login') }}" class="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition">تسجيل الدخول</a>
                     @endauth
                 </div>
             </div>
@@ -41,10 +41,19 @@
     <!-- Header & Filters -->
     <div class="bg-gradient-to-r from-indigo-600 to-purple-600 py-10 mb-8">
         <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl md:text-4xl font-bold text-white">
-                    اكتشف الأنشطة المتاحة
-                </h2>
+            <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
+                <div class="flex items-center gap-4">
+                    <!-- زر الرجوع -->
+                    <a href="{{ url()->previous() }}" 
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition backdrop-blur-sm">
+                        <i class="fas fa-arrow-right"></i>
+                        <span class="font-semibold">رجوع</span>
+                    </a>
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">
+                        اكتشف الأنشطة المتاحة
+                    </h2>
+                </div>
+                
                 @if(auth()->check() && auth()->user()->role === 'admin')
                     <a href="{{ route('activities.create') }}" class="bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition shadow-lg">
                         <i class="fas fa-plus ml-2"></i> إضافة نشاط
@@ -115,7 +124,9 @@
                             @else
                                 <i class="fas fa-calendar-alt text-6xl text-white/20"></i>
                             @endif
-                            @if($activity->status === '?????')
+                            
+                            <!-- ✅ التصحيح: استبدل ????? بـ active -->
+                            @if($activity->status === 'active')
                                 <span class="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
                                     متاح للتسجيل
                                 </span>
@@ -140,7 +151,7 @@
                             </h3>
 
                             <p class="text-gray-500 text-sm mb-4 line-clamp-2 h-10">
-                                {{ Str::limit($activity->description, 100) }}
+                                {{ \Illuminate\Support\Str::limit($activity->description, 100) }}
                             </p>
 
                             <div class="space-y-2 mb-5 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">

@@ -54,8 +54,19 @@
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
+        
+        <!-- Header مع زر الرجوع ✅ -->
         <header class="bg-white shadow-sm p-4 flex justify-between items-center">
-            <h1 class="font-bold text-xl text-indigo-700">الملف الشخصي</h1>
+            <div class="flex items-center gap-3">
+                <!-- زر الرجوع -->
+                <a href="{{ url('/student/dashboard') }}" 
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
+                    <i class="fas fa-arrow-right"></i>
+                    <span class="font-semibold">رجوع</span>
+                </a>
+                <h1 class="font-bold text-xl text-indigo-700">الملف الشخصي</h1>
+            </div>
+            
             <span class="text-gray-500 bg-gray-50 px-4 py-2 rounded-full text-sm border border-gray-100">
                 <i class="fas fa-calendar-alt ml-1 text-indigo-500"></i> {{ now()->format('Y/m/d') }}
             </span>

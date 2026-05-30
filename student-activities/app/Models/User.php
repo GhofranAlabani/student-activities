@@ -37,27 +37,28 @@ class User extends Authenticatable
     // ========================
 
     /**
-     * الأنشطة التي سجل فيها الطالب
+     * الأنشطة التي سجل فيها الطالب (الجدول الجديد: activity_student)
      */
     public function activities()
+{
+    return $this->belongsToMany(
+        Activity::class, 
+        'activity_student', 
+        'user_id',        // ← ✅ هذا التغيير المهم (كان student_id)
+        'activity_id'
+    )
+    ->withPivot('status', 'points_earned', 'participated_at')
+    ->withTimestamps();
+}
+
+    /** الأنشطة المفضلة */
+    public function favorites()
     {
-        return $this->belongsToMany(Activity::class, 'registrations', 'student_id', 'activity_id')
-                    ->withPivot('created_at')
+        return $this->belongsToMany(Activity::class, 'favorites', 'user_id', 'activity_id')
                     ->withTimestamps();
     }
 
-    /**
-     * الأنشطة المفضلة
-     */
-    public function favorites()
-{
-    return $this->belongsToMany(Activity::class, 'favorites', 'user_id', 'activity_id')
-                ->withTimestamps();
-}
-
-    /**
-     * التقارير المرسلة
-     */
+    /** التقارير المرسلة */
     public function reports()
     {
         return $this->hasMany(ActivityReport::class);

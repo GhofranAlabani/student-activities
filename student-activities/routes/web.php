@@ -94,4 +94,5 @@ Route::middleware('auth')->group(function () {
         $favorites = $user->favorites()->count();
         return view('student.profile', compact('user', 'activities', 'favorites'));
     })->name('student.profile');
-});
+
+    });

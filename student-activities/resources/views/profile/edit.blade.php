@@ -1,8 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
-        </h2>
+        <div class="flex items-center justify-between">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Profile') }}
+            </h2>
+            
+            <!-- زر الرجوع -->
+            <a href="{{ route('student.dashboard') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition text-sm font-semibold shadow-sm">
+                <i class="fas fa-arrow-right"></i>
+                رجوع للوحة التحكم
+            </a>
+        </div>
     </x-slot>
 
     <div class="py-12">
