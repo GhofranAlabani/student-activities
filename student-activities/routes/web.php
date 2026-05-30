@@ -86,3 +86,12 @@ Route::middleware('auth')->group(function () {
         return back()->with('success', '?? ????? ???????? ?????');
     })->name('admin.user.role');
 });
+
+Route::middleware('auth')->group(function () {
+    Route::get('/student/profile', function () {
+        $user = auth()->user();
+        $activities = $user->activities()->latest()->get();
+        $favorites = $user->favorites()->count();
+        return view('student.profile', compact('user', 'activities', 'favorites'));
+    })->name('student.profile');
+});
