@@ -25,10 +25,10 @@
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen flex flex-col">
 
-    <!-- Navigation Bar -->
-    <nav class="sidebar shadow-lg">
+    <!-- ✅ Navigation Bar في الأعلى -->
+    <nav class="sidebar shadow-lg sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
                 <a href="/" class="text-2xl font-bold text-white flex items-center gap-2">
@@ -63,10 +63,11 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="container mx-auto px-4 py-8">
-        {{ $slot }}
-    </div>
+    <!-- ✅ المحتوى الرئيسي مباشرة تحت الـ Navbar -->
+    <main class="flex-grow container mx-auto px-4 py-6">
+        @yield('content')
+        {{ $slot ?? '' }}
+    </main>
 
     <!-- Alpine.js for dropdown -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

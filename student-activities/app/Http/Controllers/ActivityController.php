@@ -5,17 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Models\ActivityType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 
 class ActivityController extends Controller
 {
     /**
-     * عرض جميع الأنشطة مع البحث والفلترة
+     * عرض جميع الأنشطة
      */
     public function index(Request $request)
     {
         $query = Activity::with(['activityType', 'users']);
         
-        // Search - البحث
+        // البحث
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
                 $q->where('title', 'like', '%' . $request->search . '%')
@@ -23,23 +25,70 @@ class ActivityController extends Controller
             });
         }
         
-        // Filter by type - الفلترة حسب النوع
+        // الفلترة حسب النوع
         if ($request->filled('type')) {
             $query->where('type_id', $request->type);
         }
         
         $activities = $query->latest()->paginate(9);
         
-        // جلب الأنشطة المفضلة للمستخدم الحالي
-        $favoriteIds = \App\Models\Favorite::where('user_id', auth()->id())
-            ->pluck('activity_id')
-            ->toArray();
-        
-        return view('activities.index', compact('activities', 'favoriteIds'));
+        return view('activities.index', compact('activities'));
     }
 
     /**
-     * عرض تفاصيل نشاط معين
+     * عرض نموذج إضافة نشاط
+     */
+    public function create()
+    {
+        $activityTypes = ActivityType::all();
+        return view('activities.create', compact('activityTypes'));
+    }
+
+    /**
+     * حفظ نشاط جديد
+     */
+    public function store(Request $request)
+    {
+        // ✅ ملاحظة: الفورم يرسل 'activity_type_id' لكن الداتابيز فيها 'type_id'
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'activity_type_id' => 'required|exists:activity_types,id', // من الفورم
+            'date' => 'required|date',
+            'status' => 'required|string',
+            'max_participants' => 'nullable|integer|min:1',
+            'points' => 'nullable|integer|min:0',
+            'location' => 'nullable|string|max:255',
+            'time' => 'nullable',
+            'end_time' => 'nullable',
+            'online_link' => 'nullable|url',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        // ✅ تحويل activity_type_id (من الفورم) إلى type_id (للداتابيز)
+        if (isset($validated['activity_type_id'])) {
+            $validated['type_id'] = $validated['activity_type_id'];
+            unset($validated['activity_type_id']);
+        }
+
+        // معالجة الصورة
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('activities', 'public');
+        }
+
+        // إضافة created_by إذا كان العمود موجود
+        if (auth()->check() && Schema::hasColumn('activities', 'created_by')) {
+            $validated['created_by'] = auth()->id();
+        }
+
+        Activity::create($validated);
+
+        return redirect()->route('activities.index')
+            ->with('success', '✅ تمت إضافة النشاط بنجاح');
+    }
+
+    /**
+     * عرض تفاصيل نشاط
      */
     public function show($id)
     {
@@ -47,6 +96,78 @@ class ActivityController extends Controller
             ->findOrFail($id);
         
         return view('activities.show', compact('activity'));
+    }
+
+    /**
+     * عرض نموذج تعديل نشاط
+     */
+    public function edit($id)
+    {
+        $activity = Activity::findOrFail($id);
+        $activityTypes = ActivityType::all();
+        return view('activities.edit', compact('activity', 'activityTypes'));
+    }
+
+    /**
+     * ✅ تحديث نشاط - الكود المصحح
+     */
+    public function update(Request $request, $id)
+    {
+        $activity = Activity::findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'activity_type_id' => 'required|exists:activity_types,id',
+            'date' => 'required|date',
+            'status' => 'required|string',
+            'max_participants' => 'nullable|integer|min:1',
+            'points' => 'nullable|integer|min:0',
+            'location' => 'nullable|string|max:255',
+            'time' => 'nullable',
+            'end_time' => 'nullable',
+            'online_link' => 'nullable|url',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        // ✅ تحويل activity_type_id إلى type_id (مهم جداً للتحديث)
+        if (isset($validated['activity_type_id'])) {
+            $validated['type_id'] = $validated['activity_type_id'];
+            unset($validated['activity_type_id']);
+        }
+
+        // معالجة الصورة الجديدة
+        if ($request->hasFile('image')) {
+            // حذف الصورة القديمة
+            if ($activity->image && Storage::disk('public')->exists($activity->image)) {
+                Storage::disk('public')->delete($activity->image);
+            }
+            $validated['image'] = $request->file('image')->store('activities', 'public');
+        }
+
+        // ✅ التحديث الصحيح (ليس حذف!)
+        $activity->update($validated);
+
+        return redirect()->route('activities.index')
+            ->with('success', '✅ تم تعديل النشاط بنجاح');
+    }
+
+    /**
+     * حذف نشاط
+     */
+    public function destroy($id)
+    {
+        $activity = Activity::findOrFail($id);
+        
+        // حذف الصورة المرتبطة
+        if ($activity->image && Storage::disk('public')->exists($activity->image)) {
+            Storage::disk('public')->delete($activity->image);
+        }
+        
+        $activity->delete();
+        
+        return redirect()->route('activities.index')
+            ->with('success', '✅ تم حذف النشاط بنجاح');
     }
 
     /**
@@ -59,92 +180,14 @@ class ActivityController extends Controller
             ->first();
 
         if ($favorite) {
-            // إذا كان موجود، احذفه (إلغاء المفضلة)
             $favorite->delete();
             return back()->with('success', 'تمت إزالة النشاط من المفضلة');
         } else {
-            // إذا غير موجود، أضفه
             \App\Models\Favorite::create([
                 'user_id' => auth()->id(),
                 'activity_id' => $id
             ]);
             return back()->with('success', 'تمت إضافة النشاط للمفضلة');
         }
-    }
-public function create()
-    {
-        return view('activities.create');
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'activity_type_id' => 'required|exists:activity_types,id',
-            'date' => 'required|date',
-            'status' =>'required|in:مفتوح,مغلق,منتهي,ملغي',
-            'max_participants' => 'nullable|integer|min:1',
-            'points' => 'nullable|integer|min:0',
-            'location' => 'nullable|string|max:255',
-            'time' => 'nullable',
-            'end_time' => 'nullable',
-            'online_link' => 'nullable|url',
-            'image' => 'nullable|image|max:2048',
-        ]);
-
-        $data = $request->all();
-       
-
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('activities', 'public');
-        }
-
-        Activity::create($data);
-
-        return redirect()->route('activities.index')->with('success', 'تمت إضافة النشاط بنجاح');
-    }
-
-    public function edit($id)
-    {
-        $activity = Activity::findOrFail($id);
-        return view('activities.edit', compact('activity'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $activity = Activity::findOrFail($id);
-
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'activity_type_id' => 'required|exists:activity_types,id',
-            'date' => 'required|date',
-            'status' => 'required|in:مفتوح,مغلق,منتهي,ملغي',
-            'max_participants' => 'nullable|integer|min:1',
-            'points' => 'nullable|integer|min:0',
-            'location' => 'nullable|string|max:255',
-            'time' => 'nullable',
-            'end_time' => 'nullable',
-            'online_link' => 'nullable|url',
-            'image' => 'nullable|image|max:2048',
-        ]);
-
-        $data = $request->all();
-
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('activities', 'public');
-        }
-
-        $activity->update($data);
-
-        return redirect()->route('activities.index')->with('success', 'تم تعديل النشاط بنجاح');
-    }
-
-    public function destroy($id)
-    {
-        $activity = Activity::findOrFail($id);
-        $activity->delete();
-        return redirect()->route('activities.index')->with('success', 'تم حذف النشاط بنجاح');
     }
 }

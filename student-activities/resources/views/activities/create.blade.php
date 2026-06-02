@@ -126,6 +126,20 @@
                                 @enderror
                             </div>
 
+                            <!-- Description (واحد فقط ✅) -->
+                            <div class="md:col-span-2">
+                                <label class="label">وصف النشاط <span class="required">*</span></label>
+                                <textarea
+                                    name="description"
+                                    rows="4"
+                                    placeholder="اكتب وصفاً تفصيلياً عن النشاط..."
+                                    class="input-field {{ $errors->has('description') ? 'is-invalid' : '' }}"
+                                >{{ old('description') }}</textarea>
+                                @error('description')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
                             <!-- Activity Type -->
                             <div>
                                 <label class="label">نوع النشاط <span class="required">*</span></label>
@@ -150,21 +164,8 @@
                                    <option value="مغلق">مغلق</option>
                                    <option value="منتهي">منتهي</option>
                                    <option value="ملغي">ملغي</option>
+                                </select>
                                 @error('status')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <!-- Description -->
-                            <div class="md:col-span-2">
-                                <label class="label">وصف النشاط <span class="required">*</span></label>
-                                <textarea
-                                    name="description"
-                                    rows="4"
-                                    placeholder="اكتب وصفاً تفصيلياً عن النشاط..."
-                                    class="input-field {{ $errors->has('description') ? 'is-invalid' : '' }}"
-                                >{{ old('description') }}</textarea>
-                                @error('description')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>

@@ -9,8 +9,10 @@ class Activity extends Model
 {
     use SoftDeletes;
 
+    // ✅ تم إضافة 'image' إلى القائمة
     protected $fillable = [
         'title',
+        'image',        // ✅ حقل الصورة الجديد
         'description',
         'type_id',
         'location',
@@ -66,5 +68,15 @@ class Activity extends Model
     public function report()
     {
         return $this->hasOne(ActivityReport::class);
+    }
+
+    // ✅ دالة مساعدة لعرض مسار الصورة (اختياري لكن مفيد)
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            return asset('uploads/activities/' . $this->image);
+        }
+        // صورة افتراضية إذا ما فيش صورة
+        return 'https://via.placeholder.com/400x300?text=No+Image';
     }
 }

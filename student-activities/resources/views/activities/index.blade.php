@@ -43,12 +43,12 @@
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
                 <div class="flex items-center gap-4">
-                    <!-- زر الرجوع -->
-                    <a href="{{ url()->previous() }}" 
-                       class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition backdrop-blur-sm">
-                        <i class="fas fa-arrow-right"></i>
-                        <span class="font-semibold">رجوع</span>
-                    </a>
+                   <!-- زر الرجوع -->
+                <a href="{{ route('admin.dashboard') }}" 
+                     class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition">
+                   <i class="fas fa-arrow-right"></i>
+                            رجوع
+                </a>
                     <h2 class="text-3xl md:text-4xl font-bold text-white">
                         اكتشف الأنشطة المتاحة
                     </h2>

@@ -97,6 +97,7 @@
                     </div>
                 @endif
 
+                <!-- ✅ Form التعديل الرئيسي -->
                 <form method="POST" action="{{ route('activities.update', $activity->id) }}" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
@@ -281,29 +282,30 @@
                         @error('image')<p class="text-red-500 text-xs mt-2">{{ $message }}</p>@enderror
                     </div>
 
-                    <!-- Actions -->
-                    <div class="flex items-center justify-between">
-                        <!-- Delete Button -->
-                        <form method="POST" action="{{ route('activities.destroy', $activity->id) }}"
-                            onsubmit="return confirm('هل أنت متأكد من حذف هذا النشاط؟ لا يمكن التراجع.')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="px-6 py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl font-bold hover:bg-red-100 transition">
-                                <i class="fas fa-trash ml-2"></i> حذف النشاط
-                            </button>
-                        </form>
-
-                        <div class="flex items-center gap-4">
-                            <a href="{{ route('activities.index') }}" class="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition">
-                                <i class="fas fa-times ml-2"></i> إلغاء
-                            </a>
-                            <button type="submit" class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-0.5">
-                                <i class="fas fa-save ml-2"></i> حفظ التعديلات
-                            </button>
-                        </div>
+                    <!-- ✅ أزرار الحفظ والإلغاء (داخل الـ form) -->
+                    <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+                        <a href="{{ route('activities.index') }}" class="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition">
+                            <i class="fas fa-times ml-2"></i> إلغاء
+                        </a>
+                        <button type="submit" class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-0.5">
+                            <i class="fas fa-save ml-2"></i> حفظ التعديلات
+                        </button>
                     </div>
 
-                </form>
+                </form> <!-- ✅ أقفلنا الـ form الرئيسي هنا -->
+
+                <!-- ✅ زر الحذف منفصل بره تماماً (مش داخل الـ form) -->
+                <div class="mt-4">
+                    <form method="POST" action="{{ route('activities.destroy', $activity->id) }}" 
+                          onsubmit="return confirm('هل أنت متأكد من حذف هذا النشاط؟ لا يمكن التراجع.')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="px-6 py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl font-bold hover:bg-red-100 transition">
+                            <i class="fas fa-trash ml-2"></i> حذف النشاط
+                        </button>
+                    </form>
+                </div>
+
             </div>
         </main>
     </div>
