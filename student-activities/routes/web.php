@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ActivityController;
@@ -96,3 +96,14 @@ Route::middleware('auth')->group(function () {
     })->name('student.profile');
 
     });
+
+Route::middleware('auth')->group(function () {
+    Route::post('/activities/{id}/rate', function (\Illuminate\Http\Request $request, $id) {
+        $request->validate(['rating' => 'required|integer|min:1|max:5']);
+        \App\Models\Rating::updateOrCreate(
+            ['user_id' => auth()->id(), 'activity_id' => $id],
+            ['rating' => $request->rating, 'comment' => $request->comment]
+        );
+        return back()->with('success', '?? ????? ?????? ?????!');
+    })->name('activities.rate');
+});

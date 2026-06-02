@@ -143,16 +143,15 @@
                             </div>
 
                             <!-- Status -->
-                            <div>
-                                <label class="label">الحالة <span class="required">*</span></label>
-                                <select name="status" class="input-field {{ $errors->has('status') ? 'is-invalid' : '' }}">
-                                   <option value="مفتوح">مفتوح</option>
-                                   <option value="مغلق">مغلق</option>
-                                   <option value="منتهي">منتهي</option>
-                                   <option value="ملغي">ملغي</option>
-                                @error('status')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
+                            <select name="status" class="input-field {{ $errors->has('status') ? 'is-invalid' : '' }}">
+   <option value="مفتوح">مفتوح</option>
+   <option value="مغلق">مغلق</option>
+   <option value="منتهي">منتهي</option>
+   <option value="ملغي">ملغي</option>
+</select>
+@error('status')
+    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+@enderror
                             </div>
 
                             <!-- Description -->

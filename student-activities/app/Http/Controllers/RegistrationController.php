@@ -16,7 +16,7 @@ class RegistrationController extends Controller
             $user = Auth::user();
 
             // التحقق من أن النشاط متاح
-            if ($activity->status !== '?????') {
+            if ($activity->status !== 'مفتوح') {
                 return redirect()->back()->with('error', 'هذا النشاط غير متاح للتسجيل');
             }
 
