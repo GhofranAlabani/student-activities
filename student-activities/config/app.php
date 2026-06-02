@@ -65,11 +65,11 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Africa/Cairo', // ✅ تغيرت للعربية/مصر
 
     /*
     |--------------------------------------------------------------------------
-    | Application Locale Configuration
+    | Application Locale Configuration ⭐ مهم جداً
     |--------------------------------------------------------------------------
     |
     | The application locale determines the default locale that will be used
@@ -78,11 +78,11 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'ar'), // ✅ تم التغيير من 'en' إلى 'ar'
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'ar'), // ✅ تم التغيير من 'en' إلى 'ar'
 
-    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+    'faker_locale' => env('APP_FAKER_LOCALE', 'ar_SA'), // ✅ تم التغيير من 'en_US' إلى 'ar_SA'
 
     /*
     |--------------------------------------------------------------------------

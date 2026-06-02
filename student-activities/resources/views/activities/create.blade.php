@@ -70,7 +70,6 @@
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
-
         <!-- Header -->
         <header class="bg-white shadow-sm p-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -126,20 +125,6 @@
                                 @enderror
                             </div>
 
-                            <!-- Description (واحد فقط ✅) -->
-                            <div class="md:col-span-2">
-                                <label class="label">وصف النشاط <span class="required">*</span></label>
-                                <textarea
-                                    name="description"
-                                    rows="4"
-                                    placeholder="اكتب وصفاً تفصيلياً عن النشاط..."
-                                    class="input-field {{ $errors->has('description') ? 'is-invalid' : '' }}"
-                                >{{ old('description') }}</textarea>
-                                @error('description')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-
                             <!-- Activity Type -->
                             <div>
                                 <label class="label">نوع النشاط <span class="required">*</span></label>
@@ -155,17 +140,28 @@
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
-
                             <!-- Status -->
-                            <div>
-                                <label class="label">الحالة <span class="required">*</span></label>
-                                <select name="status" class="input-field {{ $errors->has('status') ? 'is-invalid' : '' }}">
-                                   <option value="مفتوح">مفتوح</option>
-                                   <option value="مغلق">مغلق</option>
-                                   <option value="منتهي">منتهي</option>
-                                   <option value="ملغي">ملغي</option>
-                                </select>
-                                @error('status')
+                            <select name="status" class="input-field {{ $errors->has('status') ? 'is-invalid' : '' }}">
+   <option value="مفتوح">مفتوح</option>
+   <option value="مغلق">مغلق</option>
+   <option value="منتهي">منتهي</option>
+   <option value="ملغي">ملغي</option>
+</select>
+@error('status')
+    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+@enderror
+                            </div>
+
+                            <!-- Description -->
+                            <div class="md:col-span-2">
+                                <label class="label">وصف النشاط <span class="required">*</span></label>
+                                <textarea
+                                    name="description"
+                                    rows="4"
+                                    placeholder="اكتب وصفاً تفصيلياً عن النشاط..."
+                                    class="input-field {{ $errors->has('description') ? 'is-invalid' : '' }}"
+                                >{{ old('description') }}</textarea>
+                                @error('description')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -211,7 +207,6 @@
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
-
                             <!-- Start Time -->
                             <div>
                                 <label class="label">وقت البداية</label>
@@ -281,7 +276,6 @@
                         </h2>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
                             <!-- Points -->
                             <div>
                                 <label class="label">النقاط المكتسبة</label>
@@ -345,7 +339,6 @@
                                 x-ref="fileInput"
                                 @change="handleFile($event)"
                             >
-
                             <template x-if="!preview">
                                 <div>
                                     <i class="fas fa-cloud-upload-alt text-4xl text-gray-300 mb-3"></i>

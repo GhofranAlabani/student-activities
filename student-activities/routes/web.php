@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ActivityController;
@@ -32,13 +32,11 @@ Route::get('/student/dashboard', function () {
     ]);
 })->middleware(['auth'])->name('student.dashboard');
 
-// ✅ مسارات المدير (بدون تكرار)
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/admin/activity/{id}/registrations', [AdminDashboardController::class, 'showRegistrations'])->name('admin.registrations');
-    Route::get('/admin/students', [AdminDashboardController::class, 'showAllStudents'])->name('admin.students');
-    Route::get('/admin/all-registrations', [AdminDashboardController::class, 'allRegistrations'])->name('admin.all-registrations');
-});
+// مسارات المدير
+Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->middleware(['auth'])->name('admin.dashboard');
+Route::get('/admin/activity/{id}/registrations', [AdminDashboardController::class, 'showRegistrations'])->middleware(['auth'])->name('admin.registrations');
+Route::get('/admin/students', [AdminDashboardController::class, 'showAllStudents'])->middleware(['auth'])->name('admin.students');
+Route::get('/admin/all-registrations', [AdminDashboardController::class, 'allRegistrations'])->middleware(['auth'])->name('admin.all-registrations');
 
 // مسارات الأنشطة العامة
 Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
@@ -78,21 +76,33 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
-    // صلاحيات المدير
+});
+require DIR.'/auth.php';
+Route::middleware('auth')->group(function () {
     Route::patch('/admin/users/{id}/role', function (\Illuminate\Http\Request $request, $id) {
         $user = \App\Models\User::findOrFail($id);
         $user->update(['role' => $request->role]);
-        return back()->with('success', 'تم تغيير الصلاحية بنجاح');
+        return back()->with('success', '?? ????? ???????? ?????');
     })->name('admin.user.role');
+});
 
-    // ملف الطالب الشخصي
+Route::middleware('auth')->group(function () {
     Route::get('/student/profile', function () {
         $user = auth()->user();
         $activities = $user->activities()->latest()->get();
         $favorites = $user->favorites()->count();
         return view('student.profile', compact('user', 'activities', 'favorites'));
     })->name('student.profile');
-});
 
-require __DIR__.'/auth.php';
+    });
+
+Route::middleware('auth')->group(function () {
+    Route::post('/activities/{id}/rate', function (\Illuminate\Http\Request $request, $id) {
+        $request->validate(['rating' => 'required|integer|min:1|max:5']);
+        \App\Models\Rating::updateOrCreate(
+            ['user_id' => auth()->id(), 'activity_id' => $id],
+            ['rating' => $request->rating, 'comment' => $request->comment]
+        );
+        return back()->with('success', '?? ????? ?????? ?????!');
+    })->name('activities.rate');
+});

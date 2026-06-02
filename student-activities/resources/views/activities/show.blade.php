@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -75,7 +75,7 @@
                 <span class="bg-white/20 backdrop-blur-sm text-white text-sm font-bold px-3 py-1 rounded-full border border-white/30">
                     {{ $activity->activityType->name ?? 'عام' }}
                 </span>
-                @if($activity->status === '?????')
+                @if($activity->status === 'مفتوح')
                     <span class="bg-green-500 text-white text-sm font-bold px-3 py-1 rounded-full">
                         <i class="fas fa-check-circle ml-1"></i> متاح للتسجيل
                     </span>
@@ -292,7 +292,7 @@
                                 <p class="font-bold">اكتمل العدد</p>
                                 <p class="text-sm mt-1">لا توجد أماكن متاحة</p>
                             </div>
-                        @elseif($activity->status !== '?????')
+                        @elseif($activity->status !== 'مفتوح')
                             <div class="bg-gray-50 border border-gray-200 text-gray-600 px-4 py-4 rounded-xl text-center">
                                 <i class="fas fa-ban text-gray-400 text-3xl mb-2 block"></i>
                                 <p class="font-bold">التسجيل مغلق</p>
