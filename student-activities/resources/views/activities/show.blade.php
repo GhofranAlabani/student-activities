@@ -9,6 +9,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
+        /* تأثير النجوم التفاعلي */
+        .star-rating input { display: none; }
+        .star-rating label { cursor: pointer; transition: color 0.2s; }
+        .star-rating input:checked ~ label,
+        .star-rating label:hover,
+        .star-rating label:hover ~ label { color: #fbbf24 !important; }
+        .star-rating input:checked + label ~ label { color: #d1d5db !important; }
     </style>
 </head>
 <body class="pb-12">
@@ -45,14 +52,15 @@
                 <i class="fas fa-calendar-alt text-9xl text-white/20"></i>
             </div>
         @endif
-        <!-- Overlay -->
         <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        
         <!-- Back Button -->
         <div class="absolute top-4 right-4">
             <a href="{{ route('activities.index') }}" class="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:bg-white/30 transition font-semibold border border-white/30">
                 <i class="fas fa-arrow-right ml-2"></i> العودة
             </a>
         </div>
+        
         <!-- Admin Buttons -->
         @if(auth()->check() && auth()->user()->role === 'admin')
             <div class="absolute top-4 left-4 flex gap-2">
@@ -61,14 +69,14 @@
                 </a>
                 <form action="{{ route('activities.destroy', $activity->id) }}" method="POST"
                     onsubmit="return confirm('هل أنت متأكد من حذف هذا النشاط؟')">
-                    @csrf
-                    @method('DELETE')
+                    @csrf @method('DELETE')
                     <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-xl hover:bg-red-700 transition font-semibold">
                         <i class="fas fa-trash ml-1"></i> حذف
                     </button>
                 </form>
             </div>
         @endif
+        
         <!-- Title Overlay -->
         <div class="absolute bottom-6 right-6 left-6">
             <div class="flex items-center gap-3 mb-2">
@@ -205,6 +213,158 @@
                     @endif
                 </div>
 
+                <!-- ⭐⭐⭐ قسم التقييمات الجديد ⭐⭐⭐ -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        تقييمات الطلاب
+                        @if($activity->ratings_count > 0)
+                            <span class="bg-indigo-100 text-indigo-700 text-sm px-3 py-1 rounded-full font-bold mr-auto">
+                                {{ $activity->ratings_count }}
+                            </span>
+                        @endif
+                    </h3>
+
+                    @if($activity->ratings_count > 0)
+                        <!-- ملخص التقييم -->
+                        <div class="flex items-center gap-6 mb-8 p-5 bg-gradient-to-l from-indigo-50 to-purple-50 rounded-xl border border-indigo-100">
+                            <div class="text-center">
+                                <div class="text-5xl font-extrabold text-indigo-600">
+                                    {{ number_format($activity->average_rating, 1) }}
+                                </div>
+                                <div class="flex text-yellow-400 text-lg mt-1 justify-center">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <i class="fas fa-star{{ $i <= floor($activity->average_rating) ? '' : '-o' }}"></i>
+                                    @endfor
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">من {{ $activity->ratings_count }} تقييم</div>
+                            </div>
+                            
+                            <!-- توزيع النجوم -->
+                            <div class="flex-1 space-y-2">
+                                @for($stars = 5; $stars >= 1; $stars--)
+                                    <div class="flex items-center gap-2 text-sm">
+                                        <span class="w-4 text-gray-600 font-medium">{{ $stars }}</span>
+                                        <i class="fas fa-star text-yellow-400 text-xs"></i>
+                                        <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                            @php
+                                                $count = $activity->ratings->where('rating', $stars)->count();
+                                                $percent = $activity->ratings_count > 0 ? ($count / $activity->ratings_count * 100) : 0;
+                                            @endphp
+                                            <div class="h-full bg-yellow-400 rounded-full transition-all duration-500" 
+                                                 style="width: {{ $percent }}%"></div>
+                                        </div>
+                                        <span class="w-8 text-right text-gray-500 text-xs">{{ round($percent) }}%</span>
+                                    </div>
+                                @endfor
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- فورم التقييم للطالب -->
+                    @auth
+                        @if(!$userRating)
+                            <div class="mb-8 p-5 bg-indigo-50 rounded-xl border border-indigo-200">
+                                <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-pen"></i> شاركنا رأيك في هذا النشاط
+                                </h4>
+                                <form action="{{ route('activities.rate', $activity->id) }}" method="POST" class="space-y-4">
+                                    @csrf
+                                    
+                                    <!-- اختيار النجوم -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">كم تعطي هذا النشاط من نجوم؟</label>
+                                        <div class="star-rating flex gap-1" dir="ltr">
+                                            @for($i = 5; $i >= 1; $i--)
+                                                <input type="radio" name="rating" id="star{{ $i }}" value="{{ $i }}" required>
+                                                <label for="star{{ $i }}" class="text-3xl text-gray-300 hover:text-yellow-400 transition">
+                                                    <i class="fas fa-star"></i>
+                                                </label>
+                                            @endfor
+                                        </div>
+                                        @error('rating') <span class="text-red-500 text-sm block mt-1">{{ $message }}</span> @enderror
+                                    </div>
+                                    
+                                    <!-- التعليق -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">تعليقك (اختياري)</label>
+                                        <textarea name="review" rows="3" 
+                                                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                                                  placeholder="اكتب رأيك أو ملاحظتك حول النشاط..."></textarea>
+                                        @error('review') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                    </div>
+                                    
+                                    <button type="submit" 
+                                            class="bg-indigo-600 text-white px-8 py-3 rounded-xl hover:bg-indigo-700 transition font-semibold shadow-lg hover:shadow-indigo-500/30">
+                                        <i class="fas fa-paper-plane ml-2"></i> إرسال التقييم
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <!-- الطالب قيّم من قبل -->
+                            <div class="mb-8 p-5 bg-green-50 rounded-xl border border-green-200 flex items-start gap-4">
+                                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-check text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-green-800">شكرًا لتقييمك! 🌟</h4>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="text-yellow-400">
+                                            @for($i=1; $i<=5; $i++)
+                                                <i class="fas fa-star{{ $i <= $userRating->rating ? '' : '-o' }}"></i>
+                                            @endfor
+                                        </span>
+                                        <span class="text-gray-500 text-sm">- {{ $userRating->created_at->diffForHumans() }}</span>
+                                    </div>
+                                    @if($userRating->review)
+                                        <p class="text-gray-600 mt-2">"{{ $userRating->review }}"</p>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    @endauth
+
+                    <!-- قائمة التعليقات -->
+                    @if($activity->ratings->count() > 0)
+                        <div class="space-y-4">
+                            <h4 class="font-bold text-gray-700 mb-3">آخر التقييمات</h4>
+                            
+                            @foreach($activity->ratings->sortByDesc('created_at')->take(5) as $rating)
+                                <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-indigo-200 transition">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold">
+                                                {{ substr($rating->user->name ?? '؟', 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <div class="font-semibold text-gray-800">{{ $rating->user->name ?? 'طالب' }}</div>
+                                                <div class="text-xs text-gray-400">{{ $rating->created_at->diffForHumans() }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex text-yellow-400 text-sm">
+                                            @for($i=1; $i<=5; $i++)
+                                                <i class="fas fa-star{{ $i <= $rating->rating ? '' : '-o' }}"></i>
+                                            @endfor
+                                        </div>
+                                    </div>
+                                    @if($rating->review)
+                                        <p class="text-gray-600 text-sm pr-1 leading-relaxed">{{ $rating->review }}</p>
+                                    @endif
+                                </div>
+                            @endforeach
+                            
+                            @if($activity->ratings->count() > 5)
+                                <p class="text-center text-indigo-600 text-sm font-medium mt-4">
+                                    + {{ $activity->ratings->count() - 5 }} تقييمات أخرى
+                                </p>
+                            @endif
+                        </div>
+                    @else
+                        <p class="text-center text-gray-500 py-8">لا توجد تقييمات بعد. كن أول من يقيّم! ✨</p>
+                    @endif
+                </div>
+                <!-- ⭐⭐⭐ نهاية قسم التقييمات ⭐⭐⭐ -->
+
                 <!-- Registered Users -->
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
@@ -268,7 +428,7 @@
                                 <i class="fas fa-user-shield ml-2"></i>
                                 أنت مدير النظام
                             </div>
-                            <a href="{{ route('admin.registrations', $activity->id) }}" class="block w-full bg-green-600 text-white text-center py-3 rounded-xl hover:bg-green-700 transition font-bold mt-3">
+                            <a href="{{ route('admin.registrations.index') }}" class="block w-full bg-green-600 text-white text-center py-3 rounded-xl hover:bg-green-700 transition font-bold mt-3">
                                 <i class="fas fa-users ml-2"></i>
                                 عرض المسجلين
                             </a>
@@ -280,8 +440,7 @@
                             </div>
                             <form action="{{ route('activities.unregister', $activity->id) }}" method="POST" class="mt-3"
                                 onsubmit="return confirm('هل تريد إلغاء تسجيلك؟')">
-                                @csrf
-                                @method('DELETE')
+                                @csrf @method('DELETE')
                                 <button type="submit" class="w-full bg-red-50 text-red-600 border border-red-200 py-2.5 rounded-xl hover:bg-red-100 transition font-semibold text-sm">
                                     <i class="fas fa-times ml-1"></i> إلغاء التسجيل
                                 </button>
