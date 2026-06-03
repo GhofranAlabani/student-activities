@@ -2,83 +2,73 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Activity;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
+    /**
+     * عرض لوحة تحكم المدير
+     */
     public function index()
-{
-    $totalActivities = Activity::count();
-    $totalStudents = User::count();
-    $totalRegistrations = 0;
-    try {
+    {
+        $totalActivities = Activity::count();
+        $totalStudents = User::where('role', 'student')->count();
         $totalRegistrations = DB::table('registrations')->count();
-    } catch (\Exception $e) {
-        $totalRegistrations = 0;
+
+        return view('admin.dashboard', compact(
+            'totalActivities',
+            'totalStudents',
+            'totalRegistrations'
+        ));
     }
 
-    // بيانات الرسوم البيانية
-    $activitiesByType = \App\Models\ActivityType::withCount('activities')->get();
-    
-    $registrationsByMonth = DB::table('registrations')
-        ->selectRaw('MONTH(created_at) as month, COUNT(*) as total')
-        ->whereYear('created_at', date('Y'))
-        ->groupBy('month')
-        ->orderBy('month')
-        ->get();
-
-    $activitiesByStatus = Activity::selectRaw('status, COUNT(*) as total')
-        ->groupBy('status')
-        ->get();
-
-    return view('admin.dashboard', compact(
-        'totalActivities',
-        'totalStudents', 
-        'totalRegistrations',
-        'activitiesByType',
-        'registrationsByMonth',
-        'activitiesByStatus'
-    ));
-}
+    /**
+     * عرض تسجيلات نشاط معين
+     */
     public function showRegistrations($id)
     {
-        if (!auth()->check() || auth()->user()->role !== 'admin') {
-            abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة.');
-        }
-        $activity = \App\Models\Activity::with(['users', 'activityType'])->findOrFail($id);
-        $students = $activity->users;
-        
-        return view('admin.registrations', compact('activity', 'students'));
+        $activity = Activity::findOrFail($id);
+        $registrations = DB::table('registrations')
+            ->where('activity_id', $id)
+            ->join('users', 'registrations.user_id', '=', 'users.id')
+            ->select('registrations.*', 'users.name', 'users.email')
+            ->get();
+
+        return view('admin.registrations', compact('activity', 'registrations'));
     }
 
+    /**
+     * عرض جميع الطلاب
+     */
+    public function showAllStudents()
+    {
+        $students = User::where('role', 'student')
+            ->latest()
+            ->paginate(15);
+
+        return view('admin.students', compact('students'));
+    }
+
+    /**
+     * عرض جميع التسجيلات
+     */
     public function allRegistrations()
     {
-        $registrations = \DB::table('registrations')
+        $registrations = DB::table('registrations')
             ->join('users', 'registrations.user_id', '=', 'users.id')
             ->join('activities', 'registrations.activity_id', '=', 'activities.id')
-            ->select('users.name as student_name', 'users.email', 'activities.title as activity_title', 'registrations.created_at')
-            ->orderBy('registrations.created_at', 'desc')
-            ->get();
-        
-        return view('admin.all-registrations', compact('registrations'));
-    }
+            ->select(
+                'registrations.*',
+                'users.name as student_name',
+                'users.email as student_email',
+                'activities.title as activity_title'
+            )
+            ->latest('registrations.created_at')
+            ->paginate(15);
 
-    public function showAllStudents(Request $request)
-    {
-        $query = User::with('activities');
-        
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
-            });
-        }
-        
-        $students = $query->latest()->paginate(15);
-        
-        return view('admin.students', compact('students'));
+        return view('admin.all-registrations', compact('registrations'));
     }
 }

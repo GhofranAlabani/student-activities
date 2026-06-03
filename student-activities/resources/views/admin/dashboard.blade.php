@@ -1,129 +1,181 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم المدير</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
-        .sidebar-link:hover { background-color: #e0e7ff; color: #4338ca; }
-        .sidebar-link.active { background-color: #e0e7ff; color: #4338ca; font-weight: bold; }
-    </style>
-</head>
-<body class="flex h-screen overflow-hidden">
+@extends('layouts.admin')
 
-    <aside class="w-64 bg-white shadow-xl hidden md:flex flex-col z-10 border-l border-gray-100">
-        <div class="p-6 bg-indigo-600 text-center shadow-lg">
-            <div class="w-16 h-16 bg-white rounded-full mx-auto flex items-center justify-center mb-3 shadow-md">
-                <i class="fas fa-user-shield text-3xl text-indigo-600"></i>
-            </div>
-            <h2 class="text-xl font-bold text-white">لوحة المدير</h2>
-        </div>
-        
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <a href="{{ route('admin.dashboard') }}" class="sidebar-link active flex items-center p-3 rounded-xl transition duration-200">
-                <i class="fas fa-home ml-3 text-lg"></i> الرئيسية
-            </a>
-            <a href="{{ route('activities.index') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
-                <i class="fas fa-calendar-alt ml-3 text-lg"></i> الأنشطة
-            </a>
-            <a href="{{ route('admin.students') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
-                <i class="fas fa-users ml-3 text-lg"></i> الطلاب
-            </a>
-            <a href="{{ route('profile.edit') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
-                <i class="fas fa-cog ml-3 text-lg"></i> الإعدادات
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-gray-100">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="w-full flex items-center justify-center p-2 text-red-500 hover:bg-red-50 rounded-lg transition font-bold">
-                    <i class="fas fa-sign-out-alt ml-2"></i> تسجيل الخروج
-                </button>
-            </form>
-        </div>
-    </aside>
-
-    <div class="flex-1 flex flex-col overflow-hidden relative">
-        
-        <header class="bg-white shadow-sm p-4 flex justify-between items-center">
-            <h1 class="font-bold text-xl text-indigo-700 md:hidden">المدير</h1>
-            <div class="flex items-center gap-4 mr-auto">
-                <span class="text-gray-500 bg-gray-50 px-4 py-2 rounded-full text-sm shadow-sm border border-gray-100">
-                    <i class="fas fa-calendar-alt ml-1 text-indigo-500"></i> {{ now()->format('Y/m/d') }}
-                </span>
-            </div>
-        </header>
-
-        <main class="flex-1 overflow-y-auto p-6 md:p-10">
-            <div class="max-w-7xl mx-auto">
-                
-                <div class="flex justify-between items-center mb-8">
-                    <h1 class="text-3xl font-extrabold text-gray-800">مرحباً بك في لوحة التحكم 👋</h1>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    
-                    <a href="{{ route('activities.index') }}" class="block bg-white p-6 rounded-2xl shadow-md border-b-4 border-indigo-500 hover:shadow-xl transition transform hover:-translate-y-1 cursor-pointer">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <p class="text-gray-500 font-medium mb-1">مجموع الأنشطة</p>
-                                <h3 class="text-4xl font-extrabold text-gray-800">{{ $totalActivities }}</h3>
-                            </div>
-                            <div class="bg-indigo-100 p-4 rounded-full text-indigo-600 text-2xl shadow-inner">
-                                <i class="fas fa-calendar-check"></i>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="{{ route('admin.students') }}" class="block bg-white p-6 rounded-2xl shadow-md border-b-4 border-green-500 hover:shadow-xl transition transform hover:-translate-y-1 cursor-pointer">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <p class="text-gray-500 font-medium mb-1">عدد الطلاب</p>
-                                <h3 class="text-4xl font-extrabold text-gray-800">{{ $totalStudents }}</h3>
-                            </div>
-                            <div class="bg-green-100 p-4 rounded-full text-green-600 text-2xl shadow-inner">
-                                <i class="fas fa-user-graduate"></i>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="{{ route('admin.all-registrations') }}" class="block bg-white p-6 rounded-2xl shadow-md border-b-4 border-yellow-500 hover:shadow-xl transition transform hover:-translate-y-1 cursor-pointer">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <p class="text-gray-500 font-medium mb-1">إجمالي التسجيلات</p>
-                                <h3 class="text-4xl font-extrabold text-gray-800">{{ $totalRegistrations }}</h3>
-                            </div>
-                            <div class="bg-yellow-100 p-4 rounded-full text-yellow-600 text-2xl shadow-inner">
-                                <i class="fas fa-clipboard-list"></i>
-                            </div>
-                        </div>
-                    </a>
-
-                </div>
-
-                <div class="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
-                    <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4">⚡ إجراءات سريعة</h3>
-                    <div class="flex flex-wrap gap-4">
-                        <a href="{{ route('activities.index') }}" class="flex items-center bg-indigo-600 text-white px-8 py-4 rounded-xl hover:bg-indigo-700 transition shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-1">
-                            <i class="fas fa-eye ml-3 text-xl"></i> 
-                            <span class="font-bold">تصفح الأنشطة</span>
-                        </a>
-                        
-                        <a href="{{ route('activities.create') }}" class="flex items-center bg-white border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-xl hover:bg-indigo-50 transition transform hover:-translate-y-1">
-                            <i class="fas fa-plus ml-3 text-xl"></i> 
-                            <span class="font-bold">إضافة نشاط جديد</span>
-                        </a>
-                    </div>
-                </div>
-
-            </div>
-        </main>
+@section('content')
+<div class="admin-dashboard">
+    <div class="dashboard-header">
+        <h1>مرحباً بك، المشرف العام</h1>
+        <p>لوحة تحكم إدارة الأنشطة الطلابية</p>
     </div>
 
-</body>
-</html>
+    <!-- بطاقات الإحصائيات -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="stat-info">
+                <h3>مجموع الأنشطة</h3>
+                <p class="stat-number">{{ $totalActivities ?? 0 }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+                <h3>عدد الطلاب</h3>
+                <p class="stat-number">{{ $totalStudents ?? 0 }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-info">
+                <h3>إجمالي التسجيلات</h3>
+                <p class="stat-number">{{ $totalRegistrations ?? 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- الإجراءات السريعة -->
+    <div class="quick-actions">
+        <h2>إجراءات سريعة</h2>
+        <div class="actions-grid">
+            <a href="{{ route('activities.create') }}" class="action-btn">
+                <i class="fas fa-plus-circle"></i>
+                <span>إضافة نشاط جديد</span>
+            </a>
+            <a href="{{ route('admin.students') }}" class="action-btn">
+                <i class="fas fa-user-plus"></i>
+                <span>إضافة طالب جديد</span>
+            </a>
+            <a href="{{ route('admin.all-registrations') }}" class="action-btn">
+                <i class="fas fa-list-alt"></i>
+                <span>إدارة فعاليات القائمة</span>
+            </a>
+            <a href="#" class="action-btn">
+                <i class="fas fa-file-export"></i>
+                <span>إصدار تقرير فعلي</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-dashboard {
+        padding: 20px;
+    }
+
+    .dashboard-header {
+        margin-bottom: 30px;
+    }
+
+    .dashboard-header h1 {
+        color: #1e3a8a;
+        font-size: 28px;
+        margin-bottom: 5px;
+    }
+
+    .dashboard-header p {
+        color: #6b7280;
+        font-size: 16px;
+    }
+
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 15px;
+        font-size: 24px;
+        color: white;
+    }
+
+    .stat-card:nth-child(1) .stat-icon {
+        background: linear-gradient(135deg, #3b82f6, #1e40af);
+    }
+
+    .stat-card:nth-child(2) .stat-icon {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .stat-card:nth-child(3) .stat-icon {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .stat-info h3 {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 5px;
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: bold;
+        color: #1e3a8a;
+        margin: 0;
+    }
+
+    .quick-actions {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .quick-actions h2 {
+        color: #1e3a8a;
+        margin-bottom: 20px;
+        font-size: 20px;
+    }
+
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background: #f3f4f6;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #1e3a8a;
+        transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+        background: #1e3a8a;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .action-btn i {
+        font-size: 20px;
+        margin-left: 10px;
+    }
+</style>
+@endsection

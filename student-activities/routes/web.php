@@ -47,6 +47,15 @@ Route::get('/activities/{id}', [ActivityController::class, 'show'])->name('activ
 
 // مسارات تتطلب تسجيل دخول
 Route::middleware('auth')->group(function () {
+    // مسارات إدارة الكادر
+Route::get('/admin/staff', function () {
+    return view('admin.staff');
+})->name('admin.staff');
+
+// مسارات الإعلانات والتبليغات
+Route::get('/admin/announcements', function () {
+    return view('admin.announcements');
+})->name('admin.announcements');
 
     // الأنشطة
     Route::post('/activities', [ActivityController::class, 'store'])->name('activities.store');
