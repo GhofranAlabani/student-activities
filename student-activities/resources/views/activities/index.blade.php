@@ -199,7 +199,7 @@
                                 @endif
 
                                 @auth
-                                   @if($activity->users->contains(auth()->id()))
+                                   @if(in_array($activity->id, $registeredIds ?? []))
     <div class="w-full bg-green-100 text-green-700 text-center py-2.5 rounded-lg font-semibold text-sm border border-green-300">
         <i class="fas fa-check-circle ml-1"></i> تم التسجيل
     </div>

@@ -15,33 +15,33 @@ class ActivityController extends Controller
     /**
      * عرض جميع الأنشطة (للطلاب والزوار)
      */
-    public function index(Request $request)
-    {
-        $query = Activity::with(['activityType', 'users', 'ratings']);
-        
-        // البحث
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('title', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
-            });
-        }
-        
-        // الفلترة حسب النوع
-        if ($request->filled('type')) {
-            $query->where('type_id', $request->type);
-        }
-        
-        $activities = $query->latest()->paginate(9);
-        
-        // جلب معرفات المفضلة للطالب الحالي
-        $favoriteIds = auth()->check() 
-            ? auth()->user()->favorites()->pluck('activity_id')->toArray() 
-            : [];
-        
-        return view('activities.index', compact('activities', 'favoriteIds'));
+  public function index(Request $request)
+{
+    $query = Activity::with(['activityType', 'users', 'ratings']);
+    
+    if ($request->filled('search')) {
+        $query->where(function($q) use ($request) {
+            $q->where('title', 'like', '%' . $request->search . '%')
+              ->orWhere('description', 'like', '%' . $request->search . '%');
+        });
     }
+    
+    if ($request->filled('type')) {
+        $query->where('type_id', $request->type);
+    }
+    
+    $activities = $query->latest()->paginate(9);
+    
+    $favoriteIds = auth()->check() 
+        ? auth()->user()->favorites()->pluck('activity_id')->toArray() 
+        : [];
 
+    $registeredIds = auth()->check() 
+        ? DB::table('registrations')->where('student_id', auth()->id())->pluck('activity_id')->toArray()
+        : [];
+    
+    return view('activities.index', compact('activities', 'favoriteIds', 'registeredIds'));
+}
     /**
      * عرض نموذج إضافة نشاط (للمشرفين/المدير)
      */
@@ -240,7 +240,7 @@ class ActivityController extends Controller
         $activity = Activity::findOrFail($id);
 
         // منع تقييم نشاط غير مفعل
-        if ($activity->status !== 'active') {
+        if ($activity->status !== '?????') {
             return back()->with('error', 'لا يمكن تقييم هذا النشاط حالياً');
         }
 
