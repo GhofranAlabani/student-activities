@@ -56,19 +56,19 @@ class AdminDashboardController extends Controller
      * عرض جميع التسجيلات
      */
     public function allRegistrations()
-    {
-        $registrations = DB::table('registrations')
-            ->join('users', 'registrations.user_id', '=', 'users.id')
-            ->join('activities', 'registrations.activity_id', '=', 'activities.id')
-            ->select(
-                'registrations.*',
-                'users.name as student_name',
-                'users.email as student_email',
-                'activities.title as activity_title'
-            )
-            ->latest('registrations.created_at')
-            ->paginate(15);
+{
+    $registrations = DB::table('registrations')
+        ->join('users', 'registrations.student_id', '=', 'users.id')
+        ->join('activities', 'registrations.activity_id', '=', 'activities.id')
+        ->select(
+            'registrations.*',
+            'users.name as student_name',
+            'users.email as student_email',
+            'activities.title as activity_title'
+        )
+        ->latest('registrations.created_at')
+        ->paginate(15);
 
-        return view('admin.all-registrations', compact('registrations'));
-    }
+    return view('admin.all-registrations', compact('registrations'));
+}
 }

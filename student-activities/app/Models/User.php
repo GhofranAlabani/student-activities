@@ -8,7 +8,12 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+
     use HasFactory, Notifiable;
+    public function staff()
+{
+    return $this->hasOne(Staff::class);
+}
 
     protected $fillable = [
         'name',
