@@ -24,39 +24,37 @@ class StaffController extends Controller
     }
 
     // حفظ مشرف جديد
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8',
-            'position' => 'nullable|string|max:255',
-            'department' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'hire_date' => 'nullable|date',
-        ]);
+   public function store(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|min:8',
+        'position' => 'nullable|string|max:255',
+        'department' => 'nullable|string|max:255',
+        'phone' => 'nullable|string|max:20',
+        'hire_date' => 'nullable|date',
+    ]);
 
-        // إنشاء المستخدم
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'staff',
-            'email_verified_at' => now(),
-        ]);
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'role' => 'staff',
+        'email_verified_at' => now(),
+    ]);
 
-        // إنشاء سجل المشرف
-        Staff::create([
-            'user_id' => $user->id,
-            'position' => $request->position,
-            'department' => $request->department,
-            'phone' => $request->phone,
-            'hire_date' => $request->hire_date,
-            'status' => 'active',
-        ]);
+    Staff::create([
+        'user_id' => $user->id,
+        'position' => $request->position,
+        'department' => $request->department,
+        'phone' => $request->phone,
+        'hire_date' => $request->hire_date,
+        'status' => 'active',
+    ]);
 
-        return redirect()->route('admin.staff')->with('success', 'تم إضافة المشرف بنجاح');
-    }
+    return redirect()->route('admin.staff')->with('success', 'تم إضافة المشرف بنجاح');
+}
 
     // عرض تفاصيل مشرف
     public function show($id)
@@ -105,11 +103,17 @@ class StaffController extends Controller
     }
 
     // حذف مشرف
-    public function destroy($id)
-    {
-        $staff = Staff::findOrFail($id);
-        $staff->delete(); // سيحذف المستخدم تلقائياً بسبب cascade
+   public function destroy($id)
+     {
+    $staff = Staff::findOrFail($id);
+    $userId = $staff->user_id;
+    
+    // حذف سجل المشرف
+    $staff->delete();
+    
+    // حذف المستخدم من جدول users
+    User::where('id', $userId)->delete();
 
-        return redirect()->route('admin.staff')->with('success', 'تم حذف المشرف بنجاح');
+    return redirect()->route('admin.staff')->with('success', 'تم حذف المشرف بنجاح');
     }
 }

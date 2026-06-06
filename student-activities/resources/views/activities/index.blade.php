@@ -43,12 +43,13 @@
         <div class="container mx-auto px-4">
             <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
                 <div class="flex items-center gap-4">
-                   <!-- زر الرجوع -->
-                <a href="{{ route('admin.dashboard') }}" 
-                     class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition">
-                   <i class="fas fa-arrow-right"></i>
-                            رجوع
-                </a>
+                    <!--- زر الرجوع-->
+                    <a href="{{ route('student.dashboard') }}" 
+                       class="inline-flex items-center gap-2 bg-white text-indigo-600 px-6 py-3 rounded-xl hover:bg-indigo-50 transition font-bold shadow-lg transform hover:-translate-y-0.5">
+                        <i class="fas fa-arrow-right text-lg"></i>
+                        <span> زر الرجوع </span>
+                    </a>
+                    
                     <h2 class="text-3xl md:text-4xl font-bold text-white">
                         اكتشف الأنشطة المتاحة
                     </h2>
@@ -126,7 +127,7 @@
                             @endif
                             
                             <!-- ✅ التصحيح: استبدل ????? بـ active -->
-                            @if($activity->status === '?????')
+                            @if($activity->status === 'active')
                                 <span class="absolute top-3 right-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
                                     متاح للتسجيل
                                 </span>
@@ -200,17 +201,17 @@
 
                                 @auth
                                    @if(in_array($activity->id, $registeredIds ?? []))
-    <div class="w-full bg-green-100 text-green-700 text-center py-2.5 rounded-lg font-semibold text-sm border border-green-300">
-        <i class="fas fa-check-circle ml-1"></i> تم التسجيل
-    </div>
-@else
-    <form action="{{ route('activities.register', $activity->id) }}" method="POST">
-        @csrf
-        <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-lg hover:bg-emerald-700 transition font-semibold shadow-sm text-sm">
-            <i class="fas fa-check ml-1"></i> سجل الآن
-        </button>
-    </form>
-@endif
+                                    <div class="w-full bg-green-100 text-green-700 text-center py-2.5 rounded-lg font-semibold text-sm border border-green-300">
+                                        <i class="fas fa-check-circle ml-1"></i> تم التسجيل
+                                    </div>
+                                @else
+                                    <form action="{{ route('activities.register', $activity->id) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-lg hover:bg-emerald-700 transition font-semibold shadow-sm text-sm">
+                                            <i class="fas fa-check ml-1"></i> سجل الآن
+                                        </button>
+                                    </form>
+                                @endif
                                 @endauth
                             </div>
                         </div>

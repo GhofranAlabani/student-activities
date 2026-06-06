@@ -73,8 +73,9 @@
         <!-- Header -->
         <header class="bg-white shadow-sm p-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <a href="{{ route('activities.index') }}" class="text-gray-400 hover:text-indigo-600 transition">
-                    <i class="fas fa-arrow-right text-lg"></i>
+                <!-- ✅ تم تعديل زر الرجوع للعودة للوحة تحكم الطالب -->
+                <a href="{{ route('student.dashboard') }}" class="text-gray-400 hover:text-indigo-600 transition">
+                    <i class="fas fa-home text-lg"></i>
                 </a>
                 <h1 class="font-bold text-xl text-indigo-700">إضافة نشاط جديد</h1>
             </div>
@@ -141,15 +142,17 @@
                                 @enderror
                             </div>
                             <!-- Status -->
-                            <select name="status" class="input-field {{ $errors->has('status') ? 'is-invalid' : '' }}">
-   <option value="مفتوح">مفتوح</option>
-   <option value="مغلق">مغلق</option>
-   <option value="منتهي">منتهي</option>
-   <option value="ملغي">ملغي</option>
-</select>
-@error('status')
-    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-@enderror
+                            <div>
+                                <label class="label">حالة النشاط <span class="required">*</span></label>
+                                <select name="status" class="input-field {{ $errors->has('status') ? 'is-invalid' : '' }}">
+                                    <option value="مفتوح">مفتوح</option>
+                                    <option value="مغلق">مغلق</option>
+                                    <option value="منتهي">منتهي</option>
+                                    <option value="ملغي">ملغي</option>
+                                </select>
+                                @error('status')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Description -->
@@ -363,7 +366,8 @@
 
                     <!-- Submit -->
                     <div class="flex items-center justify-end gap-4">
-                        <a href="{{ route('activities.index') }}" class="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition">
+                        <!-- ✅ تم تعديل زر الإلغاء أيضاً للعودة للوحة تحكم الطالب -->
+                        <a href="{{ route('student.dashboard') }}" class="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition">
                             <i class="fas fa-times ml-2"></i> إلغاء
                         </a>
                         <button type="submit" class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-0.5">

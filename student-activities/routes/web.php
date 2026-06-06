@@ -7,6 +7,7 @@ use App\Http\Controllers\ActivityReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\AnnouncementController;
 
 // الصفحة الرئيسية
 Route::get('/', function () {
@@ -24,12 +25,19 @@ Route::get('/dashboard', function () {
     return view('admin.dashboard', compact('totalActivities', 'totalStudents', 'totalRegistrations'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// لوحة تحكم الطالب
+// لوحة تحكم الطالب - مع الإعلانات
 Route::get('/student/dashboard', function () {
+    // جلب آخر 3 إعلانات نشطة
+    $announcements = \App\Models\Announcement::active()
+        ->latest()
+        ->take(3)
+        ->get();
+    
     return view('student.dashboard', [
         'totalActivities' => \App\Models\Activity::count(),
         'totalStudents' => \App\Models\User::count(),
-        'totalRegistrations' => 0
+        'totalRegistrations' => 0,
+        'announcements' => $announcements,
     ]);
 })->middleware(['auth'])->name('student.dashboard');
 
@@ -56,10 +64,13 @@ Route::middleware('auth')->group(function () {
     Route::put('/admin/staff/{id}', [StaffController::class, 'update'])->name('admin.staff.update');
     Route::delete('/admin/staff/{id}', [StaffController::class, 'destroy'])->name('admin.staff.destroy');
 
-    // ✅ مسارات الإعلانات والتبليغات
-    Route::get('/admin/announcements', function () {
-        return view('admin.announcements');
-    })->name('admin.announcements');
+    // ✅ مسارات الإعلانات والتبليغات (كاملة)
+    Route::get('/admin/announcements', [AnnouncementController::class, 'index'])->name('admin.announcements');
+    Route::get('/admin/announcements/create', [AnnouncementController::class, 'create'])->name('admin.announcements.create');
+    Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('admin.announcements.store');
+    Route::get('/admin/announcements/{id}/edit', [AnnouncementController::class, 'edit'])->name('admin.announcements.edit');
+    Route::put('/admin/announcements/{id}', [AnnouncementController::class, 'update'])->name('admin.announcements.update');
+    Route::delete('/admin/announcements/{id}', [AnnouncementController::class, 'destroy'])->name('admin.announcements.destroy');
 
     // الأنشطة
     Route::post('/activities', [ActivityController::class, 'store'])->name('activities.store');

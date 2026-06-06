@@ -11,6 +11,20 @@
         body { font-family: 'Cairo', sans-serif; }
         .sidebar-link:hover { background-color: #e0e7ff; color: #4338ca; }
         .sidebar-link.active { background-color: #e0e7ff; color: #4338ca; font-weight: bold; }
+        
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden bg-gray-50">
@@ -35,11 +49,11 @@
                 <i class="fas fa-heart ml-3 text-lg"></i> المفضلة
             </a>
             <a href="{{ route('student.profile') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
-    <i class="fas fa-user ml-3 text-lg"></i> ملفي الشخصي
-</a>
-<a href="{{ route('profile.edit') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
-    <i class="fas fa-cog ml-3 text-lg"></i> الإعدادات
-</a>
+                <i class="fas fa-user ml-3 text-lg"></i> ملفي الشخصي
+            </a>
+            <a href="{{ route('profile.edit') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
+                <i class="fas fa-cog ml-3 text-lg"></i> الإعدادات
+            </a>
         </nav>
 
         <div class="p-4 border-t border-gray-100">
@@ -80,54 +94,131 @@
                     <p class="text-gray-600 mt-2">تصفح أنشطتك ومتابعة تقدمك</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-gradient-to-r from-pink-500 to-rose-600 p-6 rounded-2xl shadow-lg text-white">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-pink-100 text-sm mb-1">المفضلة</p>
-                                <h3 class="text-4xl font-bold">{{ auth()->user()->favorites()->count() }}</h3>
-                            </div>
-                            <div class="bg-white/20 p-4 rounded-full">
-                                <i class="fas fa-heart text-3xl"></i>
+                <!-- ✅ قسم الإعلانات المعدّل -->
+@if(isset($announcements) && $announcements->count() > 0)
+<div class="mb-8">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <i class="fas fa-bullhorn text-purple-600 text-2xl"></i>
+            آخر الإعلانات
+        </h2>
+        <span class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+            {{ $announcements->count() }} جديد
+        </span>
+    </div>
+
+    <div class="space-y-4">
+        @foreach($announcements as $announcement)
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-t-4 
+            {{ $announcement->type === 'activity' ? 'border-green-500' : ($announcement->type === 'warning' ? 'border-red-500' : 'border-gray-300') }}">
+            
+            <div class="p-6">
+                <!-- رأس الإعلان -->
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-4 flex-1">
+                        <!-- العنوان -->
+                        <div class="flex-1">
+                            <h3 class="font-bold text-gray-800 text-xl mb-1">
+                                {{ $announcement->title }}
+                            </h3>
+                            <div class="flex items-center gap-2 text-sm text-gray-500">
+                                <i class="far fa-clock"></i>
+                                <span>{{ $announcement->created_at ? $announcement->created_at->diffForHumans() : 'منذ قليل' }}</span>
                             </div>
                         </div>
                     </div>
-
-                    <div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-6 rounded-2xl shadow-lg text-white">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-yellow-100 text-sm mb-1">مجموع النقاط</p>
-                                <h3 class="text-4xl font-bold">{{ auth()->user()->points ?? 0 }}</h3>
-                            </div>
-                            <div class="bg-white/20 p-4 rounded-full">
-                                <i class="fas fa-star text-3xl"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-2xl shadow-lg text-white">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-indigo-100 text-sm mb-1">الأنشطة المشتركة</p>
-                                <h3 class="text-4xl font-bold">{{ auth()->user()->activities()->count() }}</h3>
-                            </div>
-                            <div class="bg-white/20 p-4 rounded-full">
-                                <i class="fas fa-calendar-check text-3xl"></i>
-                            </div>
-                        </div>
+                    
+                    <!-- الأيقونة الدائرية -->
+                    <div class="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 mr-4
+                        {{ $announcement->type === 'activity' ? 'bg-green-500 text-white' : ($announcement->type === 'warning' ? 'bg-red-500 text-white' : 'bg-gray-400 text-white') }}">
+                        @if($announcement->type === 'activity')
+                            <i class="fas fa-calendar-alt text-2xl"></i>
+                        @elseif($announcement->type === 'warning')
+                            <i class="fas fa-exclamation-triangle text-2xl"></i>
+                        @else
+                            <i class="fas fa-info-circle text-2xl"></i>
+                        @endif
                     </div>
                 </div>
 
-                <div class="flex flex-wrap gap-4">
-                    <a href="{{ route('activities.index') }}" class="inline-block bg-indigo-600 text-white px-8 py-4 rounded-xl hover:bg-indigo-700 transition font-bold shadow-lg">
-                        <i class="fas fa-search ml-2"></i>
-                        تصفح الأنشطة
-                    </a>
-                    <a href="{{ route('student.my-activities') }}" class="inline-block bg-white border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-xl hover:bg-indigo-50 transition font-bold">
-                        <i class="fas fa-calendar-alt ml-2"></i>
-                        أنشطتي المسجلة
-                    </a>
+                <!-- محتوى الإعلان -->
+                <p class="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
+                    {{ Str::limit($announcement->content, 150) }}
+                </p>
+
+                <!-- زر عرض النشاط -->
+                @if($announcement->activity)
+                          <a href="{{ route('activities.show', $announcement->activity->id) }}" 
+                   class="inline-flex items-center gap-2 text-sm font-bold 
+                   {{ $announcement->type === 'activity' ? 'text-green-600 hover:text-green-700' : ($announcement->type === 'warning' ? 'text-red-600 hover:text-red-700' : 'text-gray-600 hover:text-gray-700') }} transition-colors">
+                    عرض النشاط
+                    <i class="fas fa-arrow-left text-xs"></i>
+                           </a>
+                  @else
+                      <span class="inline-flex items-center gap-2 text-sm font-bold text-gray-500">
+                    <i class="fas fa-info-circle"></i>
+                              إعلان عام
+                      </span>
+                 @endif
                 </div>
+               </div>
+                 @endforeach
+                 </div>
+                </div>
+                   @endif
+
+                <!-- البطاقات الإحصائية -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-gradient-to-r from-pink-500 to-rose-600 p-6 rounded-2xl shadow-lg text-white transform hover:scale-105 transition-transform">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-pink-100 text-sm mb-1">المفضلة</p>
+                <h3 class="text-4xl font-bold">{{ auth()->user()->favorites()->count() }}</h3>
+            </div>
+            <div class="bg-white/20 p-4 rounded-full">
+                <i class="fas fa-heart text-3xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-6 rounded-2xl shadow-lg text-white transform hover:scale-105 transition-transform">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-yellow-100 text-sm mb-1">مجموع النقاط</p>
+                <h3 class="text-4xl font-bold">{{ auth()->user()->points ?? 0 }}</h3>
+            </div>
+            <div class="bg-white/20 p-4 rounded-full">
+                <i class="fas fa-star text-3xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-2xl shadow-lg text-white transform hover:scale-105 transition-transform">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-indigo-100 text-sm mb-1">الأنشطة المشتركة</p>
+                <h3 class="text-4xl font-bold">{{ auth()->user()->activities()->count() }}</h3>
+            </div>
+            <div class="bg-white/20 p-4 rounded-full">
+                <i class="fas fa-calendar-check text-3xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- الأزرار في الوسط -->
+        <div class="flex justify-center items-center gap-6 mb-8">
+          <a href="{{ route('student.my-activities') }}" 
+           class="inline-flex items-center gap-3 bg-white border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-xl hover:bg-indigo-50 transition-all font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+        <i class="fas fa-calendar-check text-xl"></i>
+        <span>أنشطتي المسجلة</span>
+     </a>
+    <a href="{{ route('activities.index') }}" 
+       class="inline-flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+        <i class="fas fa-search text-xl"></i>
+        <span>تصفح الأنشطة</span>
+    </a>
+        </div>
 
             </div>
         </main>
