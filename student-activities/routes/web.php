@@ -29,17 +29,10 @@ Route::get('/dashboard', function () {
 
 // لوحة تحكم الطالب - مع الإعلانات
 Route::get('/student/dashboard', function () {
-    // جلب آخر 3 إعلانات نشطة
-    $announcements = \App\Models\Announcement::active()
-        ->latest()
-        ->take(3)
-        ->get();
-    
     return view('student.dashboard', [
         'totalActivities' => \App\Models\Activity::count(),
         'totalStudents' => \App\Models\User::count(),
         'totalRegistrations' => 0,
-        'announcements' => $announcements,
     ]);
 })->middleware(['auth'])->name('student.dashboard');
 

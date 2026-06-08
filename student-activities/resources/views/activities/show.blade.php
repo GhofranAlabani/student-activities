@@ -151,14 +151,19 @@
                             </div>
                         @endif
                         @if($activity->location)
-                            <div class="text-center">
-                                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                                    <i class="fas fa-map-marker-alt text-red-500"></i>
-                                </div>
-                                <p class="text-xs text-gray-500">المكان</p>
-                                <p class="font-bold text-gray-800 text-sm truncate">{{ $activity->location }}</p>
-                            </div>
-                        @endif
+    <div class="text-center">
+        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+            <i class="fas fa-map-marker-alt text-red-500"></i>
+        </div>
+        <p class="text-xs text-gray-500">المكان</p>
+        <p class="font-bold text-gray-800 text-sm truncate">{{ $activity->location }}</p>
+        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($activity->location) }}" 
+            target="_blank" 
+            class="text-xs text-indigo-600 hover:underline mt-1 block">
+            <i class="fas fa-map ml-1"></i> عرض على الخريطة
+        </a>
+    </div>
+@endif
                         @if($activity->max_participants)
                             <div class="text-center">
                                 <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
