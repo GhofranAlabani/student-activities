@@ -38,6 +38,17 @@
                 <p class="stat-number">{{ $totalRegistrations ?? 0 }}</p>
             </div>
         </div>
+
+        <!-- 📋 بطاقة الاستبيانات الجديدة -->
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-poll"></i>
+            </div>
+            <div class="stat-info">
+                <h3>الاستبيانات النشطة</h3>
+                <p class="stat-number">{{ \App\Models\Survey::where('is_active', true)->count() }}</p>
+            </div>
+        </div>
     </div>
 
     <!-- الإجراءات السريعة -->
@@ -59,6 +70,17 @@
             <a href="#" class="action-btn">
                 <i class="fas fa-file-export"></i>
                 <span>إصدار تقرير فعلي</span>
+            </a>
+            
+            <!-- 📋 زر إدارة الاستبيانات الجديد -->
+            <a href="{{ route('admin.surveys.index') }}" class="action-btn action-btn-survey">
+                <i class="fas fa-poll"></i>
+                <span>إدارة الاستبيانات</span>
+            </a>
+            
+            <a href="{{ route('admin.announcements') }}" class="action-btn">
+                <i class="fas fa-bullhorn"></i>
+                <span>الإعلانات والتبليغات</span>
             </a>
         </div>
     </div>
@@ -124,6 +146,11 @@
         background: linear-gradient(135deg, #f59e0b, #d97706);
     }
 
+    /* 📋 لون أيقونة الاستبيانات - بنفسجي */
+    .stat-card:nth-child(4) .stat-icon {
+        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    }
+
     .stat-info h3 {
         font-size: 14px;
         color: #6b7280;
@@ -171,6 +198,12 @@
         background: #1e3a8a;
         color: white;
         transform: translateY(-2px);
+    }
+
+    /* 📋 لون خاص لزر الاستبيانات */
+    .action-btn-survey:hover {
+        background: #7c3aed;
+        color: white;
     }
 
     .action-btn i {

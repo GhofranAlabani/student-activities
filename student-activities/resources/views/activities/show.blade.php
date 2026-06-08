@@ -74,6 +74,15 @@
                         <i class="fas fa-trash ml-1"></i> حذف
                     </button>
                 </form>
+                @if($activity->survey)
+                    <a href="{{ route('admin.surveys.show', $activity->survey->id) }}" class="bg-purple-500 text-white px-4 py-2 rounded-xl hover:bg-purple-600 transition font-semibold">
+                        <i class="fas fa-poll ml-1"></i> الاستبيان
+                    </a>
+                @else
+                    <a href="{{ route('admin.surveys.create', $activity->id) }}" class="bg-purple-500 text-white px-4 py-2 rounded-xl hover:bg-purple-600 transition font-semibold">
+                        <i class="fas fa-plus ml-1"></i> إنشاء استبيان
+                    </a>
+                @endif
             </div>
         @endif
         
@@ -364,6 +373,47 @@
                     @endif
                 </div>
                 <!-- ⭐⭐⭐ نهاية قسم التقييمات ⭐⭐⭐ -->
+
+                <!-- 📋 قسم الاستبيان الجديد 📋 -->
+                @auth
+                    @if($activity->survey && $activity->survey->is_active)
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <i class="fas fa-poll text-purple-600"></i>
+                                استبيان النشاط
+                            </h3>
+                            
+                            @php
+                                $hasResponded = $activity->survey->responses()
+                                    ->where('user_id', auth()->id())
+                                    ->exists();
+                            @endphp
+                            
+                            @if($hasResponded)
+                                <div class="bg-green-50 border border-green-200 text-green-700 px-5 py-4 rounded-xl flex items-center gap-3">
+                                    <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                                    <div>
+                                        <p class="font-bold">شكراً لمشاركتك!</p>
+                                        <p class="text-sm">لقد قمت بملء الاستبيان بنجاح</p>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="bg-purple-50 border border-purple-200 p-5 rounded-xl">
+                                    <p class="text-gray-700 mb-4">
+                                        <i class="fas fa-info-circle text-purple-600 ml-2"></i>
+                                        نرجو منك ملء هذا الاستبيان لمساعدتنا في تحسين الأنشطة القادمة
+                                    </p>
+                                    <a href="{{ route('student.surveys.show', $activity->id) }}" 
+                                       class="block w-full bg-purple-600 text-white text-center py-3 rounded-xl hover:bg-purple-700 transition font-bold">
+                                        <i class="fas fa-poll ml-2"></i>
+                                        املأ الاستبيان الآن
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                @endauth
+                <!-- 📋 نهاية قسم الاستبيان 📋 -->
 
                 <!-- Registered Users -->
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

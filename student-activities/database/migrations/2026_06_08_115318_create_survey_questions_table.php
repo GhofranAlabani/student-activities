@@ -6,17 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+    
    public function up()
 {
-    Schema::create('survey_answers', function (Blueprint $table) {
+    Schema::create('survey_questions', function (Blueprint $table) {
         $table->id();
         $table->foreignId('survey_id')->constrained()->onDelete('cascade');
-        $table->foreignId('user_id')->constrained()->onDelete('cascade');
-        $table->foreignId('activity_id')->constrained()->onDelete('cascade');
-        $table->json('answers'); // تخزين الإجابات كـ JSON
+        $table->string('question');
+        $table->enum('type', ['text', 'radio', 'checkbox', 'rating']);
+        $table->text('options')->nullable(); // للأسئلة متعددة الخيارات
+        $table->boolean('required')->default(true);
+        $table->integer('order')->default(0);
         $table->timestamps();
     });
 }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('survey_answers');
+        Schema::dropIfExists('survey_questions');
     }
 };

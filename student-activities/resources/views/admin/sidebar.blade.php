@@ -29,15 +29,23 @@
                 </a>
             </li>
             
-            <!-- إدارة الكادر (جديد) -->
+            <!-- 📋 إدارة الاستبيانات (جديد) -->
             <li>
-                <a href="{{ route('admin.staff') ?? '#' }}" class="{{ request()->routeIs('admin.staff') ? 'active' : '' }}">
+                <a href="{{ route('admin.surveys.index') }}" class="{{ request()->routeIs('admin.surveys.*') ? 'active' : '' }}">
+                    <i class="fas fa-poll"></i>
+                    <span>إدارة الاستبيانات</span>
+                </a>
+            </li>
+            
+            <!-- إدارة الكادر -->
+            <li>
+                <a href="{{ route('admin.staff') }}" class="{{ request()->routeIs('admin.staff') ? 'active' : '' }}">
                     <i class="fas fa-chalkboard-teacher"></i>
                     <span>إدارة الكادر</span>
                 </a>
             </li>
             
-            <!-- جميع التسجيلات (مرة واحدة فقط) -->
+            <!-- جميع التسجيلات -->
             <li>
                 <a href="{{ route('admin.all-registrations') }}" class="{{ request()->routeIs('admin.all-registrations') ? 'active' : '' }}">
                     <i class="fas fa-list-alt"></i>
@@ -45,9 +53,9 @@
                 </a>
             </li>
             
-            <!-- الإعلانات والتبليغات (جديد) -->
+            <!-- الإعلانات والتبليغات -->
             <li>
-                <a href="{{ route('admin.announcements') ?? '#' }}" class="{{ request()->routeIs('admin.announcements') ? 'active' : '' }}">
+                <a href="{{ route('admin.announcements') }}" class="{{ request()->routeIs('admin.announcements') ? 'active' : '' }}">
                     <i class="fas fa-bullhorn"></i>
                     <span>الإعلانات والتبليغات</span>
                 </a>
