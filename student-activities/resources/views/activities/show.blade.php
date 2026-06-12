@@ -14,7 +14,6 @@
         .star-rating input:checked ~ label,
         .star-rating label:hover,
         .star-rating label:hover ~ label { color: #fbbf24 !important; }
-        .star-rating input:checked + label ~ label { color: #d1d5db !important; }
     </style>
 </head>
 <body class="pb-12">
@@ -30,7 +29,7 @@
                 <div class="flex gap-4 items-center">
                     <a href="{{ route('activities.index') }}" class="text-gray-700 hover:text-indigo-600 font-semibold">الأنشطة</a>
                     @auth
-                        <a href="/dashboard" class="text-gray-700 hover:text-indigo-600 font-semibold">لوحة التحكم</a>
+                        <a href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('student.dashboard') }}" class="text-gray-700 hover:text-indigo-600 font-semibold">لوحة التحكم</a>
                         <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold">
                             {{ substr(auth()->user()->name, 0, 1) }}
                         </div>
@@ -73,16 +72,12 @@
                         <i class="fas fa-trash ml-1"></i> حذف
                     </button>
                 </form>
-                <!-- زر إدارة الأسئلة العام -->
-                <a href="{{ route('admin.survey-questions.index') }}" class="bg-purple-500 text-white px-4 py-2 rounded-xl hover:bg-purple-600 transition font-semibold">
-                    <i class="fas fa-poll ml-1"></i> إدارة الاستبيان
-                </a>
             </div>
         @endif
         
         <!-- Title Overlay -->
         <div class="absolute bottom-6 right-6 left-6">
-            <div class="flex items-center gap-3 mb-2">
+            <div class="flex items-center gap-3 mb-2 flex-wrap">
                 <span class="bg-white/20 backdrop-blur-sm text-white text-sm font-bold px-3 py-1 rounded-full border border-white/30">
                     {{ $activity->activityType->name ?? 'عام' }}
                 </span>
@@ -115,13 +110,6 @@
             <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl mb-6 flex items-center gap-3">
                 <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
                 {{ session('error') }}
-            </div>
-        @endif
-
-        @if(session('info'))
-            <div class="bg-blue-50 border border-blue-200 text-blue-700 px-5 py-4 rounded-xl mb-6 flex items-center gap-3">
-                <i class="fas fa-info-circle text-blue-500 text-lg"></i>
-                {{ session('info') }}
             </div>
         @endif
 
@@ -177,13 +165,45 @@
                     </div>
                 </div>
 
+                <!-- 🗺️ خريطة Google Maps المدمجة -->
+                @if($activity->location)
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-4 flex justify-between items-center border-b border-gray-100 bg-gradient-to-l from-red-50 to-white">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-red-500 text-xl"></i>
+                                موقع النشاط على الخريطة
+                            </h3>
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($activity->location) }}" 
+                               target="_blank" 
+                               class="text-indigo-600 text-sm font-semibold hover:underline flex items-center gap-1">
+                                <i class="fas fa-external-link-alt"></i>
+                                فتح في Google Maps
+                            </a>
+                        </div>
+                        <iframe
+                            width="100%"
+                            height="350"
+                            style="border:0"
+                            loading="lazy"
+                            allowfullscreen
+                            src="https://maps.google.com/maps?q={{ urlencode($activity->location) }}&output=embed">
+                        </iframe>
+                        <div class="p-3 bg-gray-50 text-center border-t border-gray-100">
+                            <p class="text-sm text-gray-600">
+                                <i class="fas fa-info-circle text-gray-400 ml-1"></i>
+                                الموقع: <span class="font-semibold">{{ $activity->location }}</span>
+                            </p>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Description -->
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                         <i class="fas fa-info-circle text-indigo-600"></i>
                         عن النشاط
                     </h3>
-                    <p class="text-gray-600 leading-relaxed text-lg">{{ $activity->description }}</p>
+                    <p class="text-gray-600 leading-relaxed text-lg whitespace-pre-line">{{ $activity->description }}</p>
 
                     @if($activity->points || $activity->certificate)
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
@@ -232,25 +252,33 @@
                     <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                         <i class="fas fa-star text-yellow-400"></i>
                         تقييمات الطلاب
-                        @if($activity->ratings_count > 0)
+                        @php
+                            $ratingsCount = \App\Models\Rating::where('activity_id', $activity->id)->count();
+                        @endphp
+                        @if($ratingsCount > 0)
                             <span class="bg-indigo-100 text-indigo-700 text-sm px-3 py-1 rounded-full font-bold mr-auto">
-                                {{ $activity->ratings_count }}
+                                {{ $ratingsCount }}
                             </span>
                         @endif
                     </h3>
 
-                    @if($activity->ratings_count > 0)
+                    @php
+                        $allRatings = \App\Models\Rating::where('activity_id', $activity->id)->get();
+                        $avgRating = $allRatings->avg('rating') ?? 0;
+                    @endphp
+
+                    @if($ratingsCount > 0)
                         <div class="flex items-center gap-6 mb-8 p-5 bg-gradient-to-l from-indigo-50 to-purple-50 rounded-xl border border-indigo-100">
                             <div class="text-center">
                                 <div class="text-5xl font-extrabold text-indigo-600">
-                                    {{ number_format($activity->average_rating, 1) }}
+                                    {{ number_format($avgRating, 1) }}
                                 </div>
                                 <div class="flex text-yellow-400 text-lg mt-1 justify-center">
                                     @for($i = 1; $i <= 5; $i++)
-                                        <i class="fas fa-star{{ $i <= floor($activity->average_rating) ? '' : '-o' }}"></i>
+                                        <i class="fas fa-star{{ $i <= floor($avgRating) ? '' : '-o' }}"></i>
                                     @endfor
                                 </div>
-                                <div class="text-xs text-gray-500 mt-1">من {{ $activity->ratings_count }} تقييم</div>
+                                <div class="text-xs text-gray-500 mt-1">من {{ $ratingsCount }} تقييم</div>
                             </div>
                             
                             <div class="flex-1 space-y-2">
@@ -260,8 +288,8 @@
                                         <i class="fas fa-star text-yellow-400 text-xs"></i>
                                         <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                                             @php
-                                                $count = $activity->ratings->where('rating', $stars)->count();
-                                                $percent = $activity->ratings_count > 0 ? ($count / $activity->ratings_count * 100) : 0;
+                                                $count = $allRatings->where('rating', $stars)->count();
+                                                $percent = $ratingsCount > 0 ? ($count / $ratingsCount * 100) : 0;
                                             @endphp
                                             <div class="h-full bg-yellow-400 rounded-full transition-all duration-500" 
                                                  style="width: {{ $percent }}%"></div>
@@ -274,67 +302,86 @@
                     @endif
 
                     @auth
-                        @if(!$userRating)
-                            <div class="mb-8 p-5 bg-indigo-50 rounded-xl border border-indigo-200">
-                                <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
-                                    <i class="fas fa-pen"></i> شاركنا رأيك في هذا النشاط
-                                </h4>
-                                <form action="{{ route('activities.rate', $activity->id) }}" method="POST" class="space-y-4">
-                                    @csrf
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">كم تعطي هذا النشاط من نجوم؟</label>
-                                        <div class="star-rating flex gap-1" dir="ltr">
-                                            @for($i = 5; $i >= 1; $i--)
-                                                <input type="radio" name="rating" id="star{{ $i }}" value="{{ $i }}" required>
-                                                <label for="star{{ $i }}" class="text-3xl text-gray-300 hover:text-yellow-400 transition">
-                                                    <i class="fas fa-star"></i>
-                                                </label>
-                                            @endfor
+                        @php
+                            $isRegistered = \Illuminate\Support\Facades\DB::table('registrations')
+                                ->where('student_id', auth()->id())
+                                ->where('activity_id', $activity->id)
+                                ->exists();
+                            $userRating = \App\Models\Rating::where('user_id', auth()->id())
+                                ->where('activity_id', $activity->id)
+                                ->first();
+                        @endphp
+                        
+                        @if($isRegistered)
+                            @if(!$userRating)
+                                <div class="mb-8 p-5 bg-indigo-50 rounded-xl border border-indigo-200">
+                                    <h4 class="font-bold text-indigo-800 mb-3 flex items-center gap-2">
+                                        <i class="fas fa-pen"></i> شاركنا رأيك في هذا النشاط
+                                    </h4>
+                                    <form action="{{ route('activities.rate', $activity->id) }}" method="POST" class="space-y-4">
+                                        @csrf
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">كم تعطي هذا النشاط من نجوم؟</label>
+                                            <div class="star-rating flex gap-1" dir="ltr">
+                                                @for($i = 5; $i >= 1; $i--)
+                                                    <input type="radio" name="rating" id="star{{ $i }}" value="{{ $i }}" required>
+                                                    <label for="star{{ $i }}" class="text-3xl text-gray-300 hover:text-yellow-400 transition">
+                                                        <i class="fas fa-star"></i>
+                                                    </label>
+                                                @endfor
+                                            </div>
+                                            @error('rating') <span class="text-red-500 text-sm block mt-1">{{ $message }}</span> @enderror
                                         </div>
-                                        @error('rating') <span class="text-red-500 text-sm block mt-1">{{ $message }}</span> @enderror
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">تعليقك (اختياري)</label>
+                                            <textarea name="review" rows="3" 
+                                                      class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                                                      placeholder="اكتب رأيك أو ملاحظتك حول النشاط..."></textarea>
+                                            @error('review') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                        </div>
+                                        
+                                        <button type="submit" 
+                                                class="bg-indigo-600 text-white px-8 py-3 rounded-xl hover:bg-indigo-700 transition font-semibold shadow-lg hover:shadow-indigo-500/30">
+                                            <i class="fas fa-paper-plane ml-2"></i> إرسال التقييم
+                                        </button>
+                                    </form>
+                                </div>
+                            @else
+                                <div class="mb-8 p-5 bg-green-50 rounded-xl border border-green-200 flex items-start gap-4">
+                                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-check text-green-600 text-xl"></i>
                                     </div>
-                                    
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">تعليقك (اختياري)</label>
-                                        <textarea name="review" rows="3" 
-                                                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                                                  placeholder="اكتب رأيك أو ملاحظتك حول النشاط..."></textarea>
-                                        @error('review') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                        <h4 class="font-bold text-green-800">شكرًا لتقييمك! 🌟</h4>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="text-yellow-400">
+                                                @for($i=1; $i<=5; $i++)
+                                                    <i class="fas fa-star{{ $i <= $userRating->rating ? '' : '-o' }}"></i>
+                                                @endfor
+                                            </span>
+                                            <span class="text-gray-500 text-sm">- {{ $userRating->created_at->diffForHumans() }}</span>
+                                        </div>
+                                        @if($userRating->review)
+                                            <p class="text-gray-600 mt-2">"{{ $userRating->review }}"</p>
+                                        @endif
                                     </div>
-                                    
-                                    <button type="submit" 
-                                            class="bg-indigo-600 text-white px-8 py-3 rounded-xl hover:bg-indigo-700 transition font-semibold shadow-lg hover:shadow-indigo-500/30">
-                                        <i class="fas fa-paper-plane ml-2"></i> إرسال التقييم
-                                    </button>
-                                </form>
-                            </div>
-                        @else
-                            <div class="mb-8 p-5 bg-green-50 rounded-xl border border-green-200 flex items-start gap-4">
-                                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <i class="fas fa-check text-green-600 text-xl"></i>
                                 </div>
-                                <div>
-                                    <h4 class="font-bold text-green-800">شكرًا لتقييمك! 🌟</h4>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <span class="text-yellow-400">
-                                            @for($i=1; $i<=5; $i++)
-                                                <i class="fas fa-star{{ $i <= $userRating->rating ? '' : '-o' }}"></i>
-                                            @endfor
-                                        </span>
-                                        <span class="text-gray-500 text-sm">- {{ $userRating->created_at->diffForHumans() }}</span>
-                                    </div>
-                                    @if($userRating->review)
-                                        <p class="text-gray-600 mt-2">"{{ $userRating->review }}"</p>
-                                    @endif
-                                </div>
-                            </div>
+                            @endif
                         @endif
                     @endauth
 
-                    @if($activity->ratings->count() > 0)
+                    @php
+                        $allRatingsWithUsers = \App\Models\Rating::where('activity_id', $activity->id)
+                            ->with('user')
+                            ->latest()
+                            ->get();
+                    @endphp
+
+                    @if($allRatingsWithUsers->count() > 0)
                         <div class="space-y-4">
                             <h4 class="font-bold text-gray-700 mb-3">آخر التقييمات</h4>
-                            @foreach($activity->ratings->sortByDesc('created_at')->take(5) as $rating)
+                            @foreach($allRatingsWithUsers->take(5) as $rating)
                                 <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-indigo-200 transition">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex items-center gap-3">
@@ -353,7 +400,7 @@
                                         </div>
                                     </div>
                                     @if($rating->review)
-                                        <p class="text-gray-600 text-sm pr-1 leading-relaxed">{{ $rating->review }}</p>
+                                        <p class="text-gray-600 text-sm pr-1 leading-relaxed mt-2">"{{ $rating->review }}"</p>
                                     @endif
                                 </div>
                             @endforeach
@@ -363,55 +410,56 @@
                     @endif
                 </div>
 
-                <!-- 📋 قسم الاستبيان الجديد (نظام الجدولين) 📋 -->
+                <!-- 📋 قسم الاستبيان -->
                 @auth
                     @if(auth()->user()->role !== 'admin')
                         @php
-                            $hasResponded = \App\Models\SurveyResponse::where('user_id', auth()->id())
-                                ->where('activity_id', $activity->id)
-                                ->exists();
-                            $questionsCount = \App\Models\SurveyQuestion::count();
+                            $hasSurveyTable = \Illuminate\Support\Facades\Schema::hasTable('survey_responses');
+                            $hasResponded = false;
+                            $questionsCount = 0;
+                            
+                            if ($hasSurveyTable) {
+                                try {
+                                    $hasResponded = \App\Models\SurveyResponse::where('user_id', auth()->id())
+                                        ->where('activity_id', $activity->id)
+                                        ->exists();
+                                    $questionsCount = \App\Models\SurveyQuestion::where('is_active', true)->count();
+                                } catch (\Exception $e) {
+                                    // تجاهل الأخطاء
+                                }
+                            }
                         @endphp
 
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                <i class="fas fa-poll text-purple-600"></i>
-                                استبيان النشاط العام
-                            </h3>
+                        @if($hasSurveyTable && $questionsCount > 0)
+                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <i class="fas fa-poll text-purple-600"></i>
+                                    استبيان النشاط
+                                </h3>
 
-                            @if($questionsCount === 0)
-                                <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-5 py-4 rounded-xl flex items-center gap-3">
-                                    <i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>
-                                    <div>
-                                        <p class="font-bold">لا توجد أسئلة</p>
-                                        <p class="text-sm">لم يتم إعداد الاستبيان بعد من قبل الإدارة</p>
+                                @if($hasResponded)
+                                    <div class="bg-green-50 border border-green-200 text-green-700 px-5 py-4 rounded-xl flex items-center gap-3">
+                                        <i class="fas fa-check-circle text-xl"></i>
+                                        <div>
+                                            <p class="font-bold">شكراً لمشاركتك! 🎉</p>
+                                            <p class="text-sm">لقد قمت بملء الاستبيان بنجاح</p>
+                                        </div>
                                     </div>
-                                </div>
-                            @elseif($hasResponded)
-                                <div class="bg-green-50 border border-green-200 text-green-700 px-5 py-4 rounded-xl flex items-center gap-3">
-                                    <i class="fas fa-check-circle text-green-500 text-xl"></i>
-                                    <div>
-                                        <p class="font-bold">شكراً لمشاركتك!</p>
-                                        <p class="text-sm">لقد قمت بملء استبيان هذا النشاط بنجاح</p>
+                                @else
+                                    <div class="bg-purple-50 border border-purple-200 p-5 rounded-xl text-center">
+                                        <i class="fas fa-clipboard-list text-4xl text-purple-600 mb-3"></i>
+                                        <p class="text-gray-700 mb-4 font-semibold">نرجو منك ملء الاستبيان لمساعدتنا في التحسين</p>
+                                        <a href="{{ route('student.survey.show', $activity->id) }}" 
+                                           class="inline-block w-full bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition font-bold">
+                                            <i class="fas fa-poll ml-2"></i> املأ الاستبيان الآن
+                                        </a>
                                     </div>
-                                </div>
-                            @else
-                                <div class="bg-purple-50 border border-purple-200 p-5 rounded-xl">
-                                    <p class="text-gray-700 mb-4">
-                                        <i class="fas fa-info-circle text-purple-600 ml-2"></i>
-                                        نرجو منك ملء هذا الاستبيان لمساعدتنا في تحسين الأنشطة القادمة
-                                    </p>
-                                    <a href="{{ route('student.survey.show', $activity->id) }}" 
-                                       class="block w-full bg-purple-600 text-white text-center py-3 rounded-xl hover:bg-purple-700 transition font-bold">
-                                        <i class="fas fa-poll ml-2"></i>
-                                        املأ الاستبيان الآن
-                                    </a>
-                                </div>
-                            @endif
-                        </div>
+                                @endif
+                            </div>
+                        @endif
                     @endif
                 @endauth
-                <!-- 📋 نهاية قسم الاستبيان 📋 -->
+                <!-- 📋 نهاية قسم الاستبيان -->
 
                 <!-- Registered Users -->
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -470,16 +518,25 @@
                     </h3>
 
                     @auth
+                        @php
+                            $isRegistered = \Illuminate\Support\Facades\DB::table('registrations')
+                                ->where('student_id', auth()->id())
+                                ->where('activity_id', $activity->id)
+                                ->exists();
+                            $isFull = $activity->max_participants && $activity->users->count() >= $activity->max_participants;
+                            $isClosed = $activity->status !== 'مفتوح';
+                        @endphp
+
                         @if(auth()->user()->role === 'admin')
                             <div class="bg-purple-50 border border-purple-200 text-purple-700 px-4 py-3 rounded-xl text-center font-bold">
                                 <i class="fas fa-user-shield ml-2"></i>
                                 أنت مدير النظام
                             </div>
-                            <a href="{{ route('admin.registrations.index') }}" class="block w-full bg-green-600 text-white text-center py-3 rounded-xl hover:bg-green-700 transition font-bold mt-3">
+                            <a href="{{ route('admin.registrations', $activity->id) }}" class="block w-full bg-green-600 text-white text-center py-3 rounded-xl hover:bg-green-700 transition font-bold mt-3">
                                 <i class="fas fa-users ml-2"></i>
                                 عرض المسجلين
                             </a>
-                        @elseif($activity->users->contains(auth()->id()))
+                        @elseif($isRegistered)
                             <div class="bg-green-50 border border-green-300 text-green-800 px-4 py-4 rounded-xl text-center">
                                 <i class="fas fa-check-circle text-green-500 text-3xl mb-2 block"></i>
                                 <p class="font-bold text-lg">أنت مسجل في هذا النشاط</p>
@@ -492,13 +549,13 @@
                                     <i class="fas fa-times ml-1"></i> إلغاء التسجيل
                                 </button>
                             </form>
-                        @elseif($activity->users->count() >= ($activity->max_participants ?? PHP_INT_MAX))
+                        @elseif($isFull)
                             <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-4 rounded-xl text-center">
                                 <i class="fas fa-times-circle text-red-500 text-3xl mb-2 block"></i>
                                 <p class="font-bold">اكتمل العدد</p>
                                 <p class="text-sm mt-1">لا توجد أماكن متاحة</p>
                             </div>
-                        @elseif($activity->status !== 'مفتوح')
+                        @elseif($isClosed)
                             <div class="bg-gray-50 border border-gray-200 text-gray-600 px-4 py-4 rounded-xl text-center">
                                 <i class="fas fa-ban text-gray-400 text-3xl mb-2 block"></i>
                                 <p class="font-bold">التسجيل مغلق</p>
@@ -526,9 +583,12 @@
                     @auth
                         <form action="{{ route('activities.favorite', $activity->id) }}" method="POST" class="mt-3">
                             @csrf
-                            <button type="submit" class="w-full bg-pink-50 text-pink-600 border border-pink-200 py-2.5 rounded-xl hover:bg-pink-100 transition font-semibold">
-                                <i class="fas fa-heart ml-1"></i>
-                                إضافة للمفضلة
+                            @php
+                                $isFav = \App\Models\Favorite::where('user_id', auth()->id())->where('activity_id', $activity->id)->exists();
+                            @endphp
+                            <button type="submit" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl border {{ $isFav ? 'bg-red-50 text-red-500 border-red-200' : 'bg-pink-50 text-pink-600 border-pink-200 hover:bg-pink-100' }} transition font-semibold">
+                                <i class="fas fa-heart"></i>
+                                {{ $isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة' }}
                             </button>
                         </form>
                     @endauth
