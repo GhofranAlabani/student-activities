@@ -1,19 +1,15 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class SurveyQuestion extends Model
 {
-    protected $fillable = ['survey_id', 'question', 'type', 'options', 'required', 'order'];
+    protected $fillable = ['question'];
 
-    protected $casts = [
-        'options' => 'array',
-        'required' => 'boolean',
-    ];
-
-    public function survey()
+    public function responses()
     {
-        return $this->belongsTo(Survey::class);
+        return $this->hasMany(SurveyResponse::class);
     }
 }

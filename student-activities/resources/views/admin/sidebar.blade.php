@@ -31,9 +31,10 @@
             
             <!-- 📋 إدارة الاستبيانات (جديد) -->
             <li>
-                <a href="{{ route('admin.surveys.index') }}" class="{{ request()->routeIs('admin.surveys.*') ? 'active' : '' }}">
-                    <i class="fas fa-poll"></i>
-                    <span>إدارة الاستبيانات</span>
+                <a href="{{ route('admin.survey-questions.index') }}" 
+            class="{{ request()->routeIs('admin.survey-questions.*') ? 'active' : '' }}">
+          <i class="fas fa-poll"></i>
+          <span>إدارة الاستبيان</span>
                 </a>
             </li>
             

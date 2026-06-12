@@ -8,8 +8,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\AnnouncementController;
-use App\Http\Controllers\Admin\SurveyController;
-use App\Http\Controllers\Student\SurveyController as StudentSurveyController;
+use App\Http\Controllers\Admin\SurveyQuestionController;
+use App\Http\Controllers\Student\SurveyResponseController;
 
 // الصفحة الرئيسية
 Route::get('/', function () {
@@ -67,13 +67,27 @@ Route::middleware('auth')->group(function () {
     Route::put('/admin/announcements/{id}', [AnnouncementController::class, 'update'])->name('admin.announcements.update');
     Route::delete('/admin/announcements/{id}', [AnnouncementController::class, 'destroy'])->name('admin.announcements.destroy');
 
-    // ✅ مسارات الاستبيانات - الأدمن
-    Route::get('/admin/surveys', [SurveyController::class, 'index'])->name('admin.surveys.index');
-    Route::get('/admin/activities/{activity}/surveys/create', [SurveyController::class, 'create'])->name('admin.surveys.create');
-    Route::post('/admin/activities/{activity}/surveys', [SurveyController::class, 'store'])->name('admin.surveys.store');
-    Route::get('/admin/surveys/{survey}', [SurveyController::class, 'show'])->name('admin.surveys.show');
-    Route::delete('/admin/surveys/{survey}', [SurveyController::class, 'destroy'])->name('admin.surveys.destroy');
-    Route::patch('/admin/surveys/{survey}/toggle', [SurveyController::class, 'toggle'])->name('admin.surveys.toggle');
+    // ✅ مسارات إدارة أسئلة الاستبيان (للأدمن) - كاملة مع التعديل
+    Route::get('/admin/survey-questions', [SurveyQuestionController::class, 'index'])
+        ->name('admin.survey-questions.index');
+    Route::get('/admin/survey-questions/create', [SurveyQuestionController::class, 'create'])
+        ->name('admin.survey-questions.create');
+    Route::post('/admin/survey-questions', [SurveyQuestionController::class, 'store'])
+        ->name('admin.survey-questions.store');
+    Route::get('/admin/survey-questions/{id}/edit', [SurveyQuestionController::class, 'edit'])
+        ->name('admin.survey-questions.edit');
+    Route::put('/admin/survey-questions/{id}', [SurveyQuestionController::class, 'update'])
+        ->name('admin.survey-questions.update');
+    Route::delete('/admin/survey-questions/{id}', [SurveyQuestionController::class, 'destroy'])
+        ->name('admin.survey-questions.destroy');
+    Route::post('/admin/survey-questions/reset', [SurveyQuestionController::class, 'resetToDefault'])
+        ->name('admin.survey-questions.reset');
+
+    // ✅ مسارات الإجابات على الاستبيان (للطالب)
+    Route::get('/activities/{activity}/survey', [SurveyResponseController::class, 'show'])
+        ->name('student.survey.show');
+    Route::post('/activities/{activity}/survey', [SurveyResponseController::class, 'submit'])
+        ->name('student.survey.submit');
 
     // الأنشطة
     Route::post('/activities', [ActivityController::class, 'store'])->name('activities.store');
@@ -86,10 +100,6 @@ Route::middleware('auth')->group(function () {
         return back()->with('success', 'تم إلغاء التسجيل بنجاح');
     })->name('activities.unregister');
     Route::post('/activities/{id}/favorite', [ActivityController::class, 'toggleFavorite'])->name('activities.favorite');
-
-    // ✅ مسارات الاستبيانات - الطالب
-    Route::get('/activities/{activity}/survey', [StudentSurveyController::class, 'show'])->name('student.surveys.show');
-    Route::post('/activities/{activity}/survey', [StudentSurveyController::class, 'submit'])->name('student.surveys.submit');
 
     // مسارات الطالب
     Route::get('/student/my-activities', function () {

@@ -46,7 +46,7 @@
             </div>
             <div class="stat-info">
                 <h3>الاستبيانات النشطة</h3>
-                <p class="stat-number">{{ \App\Models\Survey::where('is_active', true)->count() }}</p>
+                <p class="stat-number">{{ \App\Models\SurveyQuestion::count() }}</p>
             </div>
         </div>
     </div>
@@ -72,10 +72,10 @@
                 <span>إصدار تقرير فعلي</span>
             </a>
             
-            <!-- 📋 زر إدارة الاستبيانات الجديد -->
-            <a href="{{ route('admin.surveys.index') }}" class="action-btn action-btn-survey">
-                <i class="fas fa-poll"></i>
-                <span>إدارة الاستبيانات</span>
+            <!-- زر إدارة الاستبيانات  -->
+            <a href="{{ url('/admin/survey-questions') }}" class="action-btn">
+               <i class="fas fa-poll"></i>
+                <span>إدارة الاستبيان</span>
             </a>
             
             <a href="{{ route('admin.announcements') }}" class="action-btn">
