@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ActivityController;
@@ -87,6 +87,10 @@ Route::get('/admin/survey-stats', [App\Http\Controllers\Admin\SurveyStatsControl
     ->name('admin.survey-stats.index');
 Route::get('/admin/survey-stats/activity/{activityId}', [App\Http\Controllers\Admin\SurveyStatsController::class, 'activityStats'])
     ->name('admin.survey-stats.activity');
+    Route::get('/admin/survey-stats/export-pdf', [App\Http\Controllers\Admin\SurveyStatsController::class, 'exportPDF'])
+    ->name('admin.survey-stats.export.pdf');
+Route::get('/admin/survey-stats/export-excel', [App\Http\Controllers\Admin\SurveyStatsController::class, 'exportExcel'])
+    ->name('admin.survey-stats.export.excel');
 
     // ? ?????? ???????? ??? ????????? (??????)
     Route::get('/activities/{activity}/survey', [SurveyResponseController::class, 'show'])

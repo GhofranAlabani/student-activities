@@ -24,11 +24,6 @@ class SurveyStatsController extends Controller
         // نسبة المشاركة
         $participationRate = $totalActivities > 0 ? round(($totalResponses / ($totalActivities * $totalQuestions)) * 100, 2) : 0;
         
-        // إحصائيات كل سؤال
-        $questionsStats = SurveyQuestion::withCount('responses')
-            ->select('id', 'question', DB::raw('(SELECT COUNT(*) FROM survey_responses WHERE survey_responses.question_id = survey_questions.id) as responses_count'))
-            ->get();
-        
         // توزيع الإجابات العام
         $answersDistribution = SurveyResponse::select('answer', DB::raw('COUNT(*) as count'))
             ->groupBy('answer')
