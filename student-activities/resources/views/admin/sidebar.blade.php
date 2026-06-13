@@ -62,13 +62,7 @@
                 </a>
             </li>
             
-            <!-- التقارير والإحصائيات -->
-            <li>
-                <a href="#" class="{{ request()->routeIs('admin.reports') ? 'active' : '' }}">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>التقارير والإحصائيات</span>
-                </a>
-            </li>
+            
             
             <!-- الإعدادات العامة -->
             <li>
@@ -80,7 +74,7 @@
     <a href="{{ route('admin.survey-stats.index') }}" 
        class="{{ request()->routeIs('admin.survey-stats.*') ? 'active' : '' }}">
         <i class="fas fa-chart-bar"></i>
-        <span>إحصائيات الاستبيان</span>
+        <span>إحصائيات وتقارير</span>
     </a>
 </li>
         </ul>
