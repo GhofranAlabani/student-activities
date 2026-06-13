@@ -42,7 +42,7 @@
                             {{ $announcement->is_active ? 'نشط' : 'غير نشط' }}
                         </span>
                     </td>
-                    <td>{{ $announcement->created_at->format('Y/m/d') }}</td>
+                    <td>{{ $announcement->created_at ? $announcement->created_at->format('Y/m/d') : '-' }}</td>
                     <td>
                         <a href="{{ route('admin.announcements.edit', $announcement->id) }}" class="btn-sm btn-edit">
                             <i class="fas fa-edit"></i>

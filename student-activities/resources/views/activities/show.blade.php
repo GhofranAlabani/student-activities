@@ -615,6 +615,63 @@
             </div>
         </div>
     </div>
-
+<!-- Organizer -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <i class="fas fa-user-tie text-indigo-600"></i>
+        المنظم / المشرف
+    </h3>
+    
+    @if($activity->creator)
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                {{ substr($activity->creator->name, 0, 1) }}
+            </div>
+            <div class="flex-1">
+                <p class="font-bold text-gray-800 text-lg">{{ $activity->creator->name }}</p>
+                <p class="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                    <i class="fas fa-envelope text-xs"></i>
+                    {{ $activity->creator->email }}
+                </p>
+                @if($activity->creator->role)
+                    <span class="inline-block mt-2 text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-semibold">
+                        @if($activity->creator->role === 'admin')
+                            <i class="fas fa-user-shield ml-1"></i>مدير النظام
+                        @elseif($activity->creator->role === 'staff')
+                            <i class="fas fa-user-cog ml-1"></i>مشرف
+                        @else
+                            <i class="fas fa-user ml-1"></i>{{ $activity->creator->role }}
+                        @endif
+                    </span>
+                @endif
+            </div>
+        </div>
+        
+        <!-- معلومات إضافية عن المنظم -->
+        <div class="mt-4 pt-4 border-t border-gray-100">
+            <div class="grid grid-cols-2 gap-3 text-center">
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-500 mb-1">الأنشطة المنظمة</p>
+                    <p class="text-xl font-bold text-indigo-600">
+                        {{ \App\Models\Activity::where('created_by', $activity->creator->id)->count() }}
+                    </p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-500 mb-1">تاريخ الانضمام</p>
+                    <p class="text-sm font-bold text-gray-700">
+                        {{ $activity->creator->created_at->format('Y/m') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    @else
+        <div class="text-center py-6">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-user-slash text-gray-400 text-2xl"></i>
+            </div>
+            <p class="text-gray-500 text-sm">لم يتم تحديد المنظم</p>
+        </div>
+    @endif
+</div>
 </body>
 </html>

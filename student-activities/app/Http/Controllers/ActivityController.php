@@ -15,41 +15,49 @@ class ActivityController extends Controller
     /**
      * عرض جميع الأنشطة (للطلاب والزوار)
      */
-  public function index(Request $request)
-{
-    $query = Activity::with(['activityType', 'users', 'ratings']);
-    
-    if ($request->filled('search')) {
-        $query->where(function($q) use ($request) {
-            $q->where('title', 'like', '%' . $request->search . '%')
-              ->orWhere('description', 'like', '%' . $request->search . '%');
-        });
-    }
-    
-    if ($request->filled('type')) {
-        $query->where('type_id', $request->type);
-    }
-    
-    $activities = $query->latest()->paginate(9);
-    
-    $favoriteIds = auth()->check() 
-        ? auth()->user()->favorites()->pluck('activity_id')->toArray() 
-        : [];
+    public function index(Request $request)
+    {
+        $query = Activity::with(['activityType', 'users', 'ratings', 'creator']);
+        
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+        
+        if ($request->filled('type')) {
+            $query->where('type_id', $request->type);
+        }
+        
+        $activities = $query->latest()->paginate(9);
+        
+        $favoriteIds = auth()->check() 
+            ? auth()->user()->favorites()->pluck('activity_id')->toArray() 
+            : [];
 
-    $registeredIds = auth()->check() 
-        ? DB::table('registrations')->where('student_id', auth()->id())->pluck('activity_id')->toArray()
-        : [];
-    
-    return view('activities.index', compact('activities', 'favoriteIds', 'registeredIds'));
-}
+        $registeredIds = auth()->check() 
+            ? DB::table('registrations')->where('student_id', auth()->id())->pluck('activity_id')->toArray()
+            : [];
+        
+        return view('activities.index', compact('activities', 'favoriteIds', 'registeredIds'));
+    }
+
     /**
      * عرض نموذج إضافة نشاط (للمشرفين/المدير)
      */
-    public function create()
-    {
-        $activityTypes = ActivityType::all();
-        return view('activities.create', compact('activityTypes'));
-    }
+    /**
+ * عرض نموذج إضافة نشاط (للمشرفين/المدير)
+ */
+public function create()
+{
+    $activityTypes = ActivityType::all();
+    
+    // جلب المشرفين والمديرين فقط
+    $supervisors = \App\Models\User::whereIn('role', ['admin', 'staff'])->get();
+    
+    return view('activities.create', compact('activityTypes', 'supervisors'));
+}
 
     /**
      * حفظ نشاط جديد
@@ -71,7 +79,7 @@ class ActivityController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        // تحويل activity_type_id (من الفورم) إلى type_id (للداتابيز)
+        // تحويل activity_type_id إلى type_id
         if (isset($validated['activity_type_id'])) {
             $validated['type_id'] = $validated['activity_type_id'];
             unset($validated['activity_type_id']);
@@ -82,7 +90,7 @@ class ActivityController extends Controller
             $validated['image'] = $request->file('image')->store('activities', 'public');
         }
 
-        // إضافة created_by إذا كان العمود موجود
+        // إضافة created_by (المنظم/المشرف)
         if (auth()->check() && Schema::hasColumn('activities', 'created_by')) {
             $validated['created_by'] = auth()->id();
         }
@@ -94,43 +102,46 @@ class ActivityController extends Controller
     }
 
     /**
-     * عرض تفاصيل نشاط مع التقييمات ⭐ (مُحسّن للأداء)
+     * عرض تفاصيل نشاط مع التقييمات ⭐
      */
     public function show($id)
     {
-        // ✅ استخدام withAvg و withCount لحساب الإحصائيات في استعلام واحد (أفضل للأداء)
         $activity = Activity::with([
             'activityType', 
             'users', 
             'creator', 
             'registrations',
-            'ratings.user' // جلب التقييمات مع بيانات الطالب لعرضها في الصفحة
+            'ratings.user'
         ])
-        ->withAvg('ratings as average_rating', 'rating') // ✅ يحسب المتوسط تلقائياً
-        ->withCount('ratings as ratings_count')           // ✅ يعدّ التقييمات تلقائياً
+        ->withAvg('ratings as average_rating', 'rating')
+        ->withCount('ratings as ratings_count')
         ->findOrFail($id);
         
-        // ✅ التحقق هل الطالب الحالي قيّم هذا النشاط من قبل؟
+        // التحقق هل الطالب الحالي قيّم هذا النشاط من قبل؟
         $userRating = null;
         if (auth()->check()) {
-            // نبحث في المجموعة المحملة مسبقاً لتجنب استعلام إضافي
             $userRating = $activity->ratings->firstWhere('user_id', auth()->id());
         }
         
-        // ✅ لم نعد بحاجة لتمرير averageRating و ratingsCount يدوياً
-        // لأنها أصبحت متاحة كخصائص: $activity->average_rating و $activity->ratings_count
         return view('activities.show', compact('activity', 'userRating'));
     }
 
     /**
      * عرض نموذج تعديل نشاط
      */
-    public function edit($id)
-    {
-        $activity = Activity::findOrFail($id);
-        $activityTypes = ActivityType::all();
-        return view('activities.edit', compact('activity', 'activityTypes'));
-    }
+    /**
+ * عرض نموذج تعديل نشاط
+ */
+public function edit($id)
+{
+    $activity = Activity::findOrFail($id);
+    $activityTypes = ActivityType::all();
+    
+    // جلب المشرفين والمديرين فقط
+    $supervisors = \App\Models\User::whereIn('role', ['admin', 'staff'])->get();
+    
+    return view('activities.edit', compact('activity', 'activityTypes', 'supervisors'));
+}
 
     /**
      * تحديث نشاط
@@ -212,39 +223,33 @@ class ActivityController extends Controller
         }
     }
 
-    // ============================================
-    // ⭐ وظائف جديدة: نظام التقييم بالنجوم
-    // ============================================
-
     /**
      * تخزين أو تحديث تقييم الطالب للنشاط
      */
     public function rate(Request $request, $id)
     {
-        // التحقق من الصلاحية
         if (!auth()->check()) {
             return redirect()->route('login')->with('error', 'يجب تسجيل الدخول لتقييم النشاط');
         }
 
-        // ✅ التحقق من صحة البيانات (تم تعديل 'comment' إلى 'review' ليتوافق مع الموديل)
         $validated = $request->validate([
             'rating' => 'required|integer|min:1|max:5',
-            'review' => 'nullable|string|max:500'  // ⚠️ تم التعديل هنا
+            'review' => 'nullable|string|max:500'
         ], [
             'rating.required' => 'يرجى اختيار عدد النجوم',
             'rating.min' => 'أقل تقييم هو نجمة واحدة',
             'rating.max' => 'أقصى تقييم هو 5 نجوم',
-            'review.max' => 'التعليق لا يتجاوز 500 حرف'  // ⚠️ تم تعديل رسالة الخطأ
+            'review.max' => 'التعليق لا يتجاوز 500 حرف'
         ]);
 
         $activity = Activity::findOrFail($id);
 
-        // منع تقييم نشاط غير مفعل
-        if ($activity->status !== '?????') {
+        // ✅ التحقق من حالة النشاط (مفتوح أو مكتمل)
+        if (!in_array($activity->status, ['مفتوح', 'مكتمل', 'active', 'completed'])) {
             return back()->with('error', 'لا يمكن تقييم هذا النشاط حالياً');
         }
 
-        // ✅ استخدام updateOrCreate لمنع التكرار
+        // استخدام updateOrCreate لمنع التكرار
         $rating = Rating::updateOrCreate(
             [
                 'user_id' => auth()->id(),
@@ -252,7 +257,7 @@ class ActivityController extends Controller
             ],
             [
                 'rating' => $validated['rating'],
-                'review' => $validated['review'] ?? null  // ⚠️ تم التعديل هنا
+                'review' => $validated['review'] ?? null
             ]
         );
 
@@ -260,11 +265,11 @@ class ActivityController extends Controller
     }
 
     /**
-     * عرض الأنشطة للوحة تحكم المدير (إضافي - اختياري)
+     * عرض الأنشطة للوحة تحكم المدير
      */
     public function adminIndex(Request $request)
     {
-        $query = Activity::with(['activityType', 'users', 'ratings']);
+        $query = Activity::with(['activityType', 'users', 'ratings', 'creator']);
         
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');

@@ -163,7 +163,7 @@
                 هذه الأسئلة ستظهر للطلاب بعد إكمال كل نشاط. يمكن للطلاب الإجابة بـ: 
                 <span class="font-semibold">موافق</span>، 
                 <span class="font-semibold">محايد</span>، أو 
-                <span class="font-semibold">أوافق بشدة</span>
+                <span class="font-semibold">لا اوافق </span>
             </p>
         </div>
     </div>

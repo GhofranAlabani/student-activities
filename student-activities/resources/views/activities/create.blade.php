@@ -50,11 +50,14 @@
             <a href="{{ route('activities.index') }}" class="sidebar-link active flex items-center p-3 rounded-xl transition duration-200">
                 <i class="fas fa-calendar-alt ml-3 text-lg"></i> الأنشطة
             </a>
-            <a href="#" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
-                <i class="fas fa-users ml-3 text-lg"></i> الطلاب
+            <a href="{{ route('admin.announcements') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
+                <i class="fas fa-bullhorn ml-3 text-lg"></i> الإعلانات
             </a>
-            <a href="#" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
-                <i class="fas fa-cog ml-3 text-lg"></i> الإعدادات
+            <a href="{{ route('admin.survey-questions.index') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
+                <i class="fas fa-poll ml-3 text-lg"></i> الاستبيانات
+            </a>
+            <a href="{{ route('admin.survey-stats.index') }}" class="sidebar-link flex items-center p-3 text-gray-600 rounded-xl transition duration-200">
+                <i class="fas fa-chart-bar ml-3 text-lg"></i> الإحصائيات
             </a>
         </nav>
 
@@ -73,11 +76,13 @@
         <!-- Header -->
         <header class="bg-white shadow-sm p-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <!-- ✅ تم تعديل زر الرجوع للعودة للوحة تحكم الطالب -->
-                <a href="{{ route('student.dashboard') }}" class="text-gray-400 hover:text-indigo-600 transition">
-                    <i class="fas fa-home text-lg"></i>
+                <a href="{{ route('activities.index') }}" class="text-gray-400 hover:text-indigo-600 transition">
+                    <i class="fas fa-arrow-right text-lg"></i>
                 </a>
-                <h1 class="font-bold text-xl text-indigo-700">إضافة نشاط جديد</h1>
+                <h1 class="font-bold text-xl text-indigo-700">
+                    <i class="fas fa-plus-circle text-indigo-500 ml-2"></i>
+                    إضافة نشاط جديد
+                </h1>
             </div>
             <span class="text-gray-500 bg-gray-50 px-4 py-2 rounded-full text-sm border border-gray-100">
                 <i class="fas fa-calendar-alt ml-1 text-indigo-500"></i> {{ now()->format('Y/m/d') }}
@@ -126,6 +131,37 @@
                                 @enderror
                             </div>
 
+                            <!-- ✅ حقل اختيار المنظم/المشرف -->
+                            <div>
+                                <label class="label">
+                                    <i class="fas fa-user-tie text-indigo-600 ml-1"></i>
+                                    المنظم / المشرف المسؤول <span class="required">*</span>
+                                </label>
+                                <select name="created_by" 
+                                        class="input-field {{ $errors->has('created_by') ? 'is-invalid' : '' }}"
+                                        required>
+                                    <option value="">-- اختر المشرف المسؤول --</option>
+                                    @foreach($supervisors as $supervisor)
+                                        <option value="{{ $supervisor->id }}" 
+                                                {{ old('created_by') == $supervisor->id ? 'selected' : '' }}>
+                                            {{ $supervisor->name }}
+                                            @if($supervisor->role === 'admin')
+                                                (مدير النظام)
+                                            @elseif($supervisor->role === 'staff')
+                                                (مشرف)
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('created_by')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-info-circle ml-1"></i>
+                                    سيظهر هذا الشخص كمنظم للنشاط في صفحة التفاصيل
+                                </p>
+                            </div>
+
                             <!-- Activity Type -->
                             <div>
                                 <label class="label">نوع النشاط <span class="required">*</span></label>
@@ -141,14 +177,15 @@
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
+
                             <!-- Status -->
                             <div>
                                 <label class="label">حالة النشاط <span class="required">*</span></label>
                                 <select name="status" class="input-field {{ $errors->has('status') ? 'is-invalid' : '' }}">
-                                    <option value="مفتوح">مفتوح</option>
-                                    <option value="مغلق">مغلق</option>
-                                    <option value="منتهي">منتهي</option>
-                                    <option value="ملغي">ملغي</option>
+                                    <option value="مفتوح" {{ old('status') == 'مفتوح' ? 'selected' : '' }}>مفتوح</option>
+                                    <option value="مغلق" {{ old('status') == 'مغلق' ? 'selected' : '' }}>مغلق</option>
+                                    <option value="منتهي" {{ old('status') == 'منتهي' ? 'selected' : '' }}>منتهي</option>
+                                    <option value="ملغي" {{ old('status') == 'ملغي' ? 'selected' : '' }}>ملغي</option>
                                 </select>
                                 @error('status')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -210,6 +247,7 @@
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
+
                             <!-- Start Time -->
                             <div>
                                 <label class="label">وقت البداية</label>
@@ -366,11 +404,10 @@
 
                     <!-- Submit -->
                     <div class="flex items-center justify-end gap-4">
-                        <!-- ✅ تم تعديل زر الإلغاء أيضاً للعودة للوحة تحكم الطالب -->
-                        <a href="{{ route('student.dashboard') }}" class="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition">
+                        <a href="{{ route('activities.index') }}" class="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition">
                             <i class="fas fa-times ml-2"></i> إلغاء
                         </a>
-                        <button type="submit" class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-0.5">
+                        <button type="submit" class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-purple-700 transition shadow-lg hover:shadow-indigo-300 transform hover:-translate-y-0.5">
                             <i class="fas fa-plus ml-2"></i> إضافة النشاط
                         </button>
                     </div>
