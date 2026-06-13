@@ -82,6 +82,11 @@ Route::middleware('auth')->group(function () {
         ->name('admin.survey-questions.destroy');
     Route::post('/admin/survey-questions/reset', [SurveyQuestionController::class, 'resetToDefault'])
         ->name('admin.survey-questions.reset');
+        // مسارات إحصائيات الاستبيان
+Route::get('/admin/survey-stats', [App\Http\Controllers\Admin\SurveyStatsController::class, 'index'])
+    ->name('admin.survey-stats.index');
+Route::get('/admin/survey-stats/activity/{activityId}', [App\Http\Controllers\Admin\SurveyStatsController::class, 'activityStats'])
+    ->name('admin.survey-stats.activity');
 
     // ? ?????? ???????? ??? ????????? (??????)
     Route::get('/activities/{activity}/survey', [SurveyResponseController::class, 'show'])
