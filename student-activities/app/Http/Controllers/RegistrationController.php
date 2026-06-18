@@ -47,10 +47,18 @@ class RegistrationController extends Controller
             'student_id' => auth()->id(),
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ]); 
+      \App\Models\Notification::notify(
+    auth()->id(),
+    'registered',
+    'تم التسجيل بنجاح 🎉',
+    "تم تسجيلك في نشاط \"{$activity->title}\" بنجاح. نراك هناك!",
+    $activity->id,
+    'check-circle'
+);
         
         return back()->with('success', 'تم التسجيل في النشاط بنجاح!');
-    }
+    }  
     
     /**
      * إلغاء التسجيل في نشاط

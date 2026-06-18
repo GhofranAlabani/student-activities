@@ -157,3 +157,35 @@ Route::get('/admin/survey-stats/export-excel', [App\Http\Controllers\Admin\Surve
 }); // ????? ?????? auth ????????
 
 require __DIR__.'/auth.php';
+
+Route::middleware('auth')->group(function () {
+    Route::get('/notifications/mark-read/{id}', function ($id) {
+        App\Models\Notification::where('id', $id)->where('user_id', auth()->id())->update(['is_read' => true, 'read_at' => now()]);
+        return back();
+    })->name('notifications.read');
+
+      // ... الكود الموجود عندك ...
+    
+    Route::get('/notifications', function () {
+        $notifications = App\Models\Notification::where('user_id', auth()->id())->latest()->paginate(20);
+        return view('notifications.index', compact('notifications'));
+    })->name('notifications.index');
+
+    // ✅ أضف هذا المسار لتعليم جميع الإشعارات كمقروءة
+    Route::post('/notifications/mark-all-read', function () {
+        \App\Models\Notification::where('user_id', auth()->id())
+            ->where('is_read', false)
+            ->update(['is_read' => true, 'read_at' => now()]);
+        return back()->with('success', 'تم تعليم جميع الإشعارات كمقروءة');
+    })->name('notifications.mark-all-read');
+
+    // ✅ أضف هذا المسار لحذف الإشعار نهائياً
+    Route::delete('/notifications/delete/{id}', function ($id) {
+        \App\Models\Notification::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->delete();
+        return back()->with('success', 'تم حذف الإشعار بنجاح');
+    })->name('notifications.delete');
+
+}); // نهاية مجموعة المصادقة
+

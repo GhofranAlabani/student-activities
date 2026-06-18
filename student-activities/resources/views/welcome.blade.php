@@ -2,8 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="en">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة الأنشطة الطلابية</title>
+    <title>منصة الأنشطة الطلابية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,12 +28,14 @@
         <div class="container mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-3">
+                    <!-- ✅ تغيير الشعار من "أن" إلى "من" -->
                     <div class="w-12 h-12 bg-gold rounded-xl flex items-center justify-center text-navy font-black text-2xl shadow-lg">
-                        أن
+                        من
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold text-gold">منظومة الأنشطة الطلابية</h1>
-                        <p class="text-xs text-gray-300">الفصل الثاني — ١٤٤٧هـ</p>
+                        <!-- ✅ تغيير الاسم في النافبار -->
+                        <h1 class="text-2xl font-bold text-gold">منصة الأنشطة الطلابية</h1>
+                        
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
@@ -60,14 +63,15 @@
             <div class="absolute top-20 right-20 w-96 h-96 bg-yellow-400 rounded-full blur-3xl"></div>
             <div class="absolute bottom-20 left-20 w-96 h-96 bg-yellow-600 rounded-full blur-3xl"></div>
         </div>
- <div class="container mx-auto relative z-10">
+        <div class="container mx-auto relative z-10">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 
                 <!-- Right Side - Content -->
                 <div class="space-y-8">
+                    <!-- ✅ تغيير النص هنا -->
                     <div class="inline-block bg-gold/20 border-2 border-gold text-gold px-6 py-2 rounded-full text-sm font-bold">
                         <i class="fas fa-star ml-2"></i>
-                        منظومة متكاملة للأنشطة الطلابية
+                        منصة متكاملة للأنشطة الطلابية
                     </div>
                     
                     <h1 class="text-5xl md:text-6xl font-black leading-tight">
@@ -75,8 +79,9 @@
                         ومتابعة في <span class="text-gold">مكان واحد</span>
                     </h1>
                     
+                    <!-- ✅ تغيير الوصف هنا -->
                     <p class="text-xl text-gray-300 leading-relaxed max-w-2xl">
-                        نظام متكامل لإدارة الأنشطة الطلابية، تنسيق الفعاليات ومتابعة مشاركة الطلاب — مصمم خصيصاً للبيئة التعليمية السعودية
+                       منصة متكاملة لإدارة الأنشطة الطلابية، تنسيق الفعاليات ومتابعة مشاركة الطلاب 
                     </p>
 
                     <div class="flex gap-4 pt-4">
@@ -121,18 +126,19 @@
                         <div class="text-gray-300 font-semibold">مشاركة فاعلة</div>
                     </div>
                     <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center card-hover">
-                        <div class="text-5xl font-black text-gold mb-2">٤%</div>
+                        <div class="text-5xl font-black text-gold mb-2">4%</div>
                         <div class="text-gray-300 font-semibold">معدل المشاركة</div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-     <!-- Features Section -->
+
+    <!-- Features Section -->
     <section class="py-20 bg-[#f5f0e8]">
         <div class="container mx-auto px-6">
             <div class="text-center mb-16">
-                <div class="text-gold font-bold text-sm mb-2">مميزات النظام</div>
+                <div class="text-gold font-bold text-sm mb-2">مميزات المنصة</div>
                 <h2 class="text-4xl font-black text-navy mb-4">كل ما تحتاجه في منصة واحدة</h2>
                 <p class="text-gray-600 max-w-2xl mx-auto">من إدارة الأندية إلى تقارير المشاركة — غطينا كل جانب من جوانب إدارة الأنشطة الطلابية</p>
             </div>
@@ -172,7 +178,8 @@
             </div>
         </div>
     </section>
- <!-- Activities Preview -->
+
+    <!-- Activities Preview -->
     @php
         $latestActivities = \App\Models\Activity::where('status', 'مفتوح')->latest()->take(3)->get();
     @endphp
@@ -231,7 +238,8 @@
             </div>
         </section>
     @endif
- <!-- CTA Section -->
+
+    <!-- CTA Section -->
     @guest
     <section class="gradient-navy py-20 px-6 text-white text-center">
         <div class="container mx-auto">
@@ -250,10 +258,12 @@
     <footer class="bg-navy text-white py-8 border-t-2 border-gold">
         <div class="container mx-auto px-6 text-center">
             <div class="flex items-center justify-center gap-3 mb-4">
+                <!-- ✅ تغيير الشعار في الفوتر -->
                 <div class="w-10 h-10 bg-gold rounded-xl flex items-center justify-center text-navy font-bold">
-                    أن
+                    من
                 </div>
-                <span class="text-xl font-bold text-gold">منظومة الأنشطة الطلابية</span>
+                <!-- ✅ تغيير الاسم في الفوتر -->
+                <span class="text-xl font-bold text-gold">منصة الأنشطة الطلابية</span>
             </div>
             <p class="text-gray-400 text-sm">جميع الحقوق محفوظة © {{ date('Y') }} — الفصل الثاني ١٤٤٧هـ</p>
         </div>
