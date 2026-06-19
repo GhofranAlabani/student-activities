@@ -188,4 +188,3 @@ Route::middleware('auth')->group(function () {
     })->name('notifications.delete');
 
 }); // نهاية مجموعة المصادقة
-

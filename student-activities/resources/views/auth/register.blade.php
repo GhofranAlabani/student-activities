@@ -1,52 +1,189 @@
-<x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء حساب جديد - منصة الأنشطة الطلابية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .bg-navy { background-color: #0a1929; }
+        .bg-navy-light { background-color: #112240; }
+        .text-gold { color: #d4a017; }
+        .bg-gold { background-color: #d4a017; }
+        .bg-gold:hover { background-color: #b8860b; }
+        .border-gold { border-color: #d4a017; }
+        .gradient-navy { background: linear-gradient(135deg, #0a1929 0%, #1e3a5f 100%); }
+        
+        /* تخصيص شريط التمرير */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a1929; }
+        ::-webkit-scrollbar-thumb { background: #d4a017; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b8860b; }
+    </style>
+</head>
+<body class="gradient-navy min-h-screen flex items-center justify-center p-4 py-10 relative overflow-y-auto">
 
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+    <!-- خلفية زخرفية -->
+    <div class="fixed top-20 right-20 w-96 h-96 bg-gold/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="fixed bottom-20 left-20 w-96 h-96 bg-gold/5 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 my-auto relative z-10 border border-gold/20">
+        
+        <!-- الشعار والعنوان -->
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 bg-gold rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                <i class="fas fa-graduation-cap text-4xl text-navy"></i>
+            </div>
+            <h2 class="text-3xl font-black text-navy mb-1">إنشاء حساب جديد</h2>
+            <p class="text-gray-600 text-sm">منصة الأنشطة الطلابية</p>
+            <div class="flex items-center justify-center gap-2 mt-3">
+                <div class="h-px w-12 bg-gold/30"></div>
+                <i class="fas fa-star text-gold text-xs"></i>
+                <div class="h-px w-12 bg-gold/30"></div>
+            </div>
         </div>
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+        <!-- عرض الأخطاء -->
+        @if ($errors->any())
+            <div class="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-exclamation-circle text-red-500"></i>
+                    <span class="font-bold text-sm">يوجد أخطاء:</span>
+                </div>
+                <ul class="list-disc list-inside text-sm space-y-1 mr-4">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+        <!-- نموذج التسجيل -->
+        <form method="POST" action="{{ route('register') }}" class="space-y-4">
+            @csrf
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
+            <!-- الاسم -->
+            <div>
+                <label for="name" class="block text-navy font-bold mb-1.5 text-sm">
+                    <i class="fas fa-user ml-2 text-gold"></i>
+                    الاسم الكامل
+                </label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    value="{{ old('name') }}" 
+                    required 
+                    autofocus 
+                    autocomplete="name"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition bg-gray-50 hover:bg-white"
+                    placeholder="أدخل اسمك الثلاثي"
+                >
+                @error('name')
+                    <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                    </p>
+                @enderror
+            </div>
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+            <!-- البريد الإلكتروني -->
+            <div>
+                <label for="email" class="block text-navy font-bold mb-1.5 text-sm">
+                    <i class="fas fa-envelope ml-2 text-gold"></i>
+                    البريد الإلكتروني
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    value="{{ old('email') }}" 
+                    required 
+                    autocomplete="username"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition bg-gray-50 hover:bg-white"
+                    placeholder="example@university.edu"
+                >
+                @error('email')
+                    <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                    </p>
+                @enderror
+            </div>
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+            <!-- كلمة المرور -->
+            <div>
+                <label for="password" class="block text-navy font-bold mb-1.5 text-sm">
+                    <i class="fas fa-lock ml-2 text-gold"></i>
+                    كلمة المرور
+                </label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    required 
+                    autocomplete="new-password"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition bg-gray-50 hover:bg-white"
+                    placeholder="••••••••"
+                >
+                @error('password')
+                    <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                    </p>
+                @enderror
+            </div>
 
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
+            <!-- تأكيد كلمة المرور -->
+            <div>
+                <label for="password_confirmation" class="block text-navy font-bold mb-1.5 text-sm">
+                    <i class="fas fa-lock ml-2 text-gold"></i>
+                    تأكيد كلمة المرور
+                </label>
+                <input 
+                    type="password" 
+                    id="password_confirmation" 
+                    name="password_confirmation" 
+                    required 
+                    autocomplete="new-password"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition bg-gray-50 hover:bg-white"
+                    placeholder="••••••••"
+                >
+                @error('password_confirmation')
+                    <p class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                    </p>
+                @enderror
+            </div>
 
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
+            <!-- زر التسجيل -->
+            <button 
+                type="submit" 
+                class="w-full bg-gold text-navy font-black py-3.5 px-4 rounded-xl transition duration-300 shadow-lg hover:shadow-2xl transform hover:-translate-y-1 text-lg mt-4"
+            >
+                <i class="fas fa-user-plus ml-2"></i>
+                إنشاء الحساب
+            </button>
 
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
+            <!-- رابط تسجيل الدخول -->
+            <div class="text-center pt-3">
+                <p class="text-gray-600 text-sm">
+                    لديك حساب بالفعل؟ 
+                    <a href="{{ route('login') }}" class="text-gold hover:text-yellow-700 font-bold transition hover:underline">
+                        تسجيل الدخول
+                    </a>
+                </p>
+            </div>
+        </form>
+
+        <!-- رابط العودة -->
+        <div class="text-center mt-6 pt-4 border-t-2 border-gold/10">
+            <a href="/" class="inline-flex items-center gap-2 text-gray-600 hover:text-navy text-sm font-semibold transition group">
+                <i class="fas fa-arrow-right group-hover:-translate-x-1 transition"></i>
+                العودة للصفحة الرئيسية
             </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
         </div>
-    </form>
-</x-guest-layout>
+    </div>
+
+</body>
+</html>
