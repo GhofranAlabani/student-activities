@@ -40,10 +40,10 @@
             
             <!-- إدارة الكادر -->
             <li>
-                <a href="{{ route('admin.staff') }}" class="{{ request()->routeIs('admin.staff') ? 'active' : '' }}">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <span>إدارة الكادر</span>
-                </a>
+                <a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
+    <i class="fas fa-chalkboard-teacher"></i>
+    <span>إدارة الكادر</span>
+</a>
             </li>
             
             <!-- جميع التسجيلات -->

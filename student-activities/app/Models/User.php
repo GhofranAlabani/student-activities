@@ -16,6 +16,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'points',
     ];
 
     protected $hidden = [
@@ -28,11 +29,35 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    // ✅ دوال مساعدة للتحقق من الصلاحيات
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->role === 'staff';
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === 'student';
+    }
+
+    // ✅ علاقة المشرف مع Staff
     public function staff()
     {
         return $this->hasOne(Staff::class);
     }
 
+    // ✅ علاقة المشرف مع الأنشطة (عبر جدول staff)
+    public function supervisedActivities()
+    {
+        return $this->hasMany(Activity::class, 'supervisor_id');
+    }
+
+    // ✅ علاقات الطالب
     public function activities()
     {
         return $this->belongsToMany(Activity::class, 'registrations', 'student_id', 'activity_id');
