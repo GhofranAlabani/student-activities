@@ -26,11 +26,10 @@ class StaffDashboardController extends Controller
         $myActivitiesCount = $myActivities->count();
         $totalParticipants = $myActivities->sum('registrations_count');
         
-        // التسجيلات المعلقة في أنشطته
+        // ✅ التسجيلات في أنشطته (بدون status)
         $pendingRegistrations = Registration::whereHas('activity', function($q) use ($user) {
                 $q->where('supervisor_id', $user->id);
             })
-            ->where('status', 'pending')
             ->with(['user', 'activity'])
             ->latest()
             ->take(10)

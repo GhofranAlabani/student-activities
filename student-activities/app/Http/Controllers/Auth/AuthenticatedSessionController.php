@@ -19,10 +19,10 @@ class AuthenticatedSessionController extends Controller
         return view('auth.login');
     }
 
-    /**
-     * Handle login request
-     */
-    public function store(LoginRequest $request)
+   /**
+ * Handle login request
+ */
+public function store(LoginRequest $request)
 {
     $request->authenticate();
     $request->session()->regenerate();
@@ -30,11 +30,11 @@ class AuthenticatedSessionController extends Controller
     $user = auth()->user();
 
     if ($user->role === 'admin') {
-        return redirect('/dashboard');
+        return redirect('/admin/dashboard');
     }
     
-    if ($user->role === 'supervisor') {
-        return redirect('/supervisor/dashboard');
+    if ($user->role === 'staff') {
+        return redirect('/staff/dashboard');
     }
 
     return redirect('/student/dashboard');
