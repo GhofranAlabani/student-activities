@@ -10,13 +10,13 @@ class Activity extends Model
 {
     use SoftDeletes;
 
-    // ✅ الحقول القابلة للتعديل
+    // ✅ الحقول القابلة للتعديل (Mass Assignable)
     protected $fillable = [
         'title',
         'image',
         'description',
         'type_id',
-        'supervisor_id', // ✅ أضفنا هذا
+        'supervisor_id',
         'location',
         'date',
         'time',
@@ -28,15 +28,17 @@ class Activity extends Model
         'priority',
         'certificate',
         'online_link',
+        'extra_data', // ✅ أضفنا هذا الحقل لدعم البيانات الإضافية (JSON)
     ];
 
-    // ✅ الحقول التي يجب تحويلها
+    // ✅ الحقول التي يجب تحويلها (Casts)
     protected $casts = [
         'date' => 'date',
         'time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
         'max_participants' => 'integer',
         'points' => 'integer',
+        'extra_data' => 'array', // ✅ هذا السطر مهم: يحول JSON إلى Array تلقائياً
     ];
 
     // ============================================
@@ -49,7 +51,7 @@ class Activity extends Model
         return $this->belongsTo(ActivityType::class, 'type_id');
     }
 
-    // ✅ علاقة مع المشرف (جديد!)
+    // ✅ علاقة مع المشرف
     public function supervisor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'supervisor_id');
@@ -144,5 +146,34 @@ class Activity extends Model
         return $this->status === 'active' 
             && $this->date->isFuture()
             && ($this->max_participants === null || $this->users()->count() < $this->max_participants);
+    }
+
+    // ============================================
+    // 🆕 Helpers للبيانات الإضافية (extra_data)
+    // ============================================
+
+    /**
+     * جلب قيمة محددة من البيانات الإضافية
+     * مثال: $activity->getExtra('speaker_name')
+     */
+    public function getExtra($key, $default = null)
+    {
+        return $this->extra_data[$key] ?? $default;
+    }
+
+    /**
+     * التحقق إذا كانت البيانات الإضافية تحتوي على مفتاح معين
+     */
+    public function hasExtra($key): bool
+    {
+        return isset($this->extra_data[$key]);
+    }
+
+    /**
+     * جلب كل البيانات الإضافية
+     */
+    public function getAllExtra(): array
+    {
+        return $this->extra_data ?? [];
     }
 }
