@@ -84,25 +84,26 @@
                        منصة متكاملة لإدارة الأنشطة الطلابية، تنسيق الفعاليات ومتابعة مشاركة الطلاب 
                     </p>
 
-                    <div class="flex gap-4 pt-4">
-                        @auth
-                            <a href="{{ route('activities.index') }}" 
-                               class="bg-gold text-navy px-8 py-4 rounded-xl hover:bg-yellow-600 transition font-bold text-lg shadow-xl">
-                                <i class="fas fa-search ml-2"></i>
-                                تصفح الأنشطة
-                            </a>
-                        @else
-                            <a href="{{ route('register') }}" 
-                               class="bg-gold text-navy px-8 py-4 rounded-xl hover:bg-yellow-600 transition font-bold text-lg shadow-xl">
-                                <i class="fas fa-user-plus ml-2"></i>
-                                ابدأ الآن
-                            </a>
-                            <a href="{{ route('activities.index') }}" 
-                               class="border-2 border-white text-white px-8 py-4 rounded-xl hover:bg-white hover:text-navy transition font-bold text-lg">
-                                تجوّل في النظام
-                            </a>
-                        @endauth
-                    </div>
+                   <div class="flex gap-4 pt-4">
+    @auth
+        <a href="{{ route('activities.index') }}" 
+           class="bg-gold text-navy px-8 py-4 rounded-xl hover:bg-yellow-600 transition font-bold text-lg shadow-xl">
+            <i class="fas fa-search ml-2"></i>
+            تصفح الأنشطة
+        </a>
+    @else
+        <a href="{{ route('login') }}" 
+           class="bg-gold text-navy px-8 py-4 rounded-xl hover:bg-yellow-600 transition font-bold text-lg shadow-xl">
+            <i class="fas fa-sign-in-alt ml-2"></i>
+            تسجيل الدخول
+        </a>
+        <a href="{{ route('register') }}" 
+           class="border-2 border-white text-white px-8 py-4 rounded-xl hover:bg-white hover:text-navy transition font-bold text-lg">
+            <i class="fas fa-user-plus ml-2"></i>
+            إنشاء حساب جديد
+        </a>
+    @endauth
+</div>
                 </div>
 
                 <!-- Left Side - Stats -->
@@ -240,19 +241,27 @@
     @endif
 
     <!-- CTA Section -->
-    @guest
-    <section class="gradient-navy py-20 px-6 text-white text-center">
-        <div class="container mx-auto">
-            <h2 class="text-4xl font-black mb-4">هل أنت مستعد للانضمام؟</h2>
-            <p class="text-gray-300 text-xl mb-10 max-w-xl mx-auto">سجّل الآن مجاناً وابدأ رحلتك في عالم الأنشطة الطلابية</p>
-            <a href="{{ route('register') }}" 
+   <!-- CTA Section -->
+@guest
+<section class="gradient-navy py-20 px-6 text-white text-center">
+    <div class="container mx-auto">
+        <h2 class="text-4xl font-black mb-4">هل أنت مستعد للانضمام؟</h2>
+        <p class="text-gray-300 text-xl mb-10 max-w-xl mx-auto">سجّل الآن مجاناً وابدأ رحلتك في عالم الأنشطة الطلابية</p>
+        <div class="flex gap-4 justify-center">
+            <a href="{{ route('login') }}" 
                class="inline-block bg-gold text-navy px-12 py-4 rounded-2xl font-extrabold text-xl hover:bg-yellow-600 transition shadow-xl">
-                <i class="fas fa-rocket ml-2"></i>
-                سجّل الآن
+                <i class="fas fa-sign-in-alt ml-2"></i>
+                تسجيل الدخول
+            </a>
+            <a href="{{ route('register') }}" 
+               class="inline-block border-2 border-white text-white px-12 py-4 rounded-2xl font-extrabold text-xl hover:bg-white hover:text-navy transition shadow-xl">
+                <i class="fas fa-user-plus ml-2"></i>
+                إنشاء حساب جديد
             </a>
         </div>
-    </section>
-    @endguest
+    </div>
+</section>
+@endguest
 
     <!-- Footer -->
     <footer class="bg-navy text-white py-8 border-t-2 border-gold">

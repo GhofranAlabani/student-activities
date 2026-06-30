@@ -41,6 +41,16 @@
         
         <h2 class="text-3xl font-black text-navy mb-6">تعديل النشاط: {{ $activity->title }}</h2>
 
+        @if($errors->any())
+            <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl mb-6">
+                <ul class="list-disc list-inside">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="bg-white rounded-2xl shadow-lg p-8">
             <form action="{{ route('staff.activities.update', $activity->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -86,5 +96,68 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-navy font-bold mb-2">التاريخ *</label>
-                            <input type="date" name="date" value="{{ old('date', $activity->date->format('Y-m-d')) }}" required
-                                  
+                            <input type="date" 
+                                   name="date" 
+                                   value="{{ old('date', $activity->date ? \Carbon\Carbon::parse($activity->date)->format('Y-m-d') : '') }}" 
+                                   required
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gold transition">
+                            @error('date')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-navy font-bold mb-2">الوقت *</label>
+                            <input type="time" 
+                                   name="time" 
+                                   value="{{ old('time', $activity->time ? \Carbon\Carbon::parse($activity->time)->format('H:i') : '') }}" 
+                                   required
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gold transition">
+                            @error('time')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <!-- عدد المشاركين والنقاط -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-navy font-bold mb-2">الحد الأقصى للمشاركين</label>
+                            <input type="number" name="max_participants" value="{{ old('max_participants', $activity->max_participants) }}" min="1"
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gold transition">
+                        </div>
+                        <div>
+                            <label class="block text-navy font-bold mb-2">النقاط</label>
+                            <input type="number" name="points" value="{{ old('points', $activity->points) }}" min="0"
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gold transition">
+                        </div>
+                    </div>
+
+                    <!-- الصورة -->
+                    <div>
+                        <label class="block text-navy font-bold mb-2">صورة النشاط (اتركها فارغة إذا لم ترد التغيير)</label>
+                        @if($activity->image)
+                            <div class="mb-3">
+                                <img src="{{ asset('storage/' . $activity->image) }}" class="w-32 h-32 object-cover rounded-lg border">
+                            </div>
+                        @endif
+                        <input type="file" name="image" accept="image/*"
+                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gold transition">
+                    </div>
+
+                    <!-- أزرار الإرسال -->
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" class="bg-gold text-navy px-8 py-3 rounded-xl font-bold hover:bg-yellow-600 transition">
+                            <i class="fas fa-save ml-2"></i> حفظ التعديلات
+                        </button>
+                        <a href="{{ route('staff.activities.index') }}" class="bg-gray-200 text-gray-700 px-8 py-3 rounded-xl font-bold hover:bg-gray-300 transition">
+                            إلغاء
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</body>
+</html>

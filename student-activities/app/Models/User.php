@@ -67,4 +67,10 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Activity::class, 'favorites');
     }
+
+    // ✅ علاقة مع التسجيلات (للطالب)
+public function registrations(): \Illuminate\Database\Eloquent\Relations\HasMany
+{
+    return $this->hasMany(\App\Models\Registration::class, 'student_id');
+}
 }
