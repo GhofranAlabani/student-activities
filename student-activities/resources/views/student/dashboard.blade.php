@@ -284,6 +284,7 @@
     </div>
 </div>
 
+
 <!-- الأزرار في الوسط -->
         <div class="flex justify-center items-center gap-6 mb-8">
           <a href="{{ route('student.my-activities') }}" 

@@ -69,24 +69,23 @@
     <span class="font-bold">الطلاب المسجلين</span>
 </a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
-                    <i class="fas fa-chart-bar text-gold w-5"></i>
-                    <span class="font-bold">التقارير</span>
-                </a>
+                <a href="{{ route('staff.reports.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
+    <i class="fas fa-chart-bar text-gold w-5"></i>
+    <span class="font-bold">التقارير</span>
+</a>
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
-                    <i class="fas fa-bullhorn text-gold w-5"></i>
-                    <span class="font-bold">الإعلانات</span>
-                </a>
-
+              <a href="{{ route('staff.announcements.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
+    <i class="fas fa-bullhorn text-gold w-5"></i>
+    <span class="font-bold">الإعلانات</span>
+</a>
                 <div class="border-t border-white/10 my-4"></div>
 
         
 
-                <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
-                    <i class="fas fa-cog text-gray-400 w-5"></i>
-                    <span class="font-bold">الإعدادات</span>
-                </a>
+               <a href="{{ route('staff.settings.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
+    <i class="fas fa-cog text-gold w-5"></i>
+    <span class="font-bold">الإعدادات</span>
+</a>
             </nav>
 
             <!-- Logout -->

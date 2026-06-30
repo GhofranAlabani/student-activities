@@ -34,12 +34,17 @@ Route::get('/dashboard', function () {
     }
 })->middleware(['auth'])->name('dashboard');
 
+
 // ===== لوحة تحكم الطالب =====
 Route::get('/student/dashboard', function () {
     return view('student.dashboard', [
         'totalActivities' => \App\Models\Activity::count(),
         'totalStudents' => \App\Models\User::count(),
         'totalRegistrations' => 0,
+        'announcements' => \App\Models\Announcement::active()
+            ->latest()
+            ->take(5)
+            ->get(),
     ]);
 })->middleware(['auth'])->name('student.dashboard');
 
@@ -206,10 +211,31 @@ Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->grou
 Route::get('/students', [App\Http\Controllers\Staff\StaffStudentController::class, 'index'])->name('students.index');
 
 
+
+
+// التقارير العامة
+Route::get('/reports', [App\Http\Controllers\Staff\StaffReportController::class, 'index'])->name('reports.index');
+Route::get('/reports/export-pdf', [App\Http\Controllers\Staff\StaffReportController::class, 'exportPDF'])->name('reports.export.pdf');
+Route::get('/reports/export-excel', [App\Http\Controllers\Staff\StaffReportController::class, 'exportExcel'])->name('reports.export.excel');
+
+
     // التقارير
 
     Route::get('/activities/{activity}/report', [App\Http\Controllers\Staff\StaffReportController::class, 'show'])->name('report.show');
     Route::get('/activities/{activity}/report/export', [App\Http\Controllers\Staff\StaffReportController::class, 'export'])->name('report.export');
+
+
+    // الإعلانات
+Route::get('/announcements', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'index'])->name('announcements.index');
+Route::post('/announcements', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'store'])->name('announcements.store');
+Route::delete('/announcements/{announcement}', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'destroy'])->name('announcements.destroy');
+
+
+
+// الإعدادات
+Route::get('/settings', [App\Http\Controllers\Staff\StaffSettingsController::class, 'index'])->name('settings.index');
+Route::put('/settings/profile', [App\Http\Controllers\Staff\StaffSettingsController::class, 'updateProfile'])->name('settings.profile.update');
+Route::put('/settings/password', [App\Http\Controllers\Staff\StaffSettingsController::class, 'updatePassword'])->name('settings.password.update');
 });
 
 require __DIR__.'/auth.php';

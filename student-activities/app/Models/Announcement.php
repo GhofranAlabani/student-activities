@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Announcement extends Model
 {
@@ -13,25 +14,21 @@ class Announcement extends Model
         'title',
         'content',
         'type',
-        'activity_id',
-        'user_id',
         'is_active',
-        'expires_at',
+        'start_date',
+        'end_date',
+        'created_by',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'expires_at' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
-    public function activity()
+    public function creator(): BelongsTo
     {
-        return $this->belongsTo(Activity::class);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     // Scope للإعلانات النشطة فقط
@@ -39,8 +36,8 @@ class Announcement extends Model
     {
         return $query->where('is_active', true)
                      ->where(function($q) {
-                         $q->whereNull('expires_at')
-                           ->orWhere('expires_at', '>=', now());
+                         $q->whereNull('end_date')
+                           ->orWhere('end_date', '>=', now());
                      });
     }
 }
