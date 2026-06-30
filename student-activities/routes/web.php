@@ -130,6 +130,12 @@ Route::middleware('auth')->group(function () {
         return view('student.profile', compact('user', 'activities', 'favorites'));
     })->name('student.profile');
 
+
+        // ========== الحضور (Attendance) ==========
+    Route::post('/attendance/check-in-qr', [App\Http\Controllers\Student\AttendanceController::class, 'checkInWithQR'])->name('attendance.check-in-qr');
+    Route::post('/activities/{activity}/attendance', [App\Http\Controllers\Student\AttendanceController::class, 'manualCheckIn'])->name('attendance.check-in');
+    Route::get('/attendance', [App\Http\Controllers\Student\AttendanceController::class, 'myAttendance'])->name('attendance.index');
+
     // ========== التقارير ==========
     Route::post('/reports', [ActivityReportController::class, 'store'])->name('reports.store');
 
@@ -236,6 +242,14 @@ Route::delete('/announcements/{announcement}', [App\Http\Controllers\Staff\Staff
 Route::get('/settings', [App\Http\Controllers\Staff\StaffSettingsController::class, 'index'])->name('settings.index');
 Route::put('/settings/profile', [App\Http\Controllers\Staff\StaffSettingsController::class, 'updateProfile'])->name('settings.profile.update');
 Route::put('/settings/password', [App\Http\Controllers\Staff\StaffSettingsController::class, 'updatePassword'])->name('settings.password.update');
+
+    // مسارات الحضور للمشرف
+    Route::get('/activities/{activity}/attendance', [App\Http\Controllers\Staff\AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('/activities/{activity}/attendance/qr', [App\Http\Controllers\Staff\AttendanceController::class, 'showQR'])->name('attendance.qr');
+    Route::post('/activities/{activity}/attendance/manual', [App\Http\Controllers\Staff\AttendanceController::class, 'manualCheckIn'])->name('attendance.manual');
+    Route::get('/activities/{activity}/attendance/export', [App\Http\Controllers\Staff\AttendanceController::class, 'exportReport'])->name('attendance.export');
 });
+
+
 
 require __DIR__.'/auth.php';

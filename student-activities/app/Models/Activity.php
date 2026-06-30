@@ -176,4 +176,9 @@ class Activity extends Model
     {
         return $this->extra_data ?? [];
     }
+
+    public function attendanceRecords()
+{
+    return $this->hasMany(AttendanceRecord::class);
+}
 }

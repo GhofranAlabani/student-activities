@@ -73,4 +73,9 @@ public function registrations(): \Illuminate\Database\Eloquent\Relations\HasMany
 {
     return $this->hasMany(\App\Models\Registration::class, 'student_id');
 }
+
+public function attendanceRecords()
+{
+    return $this->hasMany(AttendanceRecord::class);
+}
 }
