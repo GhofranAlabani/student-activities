@@ -38,7 +38,11 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #d4a017; border-radius: 20px; }
+        .bg-navy { background-color: #0a1929; }
+.text-gold { color: #d4a017; }
+.bg-gold { background-color: #d4a017; }
     </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="flex h-screen overflow-hidden bg-[#f5f0e8]">
 
@@ -98,79 +102,113 @@
             
             <div class="flex items-center gap-6 mr-auto">
                 
-                <!-- 🔔 جرس الإشعارات -->
-                <div class="relative group">
-                    <button class="relative p-2 text-gray-600 hover:text-gold transition focus:outline-none">
-                        <i class="fas fa-bell text-xl"></i>
-                        
-                        @php
-                            $unreadCount = \App\Models\Notification::where('user_id', auth()->id())->where('is_read', false)->count();
-                        @endphp
-                        
-                        @if($unreadCount > 0)
-                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full animate-pulse border-2 border-white">
-                                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-                            </span>
-                        @endif
-                    </button>
+               
+<!-- 🔔 نظام الإشعارات المنسدل -->
+<div class="relative" x-data="{ open: false, notifications: [], unreadCount: 0 }" 
+     @click.outside="open = false"
+     x-init="
+        fetch('/notifications/latest')
+            .then(r => r.json())
+            .then(data => { notifications = data.notifications; unreadCount = data.unread_count; });
+        setInterval(() => {
+            fetch('/notifications/latest')
+                .then(r => r.json())
+                .then(data => { notifications = data.notifications; unreadCount = data.unread_count; });
+        }, 30000);
+     ">
+    
+   <!-- 🔔 نظام الإشعارات الكامل -->
+<div class="relative" x-data="{ open: false }" @click.outside="open = false">
+    
+    <!-- زر الجرس -->
+    <button @click="open = !open" class="relative p-2 text-gray-600 hover:text-gold transition focus:outline-none">
+        <i class="fas fa-bell text-xl"></i>
+        
+        @php
+            $unreadCount = \App\Models\Notification::where('user_id', auth()->id())->where('is_read', false)->count();
+        @endphp
+        
+        @if($unreadCount > 0)
+            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full animate-pulse border-2 border-white">
+                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+            </span>
+        @endif
+    </button>
 
-                    <!-- القائمة المنسدلة للإشعارات -->
-                    <div class="absolute left-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 hidden group-hover:block z-50 overflow-hidden origin-top-right transform transition-all">
-                        <div class="p-3 bg-navy text-gold font-bold text-sm border-b border-gold/20 flex justify-between items-center">
-                            <span>آخر الإشعارات</span>
-                            @if($unreadCount > 0)
-                                <a href="{{ url('/notifications/mark-all-read') }}" class="text-xs text-gray-300 hover:text-white transition">تعليم الكل كمقروء</a>
+    <!-- القائمة المنسدلة -->
+    <div x-show="open" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 translate-y-2"
+         class="absolute left-0 top-full mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+        
+        <!-- Header القائمة -->
+        <div class="bg-gradient-to-r from-navy to-navy-light text-white p-4 flex items-center justify-between">
+            <h3 class="font-bold flex items-center gap-2">
+                <i class="fas fa-bell text-gold"></i>
+                الإشعارات
+            </h3>
+            <span class="bg-gold/20 text-gold px-2 py-1 rounded-full text-xs font-bold">
+                {{ $unreadCount }} جديد
+            </span>
+        </div>
+
+        <!-- قائمة الإشعارات -->
+        <div class="max-h-96 overflow-y-auto">
+            @php
+                $recentNotifications = \App\Models\Notification::where('user_id', auth()->id())->latest()->take(10)->get();
+            @endphp
+            
+            @forelse($recentNotifications as $notif)
+                <a href="{{ route('notifications.read', $notif->id) }}" 
+                   class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition {{ !$notif->is_read ? 'bg-yellow-50/30' : '' }}">
+                    <div class="flex items-start gap-3">
+                        <!-- الأيقونة -->
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                             style="background: {{ $notif->color ?? '#3b82f6' }}20;">
+                            @if($notif->icon && strlen($notif->icon) <= 4)
+                                <span>{{ $notif->icon }}</span>
+                            @else
+                                <i class="fas fa-{{ $notif->icon ?? 'bell' }} text-sm" style="color: {{ $notif->color ?? '#3b82f6' }}"></i>
                             @endif
                         </div>
                         
-                        <div class="max-h-64 overflow-y-auto custom-scrollbar">
-                            @php
-                                $recentNotifications = \App\Models\Notification::where('user_id', auth()->id())->latest()->take(5)->get();
-                            @endphp
-                            
-                            @forelse($recentNotifications as $notif)
-                                <a href="{{ route('notifications.read', $notif->id) }}" 
-                                   class="block p-3 border-b border-gray-50 hover:bg-gray-50 transition relative {{ !$notif->is_read ? 'bg-blue-50/30' : '' }}">
-                                    <div class="flex items-start gap-3">
-                                        <div class="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <i class="fas fa-{{ $notif->icon ?? 'bell' }} text-indigo-600 text-sm"></i>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-xs font-bold text-navy line-clamp-2 leading-relaxed">{{ $notif->title }}</p>
-                                            <p class="text-[10px] text-gray-500 mt-1 line-clamp-2">{{ $notif->message }}</p>
-                                            <p class="text-[10px] text-gray-400 mt-1">{{ $notif->created_at->diffForHumans() }}</p>
-                                        </div>
-                                        @if(!$notif->is_read)
-                                            <div class="w-2 h-2 rounded-full bg-gold mt-1.5 flex-shrink-0"></div>
-                                        @endif
-                                    </div>
-                                </a>
-                            @empty
-                                <div class="p-8 text-center text-gray-400">
-                                    <i class="fas fa-bell-slash text-3xl mb-2 opacity-50"></i>
-                                    <p class="text-sm">لا توجد إشعارات جديدة</p>
-                                </div>
-                            @endforelse
-                        </div>
-                        
-                        <div class="p-2 bg-gray-50 text-center border-t border-gray-100">
-                            <a href="{{ route('notifications.index') }}" class="text-xs font-bold text-gold hover:text-yellow-700 transition">عرض كل الإشعارات</a>
+                        <!-- المحتوى -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between mb-1">
+                                <h4 class="font-bold text-navy text-sm">{{ $notif->title }}</h4>
+                                @if(!$notif->is_read)
+                                    <span class="bg-gold/20 text-gold px-2 py-0.5 rounded-full text-xs font-bold">جديد</span>
+                                @endif
+                            </div>
+                            <p class="text-gray-600 text-xs line-clamp-2">{{ $notif->message }}</p>
+                            <p class="text-gray-400 text-xs mt-2">
+                                <i class="far fa-clock"></i>
+                                {{ $notif->created_at->diffForHumans() }}
+                            </p>
                         </div>
                     </div>
+                </a>
+            @empty
+                <div class="p-8 text-center text-gray-400">
+                    <i class="fas fa-bell-slash text-4xl mb-2 opacity-50"></i>
+                    <p class="text-sm">ما في إشعارات</p>
                 </div>
-                <!-- نهاية قسم الإشعارات -->
+            @endforelse
+        </div>
 
-                <span class="text-gray-700 bg-gold/10 px-4 py-2 rounded-full text-sm shadow-sm border border-gold/30 hidden md:inline-block">
-                    <i class="fas fa-calendar-alt ml-1 text-gold"></i> {{ now()->format('Y/m/d') }}
-                </span>
-                
-                <div class="flex items-center gap-2">
-                    <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-navy font-bold shadow-md">
-                        {{ substr(auth()->user()->name, 0, 1) }}
-                    </div>
-                    <span class="text-gray-800 font-semibold hidden md:inline">{{ auth()->user()->name }}</span>
-                </div>
-            </div>
+        <!-- Footer القائمة -->
+        <div class="bg-gray-50 p-3 text-center border-t border-gray-200">
+            <a href="{{ route('notifications.index') }}" class="text-gold font-bold text-sm hover:text-yellow-700 transition">
+                <i class="fas fa-eye ml-1"></i> عرض كل الإشعارات
+            </a>
+        </div>
+    </div>
+</div>
+<!-- نهاية قسم الإشعارات -->
         </header>
 
         <main class="flex-1 overflow-y-auto p-6 bg-[#f5f0e8]">

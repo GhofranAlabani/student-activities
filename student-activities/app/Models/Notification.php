@@ -13,7 +13,17 @@ class Notification extends Model
         'message',
         'activity_id',
         'icon',
+        'color',
+        'action_url',
+        'data',
         'is_read',
+        'read_at',
+    ];
+
+    protected $casts = [
+        'is_read' => 'boolean',
+        'read_at' => 'datetime',
+        'data' => 'array',
     ];
 
     public function user()
@@ -26,16 +36,11 @@ class Notification extends Model
         return $this->belongsTo(Activity::class);
     }
 
-    public static function notify($userId, $type, $title, $message, $activityId = null, $icon = 'bell')
+    public function markAsRead()
     {
-        return self::create([
-            'user_id' => $userId,
-            'type' => $type,
-            'title' => $title,
-            'message' => $message,
-            'activity_id' => $activityId,
-            'icon' => $icon,
-            'is_read' => false,
+        $this->update([
+            'is_read' => true,
+            'read_at' => now(),
         ]);
     }
 }

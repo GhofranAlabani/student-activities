@@ -123,13 +123,17 @@ Route::middleware('auth')->group(function () {
         return view('student.favorites', compact('favorites'));
     })->name('student.favorites');
 
-    Route::get('/student/profile', function () {
-        $user = auth()->user();
-        $activities = $user->activities()->latest()->get();
-        $favorites = $user->favorites()->count();
-        return view('student.profile', compact('user', 'activities', 'favorites'));
-    })->name('student.profile');
-
+   Route::get('/student/profile', function () {
+    $user = auth()->user();
+    $activities = $user->activities()->latest()->get();
+    $favorites = $user->favorites()->count();
+    
+    // جلب الشارات
+    $badges = \App\Models\Badge::where('is_active', true)->orderBy('requirement')->get();
+    $userBadges = $user->badges()->pluck('badges.id')->toArray();
+    
+    return view('student.profile', compact('user', 'activities', 'favorites', 'badges', 'userBadges'));
+})->name('student.profile');
 
         // ========== الحضور (Attendance) ==========
     Route::post('/attendance/check-in-qr', [App\Http\Controllers\Student\AttendanceController::class, 'checkInWithQR'])->name('attendance.check-in-qr');
@@ -162,15 +166,28 @@ Route::middleware('auth')->group(function () {
     })->name('activities.rate');
 
     // ========== الإشعارات ==========
+Route::middleware('auth')->group(function () {
+    
+    Route::get('/notifications', function () {
+        $user = auth()->user();
+        $notifications = \App\Models\Notification::where('user_id', $user->id)->latest()->paginate(20);
+        $unreadCount = \App\Models\Notification::where('user_id', $user->id)->where('is_read', false)->count();
+        return view('notifications.index', compact('notifications', 'unreadCount'));
+    })->name('notifications.index');
+
     Route::get('/notifications/mark-read/{id}', function ($id) {
-        \App\Models\Notification::where('id', $id)->where('user_id', auth()->id())->update(['is_read' => true, 'read_at' => now()]);
+        $notification = \App\Models\Notification::where('id', $id)->where('user_id', auth()->id())->first();
+        
+        if ($notification) {
+            $notification->update(['is_read' => true, 'read_at' => now()]);
+            
+            // إذا فيه رابط، روح له
+            if ($notification->action_url) {
+                return redirect($notification->action_url);
+            }
+        }
         return back();
     })->name('notifications.read');
-
-    Route::get('/notifications', function () {
-        $notifications = \App\Models\Notification::where('user_id', auth()->id())->latest()->paginate(20);
-        return view('notifications.index', compact('notifications'));
-    })->name('notifications.index');
 
     Route::post('/notifications/mark-all-read', function () {
         \App\Models\Notification::where('user_id', auth()->id())
@@ -185,7 +202,54 @@ Route::middleware('auth')->group(function () {
             ->delete();
         return back()->with('success', 'تم حذف الإشعار بنجاح');
     })->name('notifications.delete');
+    Route::get('/notifications/latest', function () {
+    $user = auth()->user();
+    $notifications = \App\Models\Notification::where('user_id', $user->id)
+        ->orderBy('created_at', 'desc')
+        ->limit(10)
+        ->get()
+        ->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'type' => $n->type,
+                'title' => $n->title,
+                'message' => $n->message,
+                'icon' => $n->icon,
+                'color' => $n->color,
+                'action_url' => $n->action_url,
+                'is_read' => $n->is_read,
+                'created_at' => $n->created_at->diffForHumans(),
+            ];
+        });
+    
+    $unreadCount = \App\Models\Notification::where('user_id', $user->id)
+        ->where('is_read', false)
+        ->count();
+    
+    return response()->json([
+        'notifications' => $notifications,
+        'unread_count' => $unreadCount,
+    ]);
+})->name('notifications.latest');
 
+Route::post('/notifications/{id}/read', function ($id) {
+    $notification = \App\Models\Notification::where('id', $id)
+        ->where('user_id', auth()->id())
+        ->first();
+    
+    if ($notification) {
+        $notification->update(['is_read' => true, 'read_at' => now()]);
+        
+        return response()->json([
+            'success' => true,
+            'action_url' => $notification->action_url,
+        ]);
+    }
+    
+    return response()->json(['success' => false], 404);
+})->name('notifications.ajax-read');
+
+});
 }); // نهاية مجموعة المصادقة العامة
 
 // ========== 🆕 مسارات المشرف (Staff) ==========

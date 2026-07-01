@@ -4,17 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PointsHistory extends Model
+class UserBadge extends Model
 {
+    protected $table = 'user_badges';
+
     protected $fillable = [
         'user_id',
-        'activity_id',
-        'points',
-        'reason',
+        'badge_id',
+        'earned_at',
     ];
 
     protected $casts = [
-        'points' => 'integer',
+        'earned_at' => 'datetime',
     ];
 
     public function user()
@@ -22,8 +23,8 @@ class PointsHistory extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function activity()
+    public function badge()
     {
-        return $this->belongsTo(Activity::class);
+        return $this->belongsTo(Badge::class);
     }
 }

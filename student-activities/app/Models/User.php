@@ -17,7 +17,13 @@ class User extends Authenticatable
         'password',
         'role',
         'points',
-    ];
+         'total_points',      
+         'level',               
+         'activities_completed',
+         'current_streak',      
+         'longest_streak',      
+];
+    
 
     protected $hidden = [
         'password',
@@ -77,5 +83,61 @@ public function registrations(): \Illuminate\Database\Eloquent\Relations\HasMany
 public function attendanceRecords()
 {
     return $this->hasMany(AttendanceRecord::class);
+}
+
+// العلاقة مع الشارات
+public function badges()
+{
+    return $this->belongsToMany(Badge::class, 'user_badges')
+                ->withPivot('earned_at')
+                ->withTimestamps();
+}
+
+// العلاقة مع سجل النقاط
+public function pointsHistory()
+{
+    return $this->hasMany(PointsHistory::class);
+}
+
+
+// حساب المستوى تلقائياً
+public function getLevelNameAttribute()
+{
+    $points = $this->total_points ?? 0;
+    
+    if ($points >= 500) return ['name' => 'خبير', 'icon' => '👑', 'color' => '#9333ea'];
+    if ($points >= 200) return ['name' => 'متقدم', 'icon' => '⭐', 'color' => '#3b82f6'];
+    if ($points >= 100) return ['name' => 'متوسط', 'icon' => '🌟', 'color' => '#10b981'];
+    if ($points >= 50)  return ['name' => 'نشيط', 'icon' => '🔥', 'color' => '#f59e0b'];
+    return ['name' => 'مبتدئ', 'icon' => '🌱', 'color' => '#6b7280'];
+}
+
+// النقاط اللازمة للمستوى التالي
+public function getNextLevelPointsAttribute()
+{
+    $points = $this->total_points ?? 0;
+    
+    if ($points >= 500) return 500;
+    if ($points >= 200) return 500;
+    if ($points >= 100) return 200;
+    if ($points >= 50)  return 100;
+    return 50;
+}
+
+// نسبة التقدم للمستوى التالي
+public function getLevelProgressAttribute()
+{
+    $points = $this->total_points ?? 0;
+    $nextLevel = $this->next_level_points;
+    
+    if ($points >= 500) return 100;
+    
+    $currentLevelStart = 0;
+    if ($points >= 200) $currentLevelStart = 200;
+    elseif ($points >= 100) $currentLevelStart = 100;
+    elseif ($points >= 50) $currentLevelStart = 50;
+    
+    $progress = (($points - $currentLevelStart) / ($nextLevel - $currentLevelStart)) * 100;
+    return min(100, max(0, $progress));
 }
 }
