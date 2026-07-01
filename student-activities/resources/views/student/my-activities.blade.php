@@ -43,6 +43,14 @@
             <a href="{{ route('student.favorites') }}" class="sidebar-link flex items-center p-3 text-gray-300 rounded-xl transition duration-200">
                 <i class="fas fa-heart ml-3 text-lg"></i> المفضلة
             </a>
+            <a href="{{ route('staff.attendance.index', $activity->id ?? 1) }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
+    <i class="fas fa-clipboard-check text-gold w-5"></i>
+    <span class="font-bold">الحضور</span>
+</a>
+            <a href="{{ route('attendance.scan') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
+    <i class="fas fa-qrcode text-gold w-5"></i>
+    <span class="font-bold">تسجيل الحضور</span>
+</a>
             <a href="{{ route('profile.edit') }}" class="sidebar-link flex items-center p-3 text-gray-300 rounded-xl transition duration-200">
                 <i class="fas fa-cog ml-3 text-lg"></i> الإعدادات
             </a>

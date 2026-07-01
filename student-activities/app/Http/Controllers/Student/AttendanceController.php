@@ -81,4 +81,11 @@ class AttendanceController extends Controller
             'attendanceRate'
         ));
     }
+    /**
+ * عرض صفحة مسح QR Code
+ */
+public function scanPage()
+{
+    return view('student.attendance.scan');
+}
 }

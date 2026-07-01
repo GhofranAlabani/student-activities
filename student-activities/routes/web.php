@@ -135,7 +135,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/check-in-qr', [App\Http\Controllers\Student\AttendanceController::class, 'checkInWithQR'])->name('attendance.check-in-qr');
     Route::post('/activities/{activity}/attendance', [App\Http\Controllers\Student\AttendanceController::class, 'manualCheckIn'])->name('attendance.check-in');
     Route::get('/attendance', [App\Http\Controllers\Student\AttendanceController::class, 'myAttendance'])->name('attendance.index');
-
+    Route::get('/attendance/scan', [App\Http\Controllers\Student\AttendanceController::class, 'scanPage'])->name('attendance.scan');
     // ========== التقارير ==========
     Route::post('/reports', [ActivityReportController::class, 'store'])->name('reports.store');
 

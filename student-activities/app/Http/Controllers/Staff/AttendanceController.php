@@ -7,7 +7,7 @@ use App\Models\Activity;
 use App\Services\AttendanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
 
 class AttendanceController extends Controller
 {
@@ -37,20 +37,28 @@ class AttendanceController extends Controller
     }
 
     /**
-     * عرض QR Code للنشاط
-     */
-    public function showQR(Activity $activity)
-    {
-        if ($activity->supervisor_id !== Auth::id()) {
-            abort(403, 'هذا النشاط ليس تحت إشرافك');
-        }
-
-        $qrData = $this->attendanceService->generateQRCode($activity);
-        $qrCode = QrCode::size(300)->generate($qrData);
-
-        return view('staff.attendance.qr', compact('activity', 'qrCode'));
+ * عرض QR Code للنشاط
+ */
+public function showQR(Activity $activity)
+{
+    if ($activity->supervisor_id !== Auth::id()) {
+        abort(403, 'هذا النشاط ليس تحت إشرافك');
     }
 
+    // توليد بيانات QR
+    $qrData = [
+        'activity_id' => $activity->id,
+        'token' => md5($activity->id . $activity->created_at),
+        'expires_at' => now()->addHours(2)->timestamp,
+    ];
+    
+    $qrString = json_encode($qrData);
+    
+    // استخدام API مجاني لتوليد QR Code
+    $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qrString);
+
+    return view('staff.attendance.qr', compact('activity', 'qrCodeUrl', 'qrString'));
+}
     /**
      * تسجيل الحضور يدوياً
      */
@@ -90,4 +98,5 @@ class AttendanceController extends Controller
 
         return view('staff.attendance.export', compact('activity', 'attendanceRecords'));
     }
+ 
 }

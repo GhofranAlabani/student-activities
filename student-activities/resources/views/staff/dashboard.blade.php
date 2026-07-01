@@ -64,28 +64,35 @@
                     <span class="font-bold">إضافة نشاط</span>
                 </a>
 
-               <a href="{{ route('staff.students.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
-    <i class="fas fa-users text-gold w-5"></i>
-    <span class="font-bold">الطلاب المسجلين</span>
-</a>
+                <a href="{{ route('staff.students.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
+                    <i class="fas fa-users text-gold w-5"></i>
+                    <span class="font-bold">الطلاب المسجلين</span>
+                </a>
 
                 <a href="{{ route('staff.reports.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
-    <i class="fas fa-chart-bar text-gold w-5"></i>
-    <span class="font-bold">التقارير</span>
-</a>
+                    <i class="fas fa-chart-bar text-gold w-5"></i>
+                    <span class="font-bold">التقارير</span>
+                </a>
 
-              <a href="{{ route('staff.announcements.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
-    <i class="fas fa-bullhorn text-gold w-5"></i>
-    <span class="font-bold">الإعلانات</span>
-</a>
+                @if($myActivities->count() > 0)
+                    @php $firstActivity = $myActivities->first(); @endphp
+                    <a href="{{ route('staff.attendance.index', $firstActivity->id) }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
+                        <i class="fas fa-clipboard-check text-gold w-5"></i>
+                        <span class="font-bold">الحضور</span>
+                    </a>
+                @endif
+
+                <a href="{{ route('staff.announcements.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
+                    <i class="fas fa-bullhorn text-gold w-5"></i>
+                    <span class="font-bold">الإعلانات</span>
+                </a>
+
                 <div class="border-t border-white/10 my-4"></div>
 
-        
-
-               <a href="{{ route('staff.settings.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
-    <i class="fas fa-cog text-gold w-5"></i>
-    <span class="font-bold">الإعدادات</span>
-</a>
+                <a href="{{ route('staff.settings.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
+                    <i class="fas fa-cog text-gold w-5"></i>
+                    <span class="font-bold">الإعدادات</span>
+                </a>
             </nav>
 
             <!-- Logout -->
@@ -253,6 +260,10 @@
                                                    class="text-green-600 hover:text-green-800" title="التسجيلات">
                                                     <i class="fas fa-users"></i>
                                                 </a>
+                                                <a href="{{ route('staff.attendance.index', $activity->id) }}" 
+                                                   class="text-indigo-600 hover:text-indigo-800" title="الحضور">
+                                                    <i class="fas fa-clipboard-check"></i>
+                                                </a>
                                                 <a href="{{ route('staff.report.show', $activity->id) }}" 
                                                    class="text-purple-600 hover:text-purple-800" title="التقرير">
                                                     <i class="fas fa-chart-bar"></i>
@@ -284,31 +295,33 @@
                     </h2>
                     <div class="space-y-3">
                         @foreach($pendingRegistrations as $registration)
-                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 bg-navy rounded-full flex items-center justify-center text-white font-bold">
-                                    {{ substr($registration->user->name, 0, 1) }}
+                            @if($registration->user && $registration->activity)
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 bg-navy rounded-full flex items-center justify-center text-white font-bold">
+                                        {{ substr($registration->user->name, 0, 1) }}
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-navy">{{ $registration->user->name }}</p>
+                                        <p class="text-xs text-gray-500">{{ $registration->activity->title }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="font-bold text-navy">{{ $registration->user->name }}</p>
-                                    <p class="text-xs text-gray-500">{{ $registration->activity->title }}</p>
+                                <div class="flex gap-2">
+                                    <form action="{{ route('staff.registrations.approve', $registration->id) }}" method="POST">
+                                        @csrf
+                                        <button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition text-sm">
+                                            <i class="fas fa-check ml-1"></i> قبول
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('staff.registrations.reject', $registration->id) }}" method="POST">
+                                        @csrf
+                                        <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition text-sm">
+                                            <i class="fas fa-times ml-1"></i> رفض
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                            <div class="flex gap-2">
-                                <form action="{{ route('staff.registrations.approve', $registration->id) }}" method="POST">
-                                    @csrf
-                                    <button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition text-sm">
-                                        <i class="fas fa-check ml-1"></i> قبول
-                                    </button>
-                                </form>
-                                <form action="{{ route('staff.registrations.reject', $registration->id) }}" method="POST">
-                                    @csrf
-                                    <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition text-sm">
-                                        <i class="fas fa-times ml-1"></i> رفض
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                            @endif
                         @endforeach
                     </div>
                 </div>
