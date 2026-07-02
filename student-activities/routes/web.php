@@ -111,6 +111,10 @@ Route::middleware('auth')->group(function () {
         return back()->with('success', 'تم إلغاء التسجيل بنجاح');
     })->name('activities.unregister');
     Route::post('/activities/{id}/favorite', [ActivityController::class, 'toggleFavorite'])->name('activities.favorite');
+    // تصدير النشاط إلى Google Calendar
+Route::get('/activities/{activity}/export-calendar', [App\Http\Controllers\ActivityController::class, 'exportToCalendar'])
+    ->name('activities.export-calendar')
+    ->middleware('auth');
 
     // ========== صفحات الطالب ==========
     Route::get('/student/my-activities', function () {
@@ -312,6 +316,13 @@ Route::put('/settings/password', [App\Http\Controllers\Staff\StaffSettingsContro
     Route::get('/activities/{activity}/attendance/qr', [App\Http\Controllers\Staff\AttendanceController::class, 'showQR'])->name('attendance.qr');
     Route::post('/activities/{activity}/attendance/manual', [App\Http\Controllers\Staff\AttendanceController::class, 'manualCheckIn'])->name('attendance.manual');
     Route::get('/activities/{activity}/attendance/export', [App\Http\Controllers\Staff\AttendanceController::class, 'exportReport'])->name('attendance.export');
+
+    Route::get('/staff/activities/{activity}/qr', [App\Http\Controllers\Staff\AttendanceController::class, 'showQR'])->name('staff.attendance.qr');
+   Route::post('/attendance/check-in-qr', [App\Http\Controllers\Staff\AttendanceController::class, 'checkInQR'])
+    ->name('attendance.check-in-qr')
+    ->middleware('auth');
+
+   
 });
 
 

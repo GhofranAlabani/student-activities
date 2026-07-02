@@ -81,9 +81,12 @@
                     </tbody>
                 </table>
             </div>
-            @if($attendanceRecords->hasPages())
-                <div class="p-6 border-t border-gray-200">{{ $attendanceRecords->links() }}</div>
-            @endif
+          @if($attendanceRecords->count() > 0)
+    <div class="p-4 bg-gray-50 text-center text-sm text-gray-500 border-t border-gray-200">
+        <i class="fas fa-info-circle ml-1 text-blue-500"></i>
+        إجمالي سجلات الحضور: <strong>{{ $attendanceRecords->count() }}</strong>
+    </div>
+@endif
         </div>
     </div>
 

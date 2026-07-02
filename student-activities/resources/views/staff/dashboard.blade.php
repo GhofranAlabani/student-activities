@@ -247,29 +247,45 @@
                                             @endif
                                         </td>
                                         <td class="px-4 py-4">
-                                            <div class="flex gap-2">
-                                                <a href="{{ route('staff.activities.show', $activity->id) }}" 
-                                                   class="text-blue-600 hover:text-blue-800" title="التفاصيل">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="{{ route('staff.activities.edit', $activity->id) }}" 
-                                                   class="text-gold hover:text-yellow-700" title="تعديل">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <a href="{{ route('staff.registrations.index', $activity->id) }}" 
-                                                   class="text-green-600 hover:text-green-800" title="التسجيلات">
-                                                    <i class="fas fa-users"></i>
-                                                </a>
-                                                <a href="{{ route('staff.attendance.index', $activity->id) }}" 
-                                                   class="text-indigo-600 hover:text-indigo-800" title="الحضور">
-                                                    <i class="fas fa-clipboard-check"></i>
-                                                </a>
-                                                <a href="{{ route('staff.report.show', $activity->id) }}" 
-                                                   class="text-purple-600 hover:text-purple-800" title="التقرير">
-                                                    <i class="fas fa-chart-bar"></i>
-                                                </a>
-                                            </div>
-                                        </td>
+    <div class="flex gap-2 items-center">
+        <a href="{{ route('staff.activities.show', $activity->id) }}" 
+           class="text-blue-600 hover:text-blue-800 p-1.5 hover:bg-blue-50 rounded-lg transition" 
+           title="التفاصيل">
+            <i class="fas fa-eye"></i>
+        </a>
+        <a href="{{ route('staff.activities.edit', $activity->id) }}" 
+           class="text-gold hover:text-yellow-700 p-1.5 hover:bg-yellow-50 rounded-lg transition" 
+           title="تعديل">
+            <i class="fas fa-edit"></i>
+        </a>
+        <a href="{{ route('staff.registrations.index', $activity->id) }}" 
+           class="text-green-600 hover:text-green-800 p-1.5 hover:bg-green-50 rounded-lg transition" 
+           title="التسجيلات">
+            <i class="fas fa-users"></i>
+        </a>
+        <a href="{{ route('staff.attendance.index', $activity->id) }}" 
+           class="text-indigo-600 hover:text-indigo-800 p-1.5 hover:bg-indigo-50 rounded-lg transition" 
+           title="الحضور">
+            <i class="fas fa-clipboard-check"></i>
+        </a>
+        
+        <!-- ✨ زر QR Code الجديد -->
+        <a href="{{ route('staff.attendance.qr', $activity->id) }}" 
+           class="text-pink-600 hover:text-pink-800 p-1.5 hover:bg-pink-50 rounded-lg transition relative group" 
+           title="QR Code للحضور">
+            <i class="fas fa-qrcode"></i>
+            <span class="absolute -top-8 right-1/2 translate-x-1/2 bg-navy text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                QR Code
+            </span>
+        </a>
+        
+        <a href="{{ route('staff.report.show', $activity->id) }}" 
+           class="text-purple-600 hover:text-purple-800 p-1.5 hover:bg-purple-50 rounded-lg transition" 
+           title="التقرير">
+            <i class="fas fa-chart-bar"></i>
+        </a>
+    </div>
+</td>
                                     </tr>
                                     @endforeach
                                 </tbody>

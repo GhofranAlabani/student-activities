@@ -38,19 +38,19 @@
                 <i class="fas fa-home ml-3 text-lg"></i> الرئيسية
             </a>
             <a href="{{ route('student.my-activities') }}" class="sidebar-link active flex items-center p-3 rounded-xl transition duration-200">
-                <i class="fas fa-calendar-check ml-3 text-lg"></i> أنشطتي
+                <i class="fas fa-calendar-check ml-3 text-lg"></i> سجل الأنشطة
             </a>
             <a href="{{ route('student.favorites') }}" class="sidebar-link flex items-center p-3 text-gray-300 rounded-xl transition duration-200">
                 <i class="fas fa-heart ml-3 text-lg"></i> المفضلة
             </a>
             <a href="{{ route('staff.attendance.index', $activity->id ?? 1) }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
-    <i class="fas fa-clipboard-check text-gold w-5"></i>
-    <span class="font-bold">الحضور</span>
-</a>
+                <i class="fas fa-clipboard-check text-gold w-5"></i>
+                <span class="font-bold">الحضور</span>
+            </a>
             <a href="{{ route('attendance.scan') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
-    <i class="fas fa-qrcode text-gold w-5"></i>
-    <span class="font-bold">تسجيل الحضور</span>
-</a>
+                <i class="fas fa-qrcode text-gold w-5"></i>
+                <span class="font-bold">تسجيل الحضور</span>
+            </a>
             <a href="{{ route('profile.edit') }}" class="sidebar-link flex items-center p-3 text-gray-300 rounded-xl transition duration-200">
                 <i class="fas fa-cog ml-3 text-lg"></i> الإعدادات
             </a>
@@ -74,7 +74,7 @@
                     <i class="fas fa-arrow-right"></i>
                     <span class="font-semibold">رجوع</span>
                 </a>
-                <h1 class="font-black text-xl text-navy border-r-2 border-gold pr-3 mr-1">أنشطتي المسجلة</h1>
+                <h1 class="font-black text-xl text-navy border-r-2 border-gold pr-3 mr-1">سجل الأنشطة</h1>
             </div>
             <div class="flex items-center gap-3">
                 <span class="text-gray-700 bg-gold/10 px-4 py-2 rounded-full text-sm border border-gold/30">
@@ -95,6 +95,17 @@
                     </div>
                 @endif
 
+                {{-- ✅ حساب الإحصائيات في الأعلى --}}
+                @php
+                    $totalPoints = $activities->sum(function($activity) {
+                        return $activity->pivot ? ($activity->pivot->points_earned ?? $activity->points ?? 0) : 0;
+                    });
+                    
+                    $activeCount = $activities->filter(function($activity) {
+                        return in_array($activity->status, ['مفتوح', 'نشط', 'active', 'مكتمل']);
+                    })->count();
+                @endphp
+
                 <!-- Summary Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
                     <div class="bg-white p-5 rounded-2xl shadow-lg border-b-4 border-indigo-500 flex items-center justify-between">
@@ -110,9 +121,7 @@
                     <div class="bg-white p-5 rounded-2xl shadow-lg border-b-4 border-emerald-500 flex items-center justify-between">
                         <div>
                             <p class="text-gray-500 text-sm font-semibold mb-1">أنشطة نشطة</p>
-                            <p class="text-4xl font-black text-navy">
-                                {{ collect($activities)->where('status', 'مفتوح')->count() }}
-                            </p>
+                            <p class="text-4xl font-black text-navy">{{ $activeCount }}</p>
                         </div>
                         <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
                             <i class="fas fa-running text-xl text-emerald-600"></i>
@@ -122,7 +131,7 @@
                     <div class="bg-white p-5 rounded-2xl shadow-lg border-b-4 border-gold flex items-center justify-between">
                         <div>
                             <p class="text-gray-500 text-sm font-semibold mb-1">النقاط المكتسبة</p>
-                            <p class="text-4xl font-black text-navy">{{ auth()->user()->points ?? 0 }}</p>
+                            <p class="text-4xl font-black text-navy">{{ $totalPoints }}</p>
                         </div>
                         <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
                             <i class="fas fa-star text-xl text-gold"></i>
@@ -136,11 +145,25 @@
                         @foreach($activities as $activity)
                             <div class="activity-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
                                 <!-- Image Area -->
-                                <div class="h-40 bg-gradient-to-br from-navy to-navy-light relative flex items-center justify-center">
+                                <div class="h-40 bg-gradient-to-br from-navy to-navy-light relative flex items-center justify-center overflow-hidden">
                                     @if($activity->image)
                                         <img src="{{ asset('storage/' . $activity->image) }}" class="w-full h-full object-cover opacity-90">
                                     @else
-                                        <i class="fas fa-calendar-alt text-5xl text-white/20"></i>
+                                        {{-- ✅ صورة افتراضية حسب نوع النشاط --}}
+                                        @php
+                                            $defaultImages = [
+                                                'مؤتمر' => 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop',
+                                                'ورشة عمل' => 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
+                                                'ندوة' => 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=400&h=300&fit=crop',
+                                                'دورة' => 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&h=300&fit=crop',
+                                            ];
+                                            $typeName = $activity->activityType->name ?? 'عام';
+                                            $defaultImage = $defaultImages[$typeName] ?? 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=400&h=300&fit=crop';
+                                        @endphp
+                                        <img src="{{ $defaultImage }}" class="w-full h-full object-cover opacity-50">
+                                        <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                                            <i class="fas fa-calendar-alt text-5xl text-white/70"></i>
+                                        </div>
                                     @endif
                                     
                                     <!-- Status Badge -->
@@ -169,9 +192,15 @@
                                     <!-- Info Details -->
                                     <div class="space-y-2 mb-4 text-sm text-gray-600 flex-1">
                                         @if($activity->date)
+                                            @php
+                                                $activityDate = \Carbon\Carbon::parse($activity->date);
+                                                $formattedDate = $activityDate->year > 2020 
+                                                    ? $activityDate->format('Y/m/d') 
+                                                    : now()->format('Y/m/d');
+                                            @endphp
                                             <div class="flex items-center gap-2">
                                                 <i class="fas fa-calendar text-gold w-5 text-center"></i>
-                                                <span>{{ \Carbon\Carbon::parse($activity->date)->format('Y/m/d') }}</span>
+                                                <span>{{ $formattedDate }}</span>
                                             </div>
                                         @endif
                                         @if($activity->location)
@@ -182,21 +211,31 @@
                                         @endif
                                         <div class="flex items-center gap-2">
                                             <i class="fas fa-clock text-gold w-5 text-center"></i>
-                                            <span>سجلت في: {{ $activity->pivot?->created_at?->format('Y/m/d') ?? 'غير معروف' }}</span>
+                                            <span>سجلت في: {{ $activity->pivot && $activity->pivot->created_at ? \Carbon\Carbon::parse($activity->pivot->created_at)->format('Y/m/d H:i') : 'غير متوفر' }}</span>
                                         </div>
                                     </div>
 
                                     <!-- Actions -->
-                                    <div class="flex gap-3 mt-auto pt-4 border-t border-gray-100">
+                                    <div class="flex gap-2 mt-auto pt-4 border-t border-gray-100">
                                         <a href="{{ route('activities.show', $activity->id) }}"
-                                            class="flex-1 bg-navy text-white text-center py-2.5 rounded-xl hover:bg-gold hover:text-navy transition font-bold text-sm flex items-center justify-center gap-2">
+                                            class="flex-1 bg-navy text-white text-center py-2 rounded-xl hover:bg-gold hover:text-navy transition font-bold text-sm flex items-center justify-center gap-1">
                                             <i class="fas fa-eye"></i> التفاصيل
                                         </a>
+                                        
+                                        @if($activity->date && \Carbon\Carbon::parse($activity->date)->isFuture())
+                                            <a href="{{ route('activities.export-calendar', $activity->id) }}" 
+                                               target="_blank"
+                                               class="flex-1 bg-blue-600 text-white text-center py-2 rounded-xl hover:bg-blue-700 transition font-bold text-sm flex items-center justify-center gap-1"
+                                               title="إضافة إلى تقويم جوجل">
+                                                <i class="fab fa-google"></i> التقويم
+                                            </a>
+                                        @endif
+                                        
                                         <form action="{{ route('activities.unregister', $activity->id) }}" method="POST"
                                             onsubmit="return confirm('هل تريد إلغاء تسجيلك في هذا النشاط؟')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="px-4 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition border border-red-100 font-bold" title="إلغاء التسجيل">
+                                            <button type="submit" class="px-3 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition border border-red-100 font-bold" title="إلغاء التسجيل">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </form>

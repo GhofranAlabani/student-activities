@@ -17,7 +17,7 @@
         <div class="mb-6">
             <h1 class="text-3xl font-bold text-gray-800 mb-2">
                 <i class="fas fa-clipboard-list text-blue-600"></i>
-                سجل الحضور
+                سجل الحضور - {{ $activity->title }}
             </h1>
         </div>
 
@@ -26,7 +26,7 @@
             <div class="bg-white rounded-xl shadow p-6 border-r-4 border-green-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm">الأنشطة المحضورة</p>
+                        <p class="text-gray-500 text-sm">الحاضرون</p>
                         <h3 class="text-3xl font-bold text-green-600">{{ $totalPresent }}</h3>
                     </div>
                     <i class="fas fa-check-circle text-green-500 text-3xl"></i>
@@ -36,10 +36,10 @@
             <div class="bg-white rounded-xl shadow p-6 border-r-4 border-blue-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm">إجمالي الأنشطة</p>
+                        <p class="text-gray-500 text-sm">إجمالي المسجلين</p>
                         <h3 class="text-3xl font-bold text-blue-600">{{ $totalActivities }}</h3>
                     </div>
-                    <i class="fas fa-calendar text-blue-500 text-3xl"></i>
+                    <i class="fas fa-users text-blue-500 text-3xl"></i>
                 </div>
             </div>
 
@@ -65,8 +65,7 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">#</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النشاط</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الطالب</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">وقت الحضور</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النقاط</th>
@@ -77,14 +76,15 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 text-sm text-gray-900">{{ $loop->iteration }}</td>
                                 <td class="px-6 py-4">
-                                    <p class="font-bold text-gray-900">{{ $record->activity->title }}</p>
-                                    <p class="text-xs text-gray-500">{{ $record->activity->location }}</p>
+                                    <p class="font-bold text-gray-900">{{ $record->user->name ?? 'طالب محذوف' }}</p>
+                                    <p class="text-xs text-gray-500">{{ $record->user->email ?? '' }}</p>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
-                                    {{ $record->activity->date->format('Y/m/d') }}
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
-                                    {{ $record->check_in_time ? $record->check_in_time->format('H:i') : '-' }}
+                                    @if($record->check_in_time)
+                                        {{ \Carbon\Carbon::parse($record->check_in_time)->format('Y/m/d H:i') }}
+                                    @else
+                                        -
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4">
                                     @if($record->status === 'present')
@@ -98,12 +98,12 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm font-bold text-blue-600">
-                                    +{{ $record->points_earned }}
+                                    +{{ $record->points_earned ?? 0 }}
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                <td colspan="5" class="px-6 py-12 text-center text-gray-500">
                                     <i class="fas fa-inbox text-4xl mb-3 block"></i>
                                     لا توجد سجلات حضور حتى الآن
                                 </td>
@@ -113,9 +113,10 @@
                 </table>
             </div>
 
-            @if($attendanceRecords->hasPages())
-                <div class="p-6 border-t border-gray-200">
-                    {{ $attendanceRecords->links() }}
+            @if($attendanceRecords->count() > 0)
+                <div class="p-4 bg-gray-50 text-center text-sm text-gray-500 border-t border-gray-200">
+                    <i class="fas fa-info-circle ml-1 text-blue-500"></i>
+                    إجمالي سجلات الحضور: <strong>{{ $attendanceRecords->count() }}</strong>
                 </div>
             @endif
         </div>
