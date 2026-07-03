@@ -5,9 +5,13 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
 use App\Models\ActivityType;
+use App\Mail\ActivityUpdatedMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class StaffActivityController extends Controller
 {
@@ -176,37 +180,102 @@ class StaffActivityController extends Controller
     }
 
     public function update(Request $request, Activity $activity)
-    {
-        if ($activity->supervisor_id !== Auth::id()) {
-            abort(403, 'هذا النشاط ليس تحت إشرافك');
+{
+    if ($activity->supervisor_id !== Auth::id()) {
+        abort(403, 'هذا النشاط ليس تحت إشرافك');
+    }
+
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'type_id' => 'required|exists:activity_types,id',
+        'location' => 'required|string|max:255',
+        'date' => 'required|date',
+        'time' => 'required',
+        'max_participants' => 'nullable|integer|min:1',
+        'points' => 'nullable|integer|min:0',
+        'image' => 'nullable|image|max:2048',
+    ]);
+
+    // ✅ تتبع التغييرات المهمة قبل التحديث
+    $changes = [];
+    
+    // مقارنة المكان
+    if (isset($validated['location']) && trim($activity->location) !== trim($validated['location'])) {
+        $changes['المكان'] = 'من: ' . $activity->location . ' إلى: ' . $validated['location'];
+    }
+    
+    // مقارنة التاريخ
+    if (isset($validated['date'])) {
+        $oldDate = \Carbon\Carbon::parse($activity->date)->format('Y-m-d');
+        $newDate = \Carbon\Carbon::parse($validated['date'])->format('Y-m-d');
+        if ($oldDate !== $newDate) {
+            $changes['التاريخ'] = 'من: ' . $oldDate . ' إلى: ' . $newDate;
         }
+    }
+    
+    // مقارنة الوقت
+    if (isset($validated['time'])) {
+        $oldTime = \Carbon\Carbon::parse($activity->time)->format('H:i');
+        $newTime = \Carbon\Carbon::parse($validated['time'])->format('H:i');
+        if ($oldTime !== $newTime) {
+            $changes['الوقت'] = 'من: ' . $oldTime . ' إلى: ' . $newTime;
+        }
+    }
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'type_id' => 'required|exists:activity_types,id',
-            'location' => 'required|string|max:255',
-            'date' => 'required|date',
-            'time' => 'required',
-            'max_participants' => 'nullable|integer|min:1',
-            'points' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|max:2048',
-        ]);
+    // رفع الصورة الجديدة
+    if ($request->hasFile('image')) {
+        if ($activity->image) {
+            Storage::disk('public')->delete($activity->image);
+        }
+        $validated['image'] = $request->file('image')->store('activities', 'public');
+    }
 
-        // رفع الصورة الجديدة
-        if ($request->hasFile('image')) {
-            // حذف الصورة القديمة
-            if ($activity->image) {
-                Storage::disk('public')->delete($activity->image);
+    // تحديث النشاط
+    $activity->update($validated);
+
+    // 🔍 DEBUG: تسجيل المعلومات
+    Log::info('=== DEBUG Activity Update ===');
+    Log::info('Activity ID: ' . $activity->id);
+    Log::info('Changes detected: ' . count($changes));
+    Log::info('Changes: ' . json_encode($changes, JSON_UNESCAPED_UNICODE));
+
+    // ✅ إرسال إشعار للطلاب المسجلين إذا فيه تغييرات مهمة
+    if (!empty($changes)) {
+        // جلب الطلاب المسجلين
+        $registrations = DB::table('registrations')
+            ->where('activity_id', $activity->id)
+            ->pluck('student_id');
+
+        $users = \App\Models\User::whereIn('id', $registrations)->get();
+        
+        Log::info('Registered students: ' . $users->count());
+
+        $emailsSent = 0;
+
+        foreach ($users as $user) {
+            if ($user->email) {
+                try {
+                    Mail::to($user->email)->send(new ActivityUpdatedMail($user, $activity, $changes));
+                    $emailsSent++;
+                    Log::info('✅ Email sent to: ' . $user->email);
+                } catch (\Exception $e) {
+                    Log::error('❌ Failed: ' . $user->email . ' - ' . $e->getMessage());
+                }
             }
-            $validated['image'] = $request->file('image')->store('activities', 'public');
         }
 
-        $activity->update($validated);
+        Log::info('=== Total emails sent: ' . $emailsSent . ' ===');
 
         return redirect()->route('staff.activities.index')
-            ->with('success', 'تم تحديث النشاط بنجاح');
+            ->with('success', 'تم تحديث النشاط بنجاح وإرسال إشعارات لـ ' . $emailsSent . ' طالب مسجل');
     }
+
+    Log::info('=== No changes detected ===');
+
+    return redirect()->route('staff.activities.index')
+        ->with('success', 'تم تحديث النشاط بنجاح');
+}
 
     public function destroy(Activity $activity)
     {
