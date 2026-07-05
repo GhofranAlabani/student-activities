@@ -29,6 +29,14 @@
                 </a>
             </li>
             
+            <!-- إدارة المدربين -->
+            <li>
+                <a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
+    <i class="fas fa-chalkboard-teacher"></i>
+                 <span>إدارة المدربين</span>
+             </a>
+            </li>
+
             <!-- 📋 إدارة الاستبيانات (جديد) -->
             <li>
                 <a href="{{ route('admin.survey-questions.index') }}" 
@@ -36,14 +44,6 @@
           <i class="fas fa-poll"></i>
           <span>إدارة الاستبيان</span>
                 </a>
-            </li>
-            
-            <!-- إدارة الكادر -->
-            <li>
-                <a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
-    <i class="fas fa-chalkboard-teacher"></i>
-    <span>إدارة الكادر</span>
-</a>
             </li>
             
             <!-- جميع التسجيلات -->

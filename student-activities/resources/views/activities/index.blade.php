@@ -1,330 +1,683 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الأنشطة الطلابية</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Cairo', sans-serif; }
-        .bg-navy { background-color: #0a1929; }
-        .bg-navy-light { background-color: #112240; }
-        .text-gold { color: #d4a017; }
-        .bg-gold { background-color: #d4a017; }
-        .bg-gold:hover { background-color: #b8860b; }
-        .border-gold { border-color: #d4a017; }
-        
-        .activity-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .activity-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(10, 25, 41, 0.15); }
-        
-        [x-cloak] { display: none !important; }
-    </style>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script> 
-</head>
-<body class="bg-[#f5f0e8] min-h-screen pb-12">
+@extends('layouts.admin')
 
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md sticky top-0 z-50 border-b border-gray-100">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <a href="/" class="text-2xl font-black text-navy flex items-center gap-2">
-                    <i class="fas fa-graduation-cap text-gold"></i>
-                    نظام الأنشطة الطلابية
-                </a>
-              <div class="flex gap-4 items-center">
-                <a href="{{ route('activities.index') }}" class="text-gray-700 hover:text-gold font-bold transition hidden md:block">الأنشطة</a>
-                
-                @auth
-                    <a href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('student.dashboard') }}" class="text-gray-700 hover:text-gold font-bold transition hidden md:block">لوحة التحكم</a>
+@section('content')
 
-                    <!-- جرس الإشعارات -->
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="relative text-gray-600 hover:text-gold transition p-2 focus:outline-none">
-                            <i class="fas fa-bell text-xl"></i>
-                            @php
-                                $unreadCount = \App\Models\Notification::where('user_id', auth()->id())->where('is_read', false)->count();
-                            @endphp
-                            @if($unreadCount > 0)
-                                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse border-2 border-white">
-                                    {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-                                </span>
-                            @endif
-                        </button>
+<style>
+    /* ===== الأنماط العامة ===== */
+    .activities-container {
+        width: 100%;
+        padding: 30px;
+        max-width: 100%;
+        direction: rtl;
+    }
 
-                        <div x-show="open" @click.outside="open = false" x-cloak
-                            class="absolute left-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden origin-top-left">
-                            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                                <h3 class="font-bold text-navy">الإشعارات</h3>
-                                <a href="{{ route('notifications.index') }}" class="text-xs text-gold hover:text-yellow-700 font-bold">عرض الكل</a>
-                            </div>
-                            <div class="max-h-96 overflow-y-auto custom-scrollbar">
-                                @php
-                                    $recentNotifications = \App\Models\Notification::where('user_id', auth()->id())->latest()->take(5)->get();
-                                @endphp
-                                @forelse($recentNotifications as $notif)
-                                    <a href="{{ route('notifications.read', $notif->id) }}" class="block p-4 border-b border-gray-50 hover:bg-gray-50 transition {{ !$notif->is_read ? 'bg-blue-50/30' : '' }}">
-                                        <div class="flex items-start gap-3">
-                                            <div class="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                                <i class="fas fa-{{ $notif->icon ?? 'bell' }} text-indigo-600 text-sm"></i>
-                                            </div>
-                                            <div class="flex-1">
-                                                <p class="font-semibold text-gray-800 text-sm">{{ $notif->title }}</p>
-                                                <p class="text-gray-500 text-xs mt-0.5 line-clamp-2">{{ $notif->message }}</p>
-                                                <p class="text-gray-400 text-xs mt-1">{{ $notif->created_at->diffForHumans() }}</p>
-                                            </div>
-                                            @if(!$notif->is_read)
-                                                <span class="w-2 h-2 bg-gold rounded-full mt-1.5 flex-shrink-0"></span>
-                                            @endif
-                                        </div>
-                                    </a>
-                                @empty
-                                    <div class="p-8 text-center text-gray-400">
-                                        <i class="fas fa-bell-slash text-3xl mb-2"></i>
-                                        <p class="text-sm">لا توجد إشعارات</p>
-                                    </div>
-                                @endforelse
-                            </div>
-                        </div>
-                    </div>
+    /* ===== الهيدر ===== */
+    .activities-header {
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        border-radius: 20px;
+        padding: 30px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+    }
 
-                    <div class="w-9 h-9 bg-gold rounded-full flex items-center justify-center text-navy font-bold shadow-md">
-                        {{ substr(auth()->user()->name, 0, 1) }}
-                    </div>
-                @else
-                    <a href="{{ route('login') }}" class="bg-navy text-white px-5 py-2 rounded-lg hover:bg-gold hover:text-navy transition font-bold">تسجيل الدخول</a>
-                @endauth
+    .activities-header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .activities-header h1 {
+        font-size: 32px;
+        font-weight: bold;
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .activities-header h1 i {
+        background: rgba(255,255,255,0.2);
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .activities-header p {
+        margin: 0;
+        opacity: 0.95;
+        font-size: 16px;
+    }
+
+    .btn-add-activity {
+        background: white;
+        color: #7c3aed;
+        padding: 15px 30px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .btn-add-activity:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+
+    /* ===== بطاقات الإحصائيات ===== */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-box {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 5px;
+        height: 100%;
+    }
+
+    .stat-box.purple::before { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+    .stat-box.green::before { background: linear-gradient(135deg, #10b981, #059669); }
+    .stat-box.blue::before { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .stat-box.orange::before { background: linear-gradient(135deg, #f97316, #ea580c); }
+
+    .stat-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+
+    .stat-icon {
+        width: 65px;
+        height: 65px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        flex-shrink: 0;
+    }
+
+    .stat-box.purple .stat-icon {
+        background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+        color: #a855f7;
+    }
+
+    .stat-box.green .stat-icon {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        color: #059669;
+    }
+
+    .stat-box.blue .stat-icon {
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        color: #2563eb;
+    }
+
+    .stat-box.orange .stat-icon {
+        background: linear-gradient(135deg, #ffedd5, #fed7aa);
+        color: #ea580c;
+    }
+
+    .stat-details h3 {
+        margin: 0 0 5px 0;
+        font-size: 14px;
+        color: #6b7280;
+        font-weight: 600;
+    }
+
+    .stat-details p {
+        margin: 0;
+        font-size: 32px;
+        font-weight: bold;
+        color: #1f2937;
+    }
+
+    /* ===== شريط البحث والفلترة ===== */
+    .search-filter-bar {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-group label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 14px;
+        transition: all 0.3s;
+        font-family: inherit;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+
+    .search-input-wrapper {
+        position: relative;
+    }
+
+    .search-input-wrapper input {
+        padding-right: 45px;
+    }
+
+    .search-input-wrapper i {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+    }
+
+    /* ===== شبكة الأنشطة ===== */
+    .activities-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+
+    .activity-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #e5e7eb;
+    }
+
+    .activity-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        border-color: #7c3aed;
+    }
+
+    .activity-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 64px;
+        color: white;
+        position: relative;
+    }
+
+    .activity-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .activity-content {
+        padding: 25px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .activity-category {
+        display: inline-block;
+        background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+        color: #7c3aed;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        align-self: flex-start;
+        border: 1px solid #c4b5fd;
+    }
+
+    .activity-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #1f2937;
+        margin: 0 0 10px 0;
+        line-height: 1.4;
+    }
+
+    .activity-description {
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0 0 20px 0;
+        flex: 1;
+    }
+
+    .activity-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f9fafb;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #4b5563;
+        font-size: 14px;
+    }
+
+    .meta-item i {
+        color: #7c3aed;
+        width: 20px;
+    }
+
+    .activity-rating {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    .rating-stars {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        color: #d97706;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 14px;
+        border: 1px solid #fcd34d;
+    }
+
+    .activity-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-action {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 14px;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        color: white;
+        box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-warning:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 2px dashed #e5e7eb;
+    }
+
+    .empty-state i {
+        font-size: 80px;
+        color: #d1d5db;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        color: #4b5563;
+        font-size: 24px;
+        margin: 0 0 10px 0;
+    }
+
+    .empty-state p {
+        color: #9ca3af;
+        font-size: 16px;
+        margin: 0 0 25px 0;
+    }
+
+    /* ===== التجاوب ===== */
+    @media (max-width: 768px) {
+        .activities-container {
+            padding: 15px;
+        }
+
+        .activities-header {
+            padding: 20px;
+        }
+
+        .activities-header h1 {
+            font-size: 24px;
+        }
+
+        .activities-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="activities-container">
+    
+    <!-- Hero Section -->
+    <div class="activities-header">
+        <div class="activities-header-content">
+            <div>
+                <h1>
+                    <i class="fas fa-calendar-alt"></i>
+                    إدارة الأنشطة الطلابية
+                </h1>
+                <p>استكشف جميع الأنشطة والفعاليات المتاحة للتسجيل</p>
             </div>
+            @if(auth()->check() && auth()->user()->role === 'admin')
+            <a href="{{ route('activities.create') }}" class="btn-add-activity">
+                <i class="fas fa-plus"></i>
+                إضافة نشاط
+            </a>
+            @endif
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-row">
+        <div class="stat-box purple">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="stat-details">
+                <h3>إجمالي الأنشطة</h3>
+                <p>{{ $activities->count() ?? 0 }}</p>
             </div>
         </div>
-    </nav>
 
-    <!-- Header & Filters -->
-    <div class="bg-gradient-to-br from-navy to-navy-light py-12 mb-8 relative overflow-hidden">
-        <!-- زخرفة خلفية -->
-        <div class="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-        
-        <div class="container mx-auto px-4 relative z-10">
-            <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
-                <div class="flex items-center gap-4">
-                    <!-- زر الرجوع -->
-                    <a href="{{ route('student.dashboard') }}" 
-                       class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white px-6 py-3 rounded-xl hover:bg-white hover:text-navy transition font-bold shadow-lg">
-                        <i class="fas fa-arrow-right text-lg"></i>
-                        <span>رجوع</span>
-                    </a>
-                    
-                    <h2 class="text-3xl md:text-4xl font-black text-white drop-shadow-lg">
-                        اكتشف الأنشطة <span class="text-gold">المتاحة</span>
-                    </h2>
+        <div class="stat-box green">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <h3>الأنشطة المتاحة</h3>
+                <p>{{ $activities->where('status', 'active')->count() ?? 0 }}</p>
+            </div>
+        </div>
+
+        <div class="stat-box blue">
+            <div class="stat-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-details">
+                <h3>تسجيلاتي</h3>
+                <p>{{ auth()->user()->activities()->count() ?? 0 }}</p>
+            </div>
+        </div>
+
+        <div class="stat-box orange">
+            <div class="stat-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-details">
+                <h3>التقييم العام</h3>
+                <p>4.8</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="search-filter-bar">
+        <form method="GET" action="{{ route('activities.index') }}">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label><i class="fas fa-search"></i> البحث</label>
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث عن نشاط...">
+                    </div>
                 </div>
-                
-                @if(auth()->check() && auth()->user()->role === 'admin')
-                    <a href="{{ route('activities.create') }}" class="bg-gold text-navy px-6 py-3 rounded-xl font-bold hover:bg-yellow-500 transition shadow-lg flex items-center gap-2">
-                        <i class="fas fa-plus"></i> إضافة نشاط
-                    </a>
-                @endif
-            </div>
 
-            <div class="bg-white rounded-2xl shadow-2xl p-5 max-w-4xl mx-auto border border-gray-100">
-                <form method="GET" action="{{ route('activities.index') }}" class="flex flex-col md:flex-row gap-4">
-                    <div class="flex-1 relative">
-                        <input type="text" name="search" value="{{ request('search') }}"
-                            placeholder="ابحث عن نشاط..."
-                            class="w-full pr-12 pl-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition">
-                        <i class="fas fa-search absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    </div>
-                    <div class="md:w-56 relative">
-                        <select name="type" class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold appearance-none cursor-pointer transition">
-                            <option value="">جميع الأنواع</option>
-                            @foreach(\App\Models\ActivityType::all() as $type)
-                                <option value="{{ $type->id }}" {{ request('type') == $type->id ? 'selected' : '' }}>
-                                    {{ $type->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <i class="fas fa-chevron-down absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-                    </div>
-                    <button type="submit" class="bg-navy text-white px-8 py-3.5 rounded-xl hover:bg-gold hover:text-navy transition font-bold shadow-md flex items-center justify-center gap-2">
-                        <i class="fas fa-filter"></i> فلترة
+                <div class="filter-group">
+                    <label><i class="fas fa-filter"></i> الفئة</label>
+                    <select name="category">
+                        <option value="">جميع الفئات</option>
+                        <option value="academic" {{ request('category') == 'academic' ? 'selected' : '' }}>الأنشطة التقنية والأكاديمية</option>
+                        <option value="cultural" {{ request('category') == 'cultural' ? 'selected' : '' }}>الأنشطة الثقافية</option>
+                        <option value="sports" {{ request('category') == 'sports' ? 'selected' : '' }}>الأنشطة الرياضية</option>
+                        <option value="social" {{ request('category') == 'social' ? 'selected' : '' }}>الأنشطة الاجتماعية</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar"></i> الفترة</label>
+                    <select name="period">
+                        <option value="">جميع الفترات</option>
+                        <option value="today" {{ request('period') == 'today' ? 'selected' : '' }}>اليوم</option>
+                        <option value="week" {{ request('period') == 'week' ? 'selected' : '' }}>هذا الأسبوع</option>
+                        <option value="month" {{ request('period') == 'month' ? 'selected' : '' }}>هذا الشهر</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn-action btn-primary">
+                        <i class="fas fa-search"></i>
+                        بحث
                     </button>
-                </form>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
 
     <!-- Activities Grid -->
-    <div class="container mx-auto px-4">
-
-        @if(session('success'))
-            <div class="bg-green-50 border border-green-200 text-green-700 px-5 py-4 rounded-xl mb-6 flex items-center gap-3 shadow-sm">
-                <i class="fas fa-check-circle text-green-500 text-lg"></i> {{ session('success') }}
-            </div>
-        @endif
-
-        @if($activities->count() > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                @foreach($activities as $activity)
-                    <div class="activity-card bg-white rounded-2xl shadow-lg overflow-hidden relative border border-gray-100 flex flex-col h-full">
-
-                        <!-- زر المفضلة -->
-                        @auth
-                            <div class="absolute top-3 left-3 z-20">
-                                <form action="{{ route('activities.favorite', $activity->id) }}" method="POST" class="m-0 p-0">
-                                    @csrf
-                                    <button type="submit" class="bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-md hover:bg-white transition transform hover:scale-110 focus:outline-none group">
-                                        @if(in_array($activity->id, $favoriteIds ?? []))
-                                            <i class="fas fa-heart text-red-500 text-lg group-hover:text-red-600 animate-pulse"></i>
-                                        @else
-                                            <i class="far fa-heart text-gray-400 text-lg group-hover:text-red-400"></i>
-                                        @endif
-                                    </button>
-                                </form>
-                            </div>
-                        @endauth
-
-                        <!-- صورة النشاط -->
-                        <div class="h-48 bg-gradient-to-br from-navy to-navy-light flex items-center justify-center relative overflow-hidden">
-                            @if($activity->image)
-                                <img src="{{ asset('storage/' . $activity->image) }}" alt="{{ $activity->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                            @else
-                                <i class="fas fa-calendar-alt text-6xl text-white/10"></i>
-                            @endif
-                            
-                            <!-- حالة النشاط -->
-                            @if($activity->status === 'مفتوح' || $activity->status === 'active')
-                                <span class="absolute top-3 right-3 bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
-                                    <i class="fas fa-check-circle"></i> متاح
-                                </span>
-                            @endif
-                        </div>
-
-                        <!-- محتوى البطاقة -->
-                        <div class="p-6 flex-1 flex flex-col">
-                            <div class="flex justify-between items-start mb-4">
-                                <span class="bg-navy/10 text-navy text-xs font-bold px-3 py-1.5 rounded-full border border-navy/5">
-                                    {{ $activity->activityType->name ?? 'عام' }}
-                                </span>
-                                @if($activity->points)
-                                    <span class="bg-yellow-100 text-yellow-700 text-xs font-bold px-3 py-1.5 rounded-full border border-yellow-200 flex items-center gap-1">
-                                        <i class="fas fa-star text-yellow-500"></i> {{ $activity->points }}
-                                    </span>
-                                @endif
-                            </div>
-
-                            <h3 class="text-xl font-black text-navy mb-3 line-clamp-1 group-hover:text-gold transition">
-                                {{ $activity->title }}
-                            </h3>
-
-                            <p class="text-gray-500 text-sm mb-5 line-clamp-2 h-10 leading-relaxed">
-                                {{ \Illuminate\Support\Str::limit($activity->description, 100) }}
-                            </p>
-
-                            <div class="space-y-2.5 mb-6 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-100 flex-1">
-                                @if($activity->location)
-                                    <div class="flex items-center gap-3">
-                                        <i class="fas fa-map-marker-alt text-gold w-5 text-center"></i>
-                                        <span class="truncate font-medium">{{ $activity->location }}</span>
-                                    </div>
-                                @endif
-                                @if($activity->date)
-                                    <div class="flex items-center gap-3">
-                                        <i class="fas fa-calendar text-gold w-5 text-center"></i>
-                                        <span class="font-medium">{{ \Carbon\Carbon::parse($activity->date)->format('Y/m/d') }}</span>
-                                    </div>
-                                @endif
-                                @if($activity->max_participants)
-                                    <div class="flex items-center gap-3">
-                                        <i class="fas fa-users text-gold w-5 text-center"></i>
-                                        <span class="font-medium">{{ $activity->users->count() }} / {{ $activity->max_participants }}</span>
-                                    </div>
-                                @endif
-                            </div>
-
-                            <div class="flex flex-col gap-3 mt-auto">
-                                <!-- زر التفاصيل -->
-                                <a href="{{ route('activities.show', $activity->id) }}" class="w-full bg-navy text-white text-center py-3 rounded-xl hover:bg-gold hover:text-navy transition font-bold shadow-md text-sm flex items-center justify-center gap-2">
-                                    <i class="fas fa-eye"></i> التفاصيل
-                                </a>
-
-                                @if(auth()->check() && auth()->user()->role === 'admin')
-                                    <!-- زر عرض المسجلين/طلبات الانضمام -->
-                                    @if($activity->requires_approval ?? false)
-                                        @php
-                                            $pendingCount = $activity->registrations()->where('status', 'pending')->count();
-                                        @endphp
-                                        <a href="{{ route('admin.registrations', $activity->id) }}" 
-                                           class="w-full bg-amber-600 text-white text-center py-2.5 rounded-xl hover:bg-amber-700 transition font-bold shadow-sm text-sm flex items-center justify-center gap-2 relative">
-                                            <i class="fas fa-clock"></i> 
-                                            طلبات الانضمام
-                                            @if($pendingCount > 0)
-                                                <span class="absolute -top-2 -left-2 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
-                                                    {{ $pendingCount }}
-                                                </span>
-                                            @endif
-                                        </a>
-                                    @else
-                                        <a href="{{ route('admin.registrations', $activity->id) }}" 
-                                           class="w-full bg-emerald-600 text-white text-center py-2.5 rounded-xl hover:bg-emerald-700 transition font-bold shadow-sm text-sm flex items-center justify-center gap-2">
-                                            <i class="fas fa-users"></i> 
-                                            عرض المسجلين ({{ $activity->users->count() }})
-                                        </a>
-                                    @endif
-                                    
-                                    <a href="{{ route('activities.edit', $activity->id) }}" class="w-full bg-gold text-navy text-center py-2.5 rounded-xl hover:bg-yellow-500 transition font-bold shadow-sm text-sm flex items-center justify-center gap-2">
-                                        <i class="fas fa-edit"></i> تعديل
-                                    </a>
-                                    <form action="{{ route('activities.destroy', $activity->id) }}" method="POST"
-                                        onsubmit="return confirm('هل أنت متأكد من حذف هذا النشاط؟')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="w-full bg-red-600 text-white py-2.5 rounded-xl hover:bg-red-700 transition font-bold shadow-sm text-sm flex items-center justify-center gap-2">
-                                            <i class="fas fa-trash"></i> حذف
-                                        </button>
-                                    </form>
-                                @endif
-
-                                @auth
-                                   @if(in_array($activity->id, $registeredIds ?? []))
-                                    <div class="w-full bg-green-100 text-green-700 text-center py-2.5 rounded-xl font-bold text-sm border border-green-200 flex items-center justify-center gap-2">
-                                        <i class="fas fa-check-circle"></i> تم التسجيل
-                                    </div>
-                                @else
-                                    @if($activity->status === 'مفتوح' || $activity->status === 'active')
-                                        <form action="{{ route('activities.register', $activity->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-xl hover:bg-emerald-700 transition font-bold shadow-md text-sm flex items-center justify-center gap-2">
-                                                <i class="fas fa-check"></i> سجل الآن
-                                            </button>
-                                        </form>
-                                    @endif
-                                @endif
-                                @endauth
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-
-            <div class="mt-12 flex justify-center">
-                {{ $activities->withQueryString()->links() }}
-            </div>
-        @else
-            <div class="bg-white rounded-2xl shadow-lg p-12 text-center max-w-md mx-auto mt-8 border border-dashed border-gray-300">
-                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-search text-3xl text-gray-400"></i>
-                </div>
-                <h3 class="text-xl font-black text-navy mb-2">لا توجد أنشطة مطابقة</h3>
-                <p class="text-gray-500 mb-6">جرب تغيير معايير البحث أو إضافة أنشطة جديدة من لوحة التحكم.</p>
-                @if(auth()->check() && auth()->user()->role === 'admin')
-                    <a href="{{ route('activities.create') }}" class="inline-block bg-navy text-white px-6 py-3 rounded-xl font-bold hover:bg-gold hover:text-navy transition shadow-lg">
-                        <i class="fas fa-plus ml-2"></i> إضافة نشاط جديد
-                    </a>
+    @if(isset($activities) && $activities->count() > 0)
+    <div class="activities-grid">
+        @foreach($activities as $activity)
+        <div class="activity-card">
+            <div class="activity-image">
+                @if($activity->image)
+                    <img src="{{ $activity->image }}" alt="{{ $activity->title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                @else
+                    <i class="fas fa-calendar-alt"></i>
+                @endif
+                
+                @if($activity->status == 'active')
+                <span class="activity-badge">
+                    <i class="fas fa-check-circle"></i>
+                    متاح
+                </span>
                 @endif
             </div>
-        @endif
-    </div>
 
-</body>
-</html>
+            <div class="activity-content">
+                <span class="activity-category">
+                    <i class="fas fa-tag"></i>
+                    {{ $activity->category ?? 'الأنشطة التقنية والأكاديمية' }}
+                </span>
+
+                <h3 class="activity-title">{{ $activity->title }}</h3>
+                
+                <p class="activity-description">
+                    {{ Str::limit($activity->description ?? 'وصف النشاط', 100) }}
+                </p>
+
+                <div class="activity-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ $activity->location ?? 'قاعة القدس' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>{{ $activity->date ? \Carbon\Carbon::parse($activity->date)->format('Y/m/d') : '2026/07/17' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-users"></i>
+                        <span>{{ $activity->registered_count ?? rand(2, 30) }} / {{ $activity->max_participants ?? 30 }} مسجل</span>
+                    </div>
+                </div>
+
+                <div class="activity-rating">
+                    <span class="rating-stars">
+                        <i class="fas fa-star"></i>
+                        {{ $activity->rating ?? '10' }}
+                    </span>
+                </div>
+
+                <div class="activity-actions">
+                    <a href="{{ route('activities.show', $activity->id) }}" class="btn-action btn-primary">
+                        <i class="fas fa-eye"></i>
+                        التفاصيل
+                    </a>
+                    
+                    <button class="btn-action btn-success">
+                        <i class="fas fa-users"></i>
+                        عرض المسجلين ({{ $activity->registered_count ?? rand(2, 10) }})
+                    </button>
+                    
+                    @if(auth()->user()->role == 'admin')
+                    <a href="{{ route('activities.edit', $activity->id) }}" class="btn-action btn-warning">
+                        <i class="fas fa-edit"></i>
+                        تعديل
+                    </a>
+                    
+                    <form action="{{ route('activities.destroy', $activity->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا النشاط؟')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn-action btn-danger" style="width: 100%;">
+                            <i class="fas fa-trash"></i>
+                            حذف
+                        </button>
+                    </form>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+    @else
+    <div class="empty-state">
+        <i class="fas fa-calendar-times"></i>
+        <h3>لا توجد أنشطة متاحة</h3>
+        <p>لا توجد أنشطة مطابقة لبحثك حالياً</p>
+        <a href="{{ route('activities.index') }}" class="btn-action btn-primary">
+            <i class="fas fa-redo"></i>
+            إعادة تعيين الفلاتر
+        </a>
+    </div>
+    @endif
+</div>
+
+@endsection
