@@ -249,9 +249,29 @@
                                 </a>
 
                                 @if(auth()->check() && auth()->user()->role === 'admin')
-                                    <a href="{{ route('admin.registrations', $activity->id) }}" class="w-full bg-emerald-600 text-white text-center py-2.5 rounded-xl hover:bg-emerald-700 transition font-bold shadow-sm text-sm flex items-center justify-center gap-2">
-                                        <i class="fas fa-users"></i> عرض المسجلين
-                                    </a>
+                                    <!-- زر عرض المسجلين/طلبات الانضمام -->
+                                    @if($activity->requires_approval ?? false)
+                                        @php
+                                            $pendingCount = $activity->registrations()->where('status', 'pending')->count();
+                                        @endphp
+                                        <a href="{{ route('admin.registrations', $activity->id) }}" 
+                                           class="w-full bg-amber-600 text-white text-center py-2.5 rounded-xl hover:bg-amber-700 transition font-bold shadow-sm text-sm flex items-center justify-center gap-2 relative">
+                                            <i class="fas fa-clock"></i> 
+                                            طلبات الانضمام
+                                            @if($pendingCount > 0)
+                                                <span class="absolute -top-2 -left-2 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                                                    {{ $pendingCount }}
+                                                </span>
+                                            @endif
+                                        </a>
+                                    @else
+                                        <a href="{{ route('admin.registrations', $activity->id) }}" 
+                                           class="w-full bg-emerald-600 text-white text-center py-2.5 rounded-xl hover:bg-emerald-700 transition font-bold shadow-sm text-sm flex items-center justify-center gap-2">
+                                            <i class="fas fa-users"></i> 
+                                            عرض المسجلين ({{ $activity->users->count() }})
+                                        </a>
+                                    @endif
+                                    
                                     <a href="{{ route('activities.edit', $activity->id) }}" class="w-full bg-gold text-navy text-center py-2.5 rounded-xl hover:bg-yellow-500 transition font-bold shadow-sm text-sm flex items-center justify-center gap-2">
                                         <i class="fas fa-edit"></i> تعديل
                                     </a>

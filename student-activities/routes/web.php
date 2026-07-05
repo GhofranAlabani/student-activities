@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/activity/{id}/registrations', [AdminDashboardController::class, 'showRegistrations'])->name('admin.registrations');
     Route::get('/admin/students', [AdminDashboardController::class, 'showAllStudents'])->name('admin.students');
     Route::get('/admin/all-registrations', [AdminDashboardController::class, 'allRegistrations'])->name('admin.all-registrations');
+    Route::get('/admin/staff', [StaffController::class, 'index'])->name('admin.staff');
 
     // ========== إدارة المشرفين (للأدمن فقط) ==========
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {

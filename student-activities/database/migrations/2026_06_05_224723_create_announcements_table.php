@@ -6,21 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    
     public function up(): void
     {
         Schema::create('announcements', function (Blueprint $table) {
             $table->id();
             $table->string('title'); // عنوان الإعلان
             $table->text('content'); // محتوى الإعلان
-            $table->string('type')->default('activity'); // نوع الإعلان (activity, general, warning)
-            $table->foreignId('activity_id')->nullable()->constrained()->onDelete('cascade'); // النشاط المرتبط
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade'); // من أنشأ الإعلان
-            $table->boolean('is_active')->default(true); // هل الإعلان نشط
-            $table->date('expires_at')->nullable(); // تاريخ انتهاء الإعلان
+            $table->enum('type', ['general', 'urgent', 'info'])->default('general'); // نوع الإعلان
+            $table->boolean('is_active')->default(true); // هل الإعلان نشط؟
+            $table->date('start_date')->nullable(); // تاريخ البدء
+            $table->date('end_date')->nullable(); // تاريخ الانتهاء ✅ (هذا المهم)
+            $table->foreignId('created_by')->constrained('users')->onDelete('cascade'); // من أنشأ الإعلان
             $table->timestamps();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('announcements');

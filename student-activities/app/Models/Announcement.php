@@ -16,7 +16,7 @@ class Announcement extends Model
         'type',
         'is_active',
         'start_date',
-        'end_date',
+        'end_date',  
         'created_by',
     ];
 
@@ -31,7 +31,7 @@ class Announcement extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    // Scope للإعلانات النشطة فقط
+    // ✅ Scope للإعلانات النشطة فقط )
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
