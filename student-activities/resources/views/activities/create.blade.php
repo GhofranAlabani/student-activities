@@ -85,7 +85,7 @@
             </span>
         </header>
 
-        <!-- Content Area -->
+        <!-- Content Area - مع Sidebar -->
         <div class="flex-1 flex overflow-hidden">
             
             <!-- Main Form Content -->
@@ -114,49 +114,66 @@
                                         عنوان النشاط <span class="text-red-500">*</span>
                                     </label>
                                     <input type="text" name="title" value="{{ old('title') }}" 
-                                        placeholder="مثال: مؤتمر الذكاء الاصطناعي 2026"
+                                        placeholder="اكتب اسم النشاط"
                                         class="input-field {{ $errors->has('title') ? 'border-red-500' : '' }}">
                                     @error('title') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
 
-                                <!-- Type & Supervisor -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label class="block text-gray-700 font-bold mb-2">
-                                            <i class="fas fa-layer-group text-indigo-600 ml-2"></i>
-                                            نوع النشاط <span class="text-red-500">*</span>
-                                        </label>
+                                <div>
+                                    <label class="block text-gray-700 font-bold mb-2">
+                                        <i class="fas fa-layer-group text-indigo-600 ml-2"></i>
+                                        نوع النشاط <span class="text-red-500">*</span>
+                                    </label>
+                                    
+                                    <div class="relative">
                                         <select name="activity_type_id" id="activity_type_select" 
                                             onchange="toggleDynamicFields()"
-                                            class="input-field {{ $errors->has('activity_type_id') ? 'border-red-500' : '' }}">
-                                            <option value="">-- اختر نوع النشاط --</option>
+                                            class="input-field w-full appearance-none pr-10 {{ $errors->has('activity_type_id') ? 'border-red-500' : '' }}"
+                                            required>
+                                            
+                                            <!-- ✅ الخيار الافتراضي -->
+                                            <option value="" disabled selected>اختر نوع النشاط</option>
+                                            
+                                            <!-- ✅ الأنواع من قاعدة البيانات -->
                                             @foreach(\App\Models\ActivityType::all() as $type)
                                                 <option value="{{ $type->id }}" {{ old('activity_type_id') == $type->id ? 'selected' : '' }}>
                                                     {{ $type->name }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        @error('activity_type_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                        
+                                        <!-- سهم القائمة (يمين لأن الموقع RTL) -->
+                                        <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                                            <i class="fas fa-chevron-down text-gray-400"></i>
+                                        </div>
                                     </div>
-
-                                    <div>
-                                        <label class="block text-gray-700 font-bold mb-2">
-                                            <i class="fas fa-user-tie text-indigo-600 ml-2"></i>
-                                            المشرف المسؤول <span class="text-red-500">*</span>
-                                        </label>
-                                        <select name="created_by" class="input-field {{ $errors->has('created_by') ? 'border-red-500' : '' }}" required>
-                                            <option value="">-- اختر المشرف --</option>
-                                            @foreach($supervisors as $supervisor)
-                                                <option value="{{ $supervisor->id }}" {{ old('created_by') == $supervisor->id ? 'selected' : '' }}>
-                                                    {{ $supervisor->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('created_by') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                                    </div>
+                                    
+                                    @error('activity_type_id') 
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p> 
+                                    @enderror
                                 </div>
 
-                                <!-- Status -->
+                                <!-- Supervisor -->
+                                <div>
+                                    <label class="block text-gray-700 font-bold mb-2">
+                                        <i class="fas fa-user-tie text-indigo-600 ml-2"></i>
+                                        المشرف المسؤول <span class="text-red-500">*</span>
+                                    </label>
+                                    <select name="created_by" class="input-field {{ $errors->has('created_by') ? 'border-red-500' : '' }}" required>
+                                        <option value=""> اختر المشرف </option>
+                                        @foreach($supervisors as $supervisor)
+                                            <option value="{{ $supervisor->id }}" {{ old('created_by') == $supervisor->id ? 'selected' : '' }}>
+                                                {{ $supervisor->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('created_by') 
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}
+
+                                    </p>
+                                     @enderror
+                                </div>
+
                                 <div>
                                     <label class="block text-gray-700 font-bold mb-2">
                                         <i class="fas fa-toggle-on text-indigo-600 ml-2"></i>
@@ -171,14 +188,7 @@
                                                 <div class="font-bold text-gray-700 peer-checked:text-green-700">مفتوح</div>
                                             </div>
                                         </label>
-                                        <label class="flex-1 cursor-pointer">
-                                            <input type="radio" name="status" value="مغلق" {{ old('status') === 'مغلق' ? 'checked' : '' }} 
-                                                class="peer sr-only" onchange="updateStatusLabel(this)">
-                                            <div class="text-center py-4 border-2 border-gray-200 rounded-xl peer-checked:border-red-500 peer-checked:bg-red-50 transition hover:bg-gray-50">
-                                                <i class="fas fa-lock text-2xl text-red-500 mb-2"></i>
-                                                <div class="font-bold text-gray-700 peer-checked:text-red-700">مغلق</div>
-                                            </div>
-                                        </label>
+                        
                                     </div>
                                 </div>
 
@@ -211,158 +221,288 @@
                             </div>
 
                             <div id="dynamic-fields-container" class="hidden">
-                                <!-- Conference Fields (نوع 1) -->
+                                <!-- 1. الأنشطة التقنية والأكاديمية (ID: 1) -->
                                 <div id="type-1-fields" class="dynamic-section space-y-6">
                                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-200">
                                         <h3 class="text-lg font-bold text-blue-700 mb-4 flex items-center gap-2">
-                                            <i class="fas fa-microphone-alt"></i>
-                                            تفاصيل المؤتمر
+                                            <i class="fas fa-laptop-code"></i>
+                                            تفاصيل النشاط التقني والأكاديمي
                                         </h3>
                                         
-                                        <!-- ✅ قسم المتحدثين الديناميكي -->
-                                        <div class="bg-white p-5 rounded-xl border border-blue-100 shadow-sm mb-6">
-                                            <label class="block text-gray-800 font-bold mb-3 text-lg">
-                                                <i class="fas fa-user-tie text-blue-600 ml-2"></i> المتحدثون
-                                                <span class="text-xs text-gray-400 font-normal mr-2">(اضغط + لإضافة متحدثين آخرين)</span>
-                                            </label>
-
-                                            <div id="speakers-container">
-                                                <div class="speaker-row flex gap-3 mb-3 items-center">
-                                                    <input type="text" name="speakers[]" placeholder="اسم المتحدث الأول (مثال: د. أحمد محمد)" 
-                                                        class="input-field flex-1" value="{{ old('speakers.0') }}" required>
-                                                    <div class="w-10"></div>
-                                                </div>
-                                                @php $oldSpeakers = old('speakers', []); @endphp
-                                                @for($i = 1; $i < count($oldSpeakers); $i++)
-                                                    <div class="speaker-row flex gap-3 mb-3 items-center">
-                                                        <input type="text" name="speakers[]" placeholder="اسم المتحدث..." 
-                                                            class="input-field flex-1" value="{{ $oldSpeakers[$i] }}">
-                                                        <button type="button" onclick="removeSpeaker(this)" 
-                                                            class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition" title="حذف">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
-                                                    </div>
-                                                @endfor
-                                            </div>
-
-                                            <button type="button" onclick="addSpeaker()" 
-                                                class="mt-2 text-indigo-600 hover:text-indigo-800 font-bold text-sm flex items-center gap-2 transition bg-indigo-50 px-4 py-2 rounded-lg hover:bg-indigo-100">
-                                                <i class="fas fa-plus-circle"></i> إضافة متحدث آخر
-                                            </button>
-                                        </div>
-
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div>
-                                                <label class="block text-gray-700 font-semibold mb-2">سعة القاعة</label>
-                                                <input type="number" name="hall_capacity" value="{{ old('hall_capacity') }}" 
-                                                    placeholder="عدد المقاعد" class="input-field">
+                                                <label class="block text-gray-700 font-semibold mb-2">لغة البرمجة المستخدمة</label>
+                                                <select name="programming_language" class="input-field">
+                                                    <option value="">اختر اللغة...</option>
+                                                    <option value="python">Python</option>
+                                                    <option value="javascript">JavaScript</option>
+                                                    <option value="java">Java</option>
+                                                    <option value="cpp">C++</option>
+                                                    <option value="csharp">C#</option>
+                                                    <option value="php">PHP</option>
+                                                    <option value="other">أخرى</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">المستوى المطلوب</label>
+                                                <select name="skill_level" class="input-field">
+                                                    <option value="beginner">مبتدئ</option>
+                                                    <option value="intermediate">متوسط</option>
+                                                    <option value="advanced">متقدم</option>
+                                                </select>
                                             </div>
                                         </div>
+                                        
                                         <div class="mt-4">
-                                            <label class="block text-gray-700 font-semibold mb-2">أجندة المؤتمر</label>
-                                            <textarea name="agenda" rows="3" placeholder="جدول أعمال المؤتمر..." 
-                                                class="input-field">{{ old('agenda') }}</textarea>
-                                        </div>
-                                        <div class="mt-4">
-                                            <label class="block text-gray-700 font-semibold mb-2">رابط البث المباشر</label>
-                                            <input type="url" name="live_stream_link" value="{{ old('live_stream_link') }}" 
-                                                placeholder="https://..." class="input-field">
+                                            <label class="block text-gray-700 font-semibold mb-2">المتطلبات التقنية</label>
+                                            <textarea name="technical_requirements" rows="3" placeholder="مثال: تثبيت Python 3.8+، معرفة أساسية بـ..." class="input-field"></textarea>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Competition Fields (نوع 2) -->
+                                <!-- 2. الأنشطة المهنية والتطويرية (ID: 2) -->
                                 <div id="type-2-fields" class="dynamic-section space-y-6">
-                                    <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-200">
-                                        <h3 class="text-lg font-bold text-yellow-700 mb-4 flex items-center gap-2">
-                                            <i class="fas fa-trophy"></i>
-                                            تفاصيل المسابقة
-                                        </h3>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label class="block text-gray-700 font-semibold mb-2">قيمة الجائزة</label>
-                                                <input type="text" name="prize_value" value="{{ old('prize_value') }}" 
-                                                    placeholder="1000 دينار" class="input-field">
-                                            </div>
-                                            <div>
-                                                <label class="block text-gray-700 font-semibold mb-2">عدد أفراد الفريق</label>
-                                                <input type="number" name="team_size" value="{{ old('team_size') }}" 
-                                                    placeholder="عدد الأعضاء" class="input-field">
-                                            </div>
-                                        </div>
-                                        <div class="mt-4">
-                                            <label class="block text-gray-700 font-semibold mb-2">معايير التحكيم</label>
-                                            <textarea name="judging_criteria" rows="3" placeholder="معايير التقييم..." 
-                                                class="input-field">{{ old('judging_criteria') }}</textarea>
-                                        </div>
-                                        <div class="mt-4">
-                                            <label class="block text-gray-700 font-semibold mb-2">آخر موعد للتسليم</label>
-                                            <input type="date" name="submission_deadline" value="{{ old('submission_deadline') }}" 
-                                                class="input-field">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Workshop Fields (نوع 3) -->
-                                <div id="type-3-fields" class="dynamic-section space-y-6">
                                     <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-200">
                                         <h3 class="text-lg font-bold text-green-700 mb-4 flex items-center gap-2">
-                                            <i class="fas fa-tools"></i>
-                                            تفاصيل ورشة العمل
+                                            <i class="fas fa-briefcase"></i>
+                                            تفاصيل النشاط المهني والتطويري
                                         </h3>
+                                        
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div>
-                                                <label class="block text-gray-700 font-semibold mb-2">المدة بالساعات</label>
-                                                <input type="number" name="duration_hours" value="{{ old('duration_hours') }}" 
-                                                    step="0.5" placeholder="3" class="input-field">
+                                                <label class="block text-gray-700 font-semibold mb-2">الشركات المشاركة</label>
+                                                <input type="text" name="participating_companies" placeholder="مثال: Google, Microsoft..." class="input-field">
                                             </div>
                                             <div>
-                                                <label class="block text-gray-700 font-semibold mb-2">المتطلبات المسبقة</label>
-                                                <input type="text" name="prerequisites" value="{{ old('prerequisites') }}" 
-                                                    placeholder="معرفة أساسية بـ PHP" class="input-field">
+                                                <label class="block text-gray-700 font-semibold mb-2">عدد الوظائف المتاحة</label>
+                                                <input type="number" name="available_jobs" placeholder="0" class="input-field">
                                             </div>
                                         </div>
-                                        <div class="mt-4">
-                                            <label class="block text-gray-700 font-semibold mb-2">المواد المطلوبة</label>
-                                            <textarea name="materials_list" rows="3" placeholder="الأدوات والمواد..." 
-                                                class="input-field">{{ old('materials_list') }}</textarea>
-                                        </div>
                                         
+                                        <div class="mt-4">
+                                            <label class="block text-gray-700 font-semibold mb-2">المهارات المستهدفة</label>
+                                            <textarea name="targeted_skills" rows="3" placeholder="المهارات التي سيتم تطويرها..." class="input-field"></textarea>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Volunteer Fields (نوع 4) -->
-                                <div id="type-4-fields" class="dynamic-section space-y-6">
+                                <!-- 3. الأنشطة الترفيهية والاجتماعية (ID: 3) -->
+                                <div id="type-3-fields" class="dynamic-section space-y-6">
                                     <div class="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-6 border-2 border-pink-200">
                                         <h3 class="text-lg font-bold text-pink-700 mb-4 flex items-center gap-2">
-                                            <i class="fas fa-hands-helping"></i>
-                                            تفاصيل العمل التطوعي
+                                            <i class="fas fa-smile-beam"></i>
+                                            تفاصيل النشاط الترفيهي والاجتماعي
                                         </h3>
-                                        <div>
-                                            <label class="block text-gray-700 font-semibold mb-2">المهارات المطلوبة</label>
-                                            <input type="text" name="required_skills" value="{{ old('required_skills') }}" 
-                                                placeholder="التواصل، العمل الجماعي" class="input-field">
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">نوع النشاط</label>
+                                                <select name="entertainment_type" class="input-field">
+                                                    <option value="">اختر النوع...</option>
+                                                    <option value="trip">رحلة</option>
+                                                    <option value="party">حفلة</option>
+                                                    <option value="games">ألعاب</option>
+                                                    <option value="social">اجتماعي</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">الفئة العمرية</label>
+                                                <input type="text" name="age_group" placeholder="مثال: 18-25 سنة" class="input-field">
+                                            </div>
                                         </div>
+                                        
                                         <div class="mt-4">
-                                            <label class="block text-gray-700 font-semibold mb-2">وسائل النقل</label>
-                                            <input type="text" name="transportation" value="{{ old('transportation') }}" 
-                                                placeholder="حافلة متوفرة" class="input-field">
-                                        </div>
-                                        <div class="mt-4">
-                                            <label class="block text-gray-700 font-semibold mb-2">أثر النشاط على المجتمع</label>
-                                            <textarea name="community_impact" rows="3" placeholder="الفائدة المجتمعية..." 
-                                                class="input-field">{{ old('community_impact') }}</textarea>
-                                        </div>
-                                        <div class="mt-4 flex items-center gap-3">
-                                            <input type="checkbox" name="uniform_provided" id="uniform_prov" value="1" 
-                                                {{ old('uniform_provided') ? 'checked' : '' }} 
-                                                class="w-5 h-5 text-pink-600 rounded focus:ring-pink-500">
-                                            <label for="uniform_prov" class="text-gray-700 font-semibold cursor-pointer">
-                                                👕 توفير زي موحد
-                                            </label>
+                                            <label class="block text-gray-700 font-semibold mb-2">الأنشطة المخططة</label>
+                                            <textarea name="planned_activities" rows="3" placeholder="وصف الأنشطة والفعاليات..." class="input-field"></textarea>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- 4. الهكاثونات والمسابقات المفتوحة (ID: 4) -->
+                                <div id="type-4-fields" class="dynamic-section space-y-6">
+                                    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 border-2 border-purple-200">
+                                        <h3 class="text-lg font-bold text-purple-700 mb-4 flex items-center gap-2">
+                                            <i class="fas fa-trophy"></i>
+                                            تفاصيل الهاكاثون أو المسابقة
+                                        </h3>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">مدة المسابقة (بالساعات)</label>
+                                                <input type="number" name="competition_duration" placeholder="24" class="input-field">
+                                            </div>
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">حجم الفريق</label>
+                                                <input type="number" name="team_size" placeholder="عدد الأعضاء" class="input-field">
+                                            </div>
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">قيمة الجوائز</label>
+                                                <input type="text" name="prize_value" placeholder="مثال: 3000 دينار " class="input-field">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-4">
+                                            <label class="block text-gray-700 font-semibold mb-2">موضوع المسابقة</label>
+                                            <textarea name="competition_topic" rows="3" placeholder="المشكلة أو التحدي المطلوب حله..." class="input-field"></textarea>
+                                        </div>
+                                        
+                                        <div class="mt-4">
+                                            <label class="block text-gray-700 font-semibold mb-2">معايير التحكيم</label>
+                                            <textarea name="judging_criteria" rows="3" placeholder="كيف سيتم تقييم المشاريع..." class="input-field"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 5. حاضنات الأعمال والابتكار (ID: 5) -->
+                                <div id="type-5-fields" class="dynamic-section space-y-6">
+                                    <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-200">
+                                        <h3 class="text-lg font-bold text-yellow-700 mb-4 flex items-center gap-2">
+                                            <i class="fas fa-lightbulb"></i>
+                                            تفاصيل حاضنة الأعمال والابتكار
+                                        </h3>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">قطاع الأعمال</label>
+                                                <select name="business_sector" class="input-field">
+                                                    <option value="">اختر القطاع...</option>
+                                                    <option value="tech">تقنية</option>
+                                                    <option value="health">صحة</option>
+                                                    <option value="education">تعليم</option>
+                                                    <option value="finance">مالية</option>
+                                                    <option value="other">أخرى</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">مرحلة المشروع</label>
+                                                <select name="project_stage" class="input-field">
+                                                    <option value="idea">فكرة</option>
+                                                    <option value="prototype">نموذج أولي</option>
+                                                    <option value="mvp">منتج أولي</option>
+                                                    <option value="growth">نمو</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-4">
+                                            <label class="block text-gray-700 font-semibold mb-2">فكرة المشروع</label>
+                                            <textarea name="project_idea" rows="3" placeholder="وصف مختصر لفكرة المشروع..." class="input-field"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 6. الأنشطة الرياضية والصحية (ID: 6) -->
+                                <div id="type-6-fields" class="dynamic-section space-y-6">
+                                    <div class="bg-gradient-to-r from-red-50 to-rose-50 rounded-2xl p-6 border-2 border-red-200">
+                                        <h3 class="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
+                                            <i class="fas fa-running"></i>
+                                            تفاصيل النشاط الرياضي والصحي
+                                        </h3>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">نوع الرياضة</label>
+                                                <select name="sport_type" class="input-field">
+                                                    <option value="">اختر الرياضة...</option>
+                                                    <option value="football">كرة القدم</option>
+                                                    <option value="basketball">كرة السلة</option>
+                                                    <option value="volleyball">كرة الطائرة</option>
+                                                    <option value="fitness">لياقة بدنية</option>
+                                                    <option value="other">أخرى</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">المستوى الرياضي</label>
+                                                <select name="fitness_level" class="input-field">
+                                                    <option value="beginner">مبتدئ</option>
+                                                    <option value="intermediate">متوسط</option>
+                                                    <option value="advanced">متقدم</option>
+                                                    <option value="professional">محترف</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-4">
+                                            <label class="block text-gray-700 font-semibold mb-2">المعدات المطلوبة</label>
+                                            <textarea name="required_equipment" rows="3" placeholder="الأدوات والمعدات اللازمة..." class="input-field"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 7. الأنشطة الثقافية والفنية (ID: 7) -->
+                                <div id="type-7-fields" class="dynamic-section space-y-6">
+                                    <div class="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-2xl p-6 border-2 border-teal-200">
+                                        <h3 class="text-lg font-bold text-teal-700 mb-4 flex items-center gap-2">
+                                            <i class="fas fa-palette"></i>
+                                            تفاصيل النشاط الثقافي والفني
+                                        </h3>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">نوع النشاط الفني</label>
+                                                <select name="art_type" class="input-field">
+                                                    <option value="">اختر النوع...</option>
+                                                    <option value="painting">رسم</option>
+                                                    <option value="photography">تصوير</option>
+                                                    <option value="music">موسيقى</option>
+                                                    <option value="theater">مسرح</option>
+                                                    <option value="writing">كتابة</option>
+                                                    <option value="other">أخرى</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">الموضوع الثقافي</label>
+                                                <input type="text" name="cultural_theme" placeholder="مثال: التراث الشعبي..." class="input-field">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-4">
+                                            <label class="block text-gray-700 font-semibold mb-2">المواد الفنية المطلوبة</label>
+                                            <textarea name="art_materials" rows="3" placeholder="الأدوات والمواد اللازمة..." class="input-field"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 8. الإرشاد والتوجيه الأكاديمي (ID: 8) -->
+                                <div id="type-8-fields" class="dynamic-section space-y-6">
+                                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-6 border-2 border-indigo-200">
+                                        <h3 class="text-lg font-bold text-indigo-700 mb-4 flex items-center gap-2">
+                                            <i class="fas fa-graduation-cap"></i>
+                                            تفاصيل الإرشاد والتوجيه الأكاديمي
+                                        </h3>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">التخصص الأكاديمي</label>
+                                                <select name="academic_specialization" class="input-field">
+                                                    <option value="">اختر التخصص...</option>
+                                                    <option value="cs">علوم الحاسب</option>
+                                                    <option value="is">نظم المعلومات</option>
+                                                    <option value="se">هندسة البرمجيات</option>
+                                                    <option value="ai">الذكاء الاصطناعي</option>
+                                                    <option value="cyber">الأمن السيبراني</option>
+                                                    <option value="general">عام</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-gray-700 font-semibold mb-2">المستوى الدراسي</label>
+                                                <select name="academic_level" class="input-field">
+                                                    <option value="freshman">سنة أولى</option>
+                                                    <option value="sophomore">سنة ثانية</option>
+                                                    <option value="junior">سنة ثالثة</option>
+                                                    <option value="senior">سنة رابعة</option>
+                                                    <option value="graduate">دراسات عليا</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-4">
+                                            <label class="block text-gray-700 font-semibold mb-2">المواضيع المطروحة</label>
+                                            <textarea name="guidance_topics" rows="3" placeholder="المواضيع التي سيتم مناقشتها..." class="input-field"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
 
                             <div id="no-type-selected" class="text-center py-12 text-gray-400">
@@ -549,8 +689,8 @@
                 </form>
             </main>
 
-            <!-- Sidebar Navigation -->
-            <aside class="w-80 bg-white border-l border-gray-200 p-6 overflow-y-auto">
+            <!-- ✅ Sidebar Navigation - تم إرجاعه -->
+            <aside class="w-80 bg-white border-l border-gray-200 p-6 overflow-y-auto hidden md:block">
                 <div class="sidebar-nav">
                     <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
                         <i class="fas fa-list-ul text-indigo-600"></i>
@@ -717,14 +857,10 @@
             document.getElementById('progress-text').textContent = Math.round(progress) + '%';
         }
 
-        // ✅ Dynamic Fields Toggle - النسخة الذكية (تتعرف بالاسم مو بالـ ID)
+        // ✅ Dynamic Fields Toggle - يدعم 8 أنواع أنشطة
         function toggleDynamicFields() {
             const typeSelect = document.getElementById('activity_type_select');
             const typeId = typeSelect.value;
-            const selectedOption = typeSelect.options[typeSelect.selectedIndex];
-            const typeName = selectedOption ? selectedOption.text.toLowerCase().trim() : '';
-            
-            console.log('Selected Type ID:', typeId, '| Name:', typeName);
             
             // Hide all dynamic sections
             document.querySelectorAll('.dynamic-section').forEach(section => {
@@ -732,44 +868,20 @@
             });
             
             if (typeId) {
-                let sectionToShow = null;
-                
-                // 🔍 الطريقة الذكية: البحث حسب اسم النوع (لأن الـ IDs قد تختلف)
-                if (typeName.includes('مؤتمر') || typeName.includes('conference')) {
-                    sectionToShow = document.getElementById('type-1-fields');
-                } 
-                else if (typeName.includes('مسابقة') || typeName.includes('competition') || typeName.includes('contest')) {
-                    sectionToShow = document.getElementById('type-2-fields');
-                } 
-                else if (typeName.includes('ورشة') || typeName.includes('workshop') || typeName.includes('training')) {
-                    sectionToShow = document.getElementById('type-3-fields');
-                } 
-                else if (typeName.includes('تطوع') || typeName.includes('volunteer') || typeName.includes('voluntary')) {
-                    sectionToShow = document.getElementById('type-4-fields');
-                } 
-                // Fallback: حسب الـ ID المباشر
-                else {
-                    sectionToShow = document.getElementById('type-' + typeId + '-fields');
-                }
-                
-                if (sectionToShow) {
-                    sectionToShow.style.display = 'block';
+                // إظهار القسم المناسب حسب الـ ID
+                const section = document.getElementById('type-' + typeId + '-fields');
+                if (section) {
+                    section.style.display = 'block';
                     document.getElementById('dynamic-fields-container').classList.remove('hidden');
                     document.getElementById('no-type-selected').style.display = 'none';
                     
-                    // الانتقال التلقائي للقسم الثاني
+                    // الانتقال التلقائي للقسم
                     showSection('dynamic');
                     document.getElementById('nav-dynamic').classList.remove('opacity-50');
                     
-                    // تمرير سلس للقسم
                     setTimeout(() => {
-                        sectionToShow.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'nearest' 
-                        });
+                        section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }, 100);
-                } else {
-                    console.warn('لم يتم العثور على قسم للنوع:', typeName);
                 }
             } else {
                 document.getElementById('dynamic-fields-container').classList.add('hidden');
