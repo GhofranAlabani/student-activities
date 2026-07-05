@@ -67,10 +67,11 @@
             
 </a>
 
-<a href="{{ route('staff.attendance.index', $activity->id ?? 1) }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
+<a href="{{ route('attendance.index') }}" 
+class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
     <i class="fas fa-clipboard-check text-gold w-5"></i>
     <span class="font-bold">الحضور</span>
-</a> 
+</a>
 
 <a href="{{ route('attendance.scan') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
     <i class="fas fa-qrcode text-gold w-5"></i>

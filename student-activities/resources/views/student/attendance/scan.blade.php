@@ -10,6 +10,7 @@
     <style>
         body { font-family: 'Cairo', sans-serif; }
         .bg-navy { background-color: #0a1929; }
+        .text-navy { color: #0a1929; }
         .text-gold { color: #d4a017; }
         .bg-gold { background-color: #d4a017; }
         .bg-gold:hover { background-color: #b8860b; }
@@ -104,7 +105,7 @@
         function processQRData(decodedText) {
             let activityId = null;
             
-            // محاولة 1: إذا كان الرابط يحتوي على activity_id
+            // محاولة 1: إذا الرابط يحتوي على activity_id
             const urlMatch = decodedText.match(/activity_id=(\d+)/);
             if (urlMatch) {
                 activityId = urlMatch[1];
@@ -143,20 +144,21 @@
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ activity_id: activityId })
+                body: JSON.stringify({ 
+                    qr_data: 'activity_id=' + activityId 
+                })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     showMessage('success', '✅ ' + data.message + ' (+' + (data.points || 0) + ' نقطة)');
                 } else {
-                    showMessage('error', '❌ ' + data.message);
+                    showMessage('error', '❌ ' + (data.message || 'فشل الاتصال بالخادم'));
                     document.getElementById('startBtn').classList.remove('hidden');
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showMessage('error', 'حدث خطأ في الاتصال بالخادم');
+                showMessage('error', '❌ فشل الاتصال بالخادم');
                 document.getElementById('startBtn').classList.remove('hidden');
             });
         }
@@ -192,21 +194,22 @@
             
             msgDiv.className = 'mt-6 border px-5 py-4 rounded-xl ' + colors[type];
             msgDiv.innerHTML = '<i class="fas fa-' + icons[type] + ' ml-2"></i>' + text;
-            
-            // التحقق من وجود activity_id في الـ URL
-const urlParams = new URLSearchParams(window.location.search);
-const activityId = urlParams.get('activity_id');
-
-if (activityId) {
-    // تسجيل الحضور تلقائياً
-    setTimeout(() => {
-        submitCheckIn(activityId);
-    }, 1000); // تأخير ثانية واحدة
-}
         }
-    </script>
-   
 
+// التحقق من وجود activity_id في URL عند تحميل الصفحة
+window.addEventListener('load', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const activityId = urlParams.get('activity_id');
+
+    if (activityId) {
+        // نعرض رسالة وننتظر تأكيد المستخدم
+        showMessage('info', '📱 تم اكتشاف نشاط! اضغط على "تشغيل الكاميرا" أو أدخل الرابط يدوياً');
+        
+        // نملأ الحقل تلقائياً
+        document.getElementById('qrInput').value = '{{ route("attendance.scan") }}?activity_id=' + activityId;
+    }
+});
+    </script>
 
 </body>
 </html>

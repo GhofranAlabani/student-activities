@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class PointsHistory extends Model
 {
+    protected $table = 'points_history'; // ✅ هذا السطر يحل المشكلة!
+
     protected $fillable = [
         'user_id',
         'activity_id',
