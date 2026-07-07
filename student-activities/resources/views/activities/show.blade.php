@@ -179,7 +179,8 @@
                                 فتح في Google Maps <i class="fas fa-external-link-alt text-xs"></i>
                             </a>
                         </div>
-                        <iframe width="100%" height="350" style="border:0" loading="lazy" allowfullscreen src="https://maps.google.com/maps?q={{ urlencode($activity->location) }}&output=embed"></iframe>
+                       <iframe width="100%" height="350" style="border:0" loading="lazy" allowfullscreen 
+src="https://maps.google.com/maps?q={{ urlencode($activity->location . ', ليبيا') }}&z=15&output=embed"></iframe>
                     </div>
                 @endif
 
