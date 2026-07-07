@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أنشطتي المسجلة</title>
+    <title>تصفح الأنشطة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -37,21 +37,21 @@
             <a href="{{ route('student.dashboard') }}" class="sidebar-link flex items-center p-3 text-gray-300 rounded-xl transition duration-200">
                 <i class="fas fa-home ml-3 text-lg"></i> الرئيسية
             </a>
-            <a href="{{ route('student.my-activities') }}" class="sidebar-link active flex items-center p-3 rounded-xl transition duration-200">
+            <a href="{{ route('student.activities') }}" class="sidebar-link active flex items-center p-3 rounded-xl transition duration-200">
+                <i class="fas fa-calendar-alt ml-3 text-lg"></i> تصفح الأنشطة
+            </a>
+            <a href="{{ route('student.my-activities') }}" class="sidebar-link flex items-center p-3 text-gray-300 rounded-xl transition duration-200">
                 <i class="fas fa-calendar-check ml-3 text-lg"></i> سجل الأنشطة
             </a>
             <a href="{{ route('student.favorites') }}" class="sidebar-link flex items-center p-3 text-gray-300 rounded-xl transition duration-200">
                 <i class="fas fa-heart ml-3 text-lg"></i> المفضلة
             </a>
-            <a href="{{ route('staff.attendance.index', $activity->id ?? 1) }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
-                <i class="fas fa-clipboard-check text-gold w-5"></i>
-                <span class="font-bold">الحضور</span>
+            <a href="{{ route('attendance.index') }}" class="sidebar-link flex items-center p-3 text-gray-300 rounded-xl transition duration-200">
+                <i class="fas fa-clipboard-check ml-3 text-lg"></i> الحضور
             </a>
-            <a href="{{ route('attendance.scan') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
-                <i class="fas fa-qrcode text-gold w-5"></i>
-                <span class="font-bold">تسجيل الحضور</span>
+            <a href="{{ route('attendance.scan') }}" class="sidebar-link flex items-center p-3 text-gray-300 rounded-xl transition duration-200">
+                <i class="fas fa-qrcode ml-3 text-lg"></i> تسجيل الحضور
             </a>
-            
         </nav>
         <div class="p-4 border-t border-gold/20">
             <form method="POST" action="{{ route('logout') }}">
@@ -72,7 +72,7 @@
                     <i class="fas fa-arrow-right"></i>
                     <span class="font-semibold">رجوع</span>
                 </a>
-                <h1 class="font-black text-xl text-navy border-r-2 border-gold pr-3 mr-1">سجل الأنشطة</h1>
+                <h1 class="font-black text-xl text-navy border-r-2 border-gold pr-3 mr-1">تصفح الأنشطة المتاحة</h1>
             </div>
             <div class="flex items-center gap-3">
                 <span class="text-gray-700 bg-gold/10 px-4 py-2 rounded-full text-sm border border-gold/30">
@@ -93,59 +93,6 @@
                     </div>
                 @endif
 
-                {{-- ✅ حساب الإحصائيات في الأعلى --}}
-               @php
-    // ✅ حساب النقاط من الحضور الفعلي فقط
-    $totalPoints = \DB::table('attendance_records')
-        ->where('user_id', auth()->id())
-        ->where('status', 'present')
-        ->sum('points_earned');
-
-    
-    
-    $activeCount = $activities->filter(function($activity) {
-        // ✅ النشاط يعتبر نشط إذا:
-        // 1. الحالة مفتوح أو نشط
-        // 2. والتاريخ ما زال في المستقبل (أو اليوم)
-        $isStatusActive = in_array($activity->status, ['مفتوح', 'نشط', 'active']);
-        $isDateValid = $activity->date && \Carbon\Carbon::parse($activity->date)->gte(now()->startOfDay());
-        
-        return $isStatusActive && $isDateValid;
-    })->count();
-@endphp
-                <!-- Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-                    <div class="bg-white p-5 rounded-2xl shadow-lg border-b-4 border-indigo-500 flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm font-semibold mb-1">إجمالي الأنشطة</p>
-                            <p class="text-4xl font-black text-navy">{{ count($activities) }}</p>
-                        </div>
-                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-layer-group text-xl text-indigo-600"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white p-5 rounded-2xl shadow-lg border-b-4 border-emerald-500 flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm font-semibold mb-1">أنشطة نشطة</p>
-                            <p class="text-4xl font-black text-navy">{{ $activeCount }}</p>
-                        </div>
-                        <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-running text-xl text-emerald-600"></i>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl shadow-lg border-b-4 border-gold flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm font-semibold mb-1">النقاط المكتسبة</p>
-                            <p class="text-4xl font-black text-navy">{{ $totalPoints }}</p>
-                        </div>
-                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-star text-xl text-gold"></i>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Activities Grid -->
                 @if(count($activities) > 0)
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -156,7 +103,6 @@
                                     @if($activity->image)
                                         <img src="{{ asset('storage/' . $activity->image) }}" class="w-full h-full object-cover opacity-90">
                                     @else
-                                        {{-- ✅ صورة افتراضية حسب نوع النشاط --}}
                                         @php
                                             $defaultImages = [
                                                 'مؤتمر' => 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop',
@@ -174,11 +120,9 @@
                                     @endif
                                     
                                     <!-- Status Badge -->
-                                    @if($activity->status === 'مفتوح')
-                                        <span class="absolute top-3 right-3 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">نشط</span>
-                                    @elseif($activity->status === 'منتهي')
-                                        <span class="absolute top-3 right-3 bg-gray-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">منتهي</span>
-                                    @endif
+                                    <span class="absolute top-3 right-3 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                                        متاح للتسجيل
+                                    </span>
                                 </div>
 
                                 <div class="p-5 flex-1 flex flex-col">
@@ -187,40 +131,22 @@
                                         <span class="bg-navy/10 text-navy text-xs font-bold px-3 py-1 rounded-full">
                                             {{ $activity->activityType->name ?? 'عام' }}
                                         </span>
-                                        @php
-    // التحقق من هل حضر الطالب هذا النشاط
-    $attended = \DB::table('attendance_records')
-        ->where('user_id', auth()->id())
-        ->where('activity_id', $activity->id)
-        ->where('status', 'present')
-        ->first();
-@endphp
-
-@if($attended)
-    <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-        <i class="fas fa-star text-emerald-500"></i> +{{ $attended->points_earned }} مكتسبة
-    </span>
-@elseif($activity->points)
-    <span class="bg-yellow-100 text-yellow-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-        <i class="fas fa-star text-yellow-500"></i> {{ $activity->points }} متاحة
-    </span>
-@endif
+                                        @if($activity->points)
+                                            <span class="bg-yellow-100 text-yellow-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                                                <i class="fas fa-star text-yellow-500"></i> {{ $activity->points }} نقطة
+                                            </span>
+                                        @endif
                                     </div>
 
                                     <h3 class="font-black text-navy text-lg mb-3 line-clamp-1">{{ $activity->title }}</h3>
+                                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ $activity->description }}</p>
 
                                     <!-- Info Details -->
                                     <div class="space-y-2 mb-4 text-sm text-gray-600 flex-1">
                                         @if($activity->date)
-                                            @php
-                                                $activityDate = \Carbon\Carbon::parse($activity->date);
-                                                $formattedDate = $activityDate->year > 2020 
-                                                    ? $activityDate->format('Y/m/d') 
-                                                    : now()->format('Y/m/d');
-                                            @endphp
                                             <div class="flex items-center gap-2">
                                                 <i class="fas fa-calendar text-gold w-5 text-center"></i>
-                                                <span>{{ $formattedDate }}</span>
+                                                <span>{{ \Carbon\Carbon::parse($activity->date)->format('Y/m/d') }}</span>
                                             </div>
                                         @endif
                                         @if($activity->location)
@@ -230,8 +156,8 @@
                                             </div>
                                         @endif
                                         <div class="flex items-center gap-2">
-                                            <i class="fas fa-clock text-gold w-5 text-center"></i>
-                                           <span>سجلت في: {{ $activity->pivot && $activity->pivot->created_at ? \Carbon\Carbon::parse($activity->pivot->created_at)->format('Y/m/d H:i') : \Carbon\Carbon::parse($activity->created_at)->format('Y/m/d H:i') }}</span>
+                                            <i class="fas fa-users text-gold w-5 text-center"></i>
+                                            <span>السعة: {{ $activity->registrations_count ?? $activity->capacity ?? 'غير محدد' }}</span>
                                         </div>
                                     </div>
 
@@ -242,21 +168,12 @@
                                             <i class="fas fa-eye"></i> التفاصيل
                                         </a>
                                         
-                                        @if($activity->date && \Carbon\Carbon::parse($activity->date)->isFuture())
-                                            <a href="{{ route('activities.export-calendar', $activity->id) }}" 
-                                               target="_blank"
-                                               class="flex-1 bg-blue-600 text-white text-center py-2 rounded-xl hover:bg-blue-700 transition font-bold text-sm flex items-center justify-center gap-1"
-                                               title="إضافة إلى تقويم جوجل">
-                                                <i class="fab fa-google"></i> التقويم
-                                            </a>
-                                        @endif
-                                        
-                                        <form action="{{ route('activities.unregister', $activity->id) }}" method="POST"
-                                            onsubmit="return confirm('هل تريد إلغاء تسجيلك في هذا النشاط؟')">
+                                        <form action="{{ route('activities.register', $activity->id) }}" method="POST" class="flex-1">
                                             @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="px-3 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition border border-red-100 font-bold" title="إلغاء التسجيل">
-                                                <i class="fas fa-times"></i>
+                                            <button type="submit" 
+                                                    class="w-full bg-gold text-navy text-center py-2 rounded-xl hover:bg-yellow-600 transition font-bold text-sm flex items-center justify-center gap-1"
+                                                    onclick="return confirm('هل تريد التسجيل في هذا النشاط؟')">
+                                                <i class="fas fa-plus"></i> تسجيل
                                             </button>
                                         </form>
                                     </div>
@@ -264,24 +181,14 @@
                             </div>
                         @endforeach
                     </div>
-
-                    <!-- Pagination -->
-                    <div class="mt-10 flex justify-center">
-                        @if(method_exists($activities, 'links'))
-                            {{ $activities->links() }}
-                        @endif
-                    </div>
                 @else
                     <!-- Empty State -->
                     <div class="bg-white rounded-2xl shadow-sm border border-dashed border-gray-300 p-16 text-center">
                         <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <i class="fas fa-clipboard-list text-4xl text-gray-400"></i>
+                            <i class="fas fa-calendar-times text-4xl text-gray-400"></i>
                         </div>
-                        <h3 class="text-xl font-black text-navy mb-2">لم تسجل في أي نشاط بعد</h3>
-                        <p class="text-gray-500 mb-8 max-w-md mx-auto">ابدأ رحلتك الآن وتصفح الأنشطة المتاحة للتسجيل واكتساب النقاط!</p>
-                       <a href="{{ route('activities.index') }}" class="...">
-    <i class="fas fa-search"></i> تصفح الأنشطة
-</a>
+                        <h3 class="text-xl font-black text-navy mb-2">لا توجد أنشطة متاحة حالياً</h3>
+                        <p class="text-gray-500 max-w-md mx-auto">ترقب الأنشطة القادمة! سيتم إضافة أنشطة جديدة قريباً.</p>
                     </div>
                 @endif
 

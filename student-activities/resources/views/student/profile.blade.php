@@ -93,9 +93,7 @@
             <a href="{{ route('student.profile') }}" class="sidebar-link active flex items-center p-3 rounded-xl transition duration-200">
                 <i class="fas fa-user ml-3 text-lg"></i> ملفي الشخصي
             </a>
-            <a href="{{ route('profile.edit') }}" class="sidebar-link flex items-center p-3 text-gray-300 rounded-xl transition duration-200">
-                <i class="fas fa-cog ml-3 text-lg"></i> الإعدادات
-            </a>
+           
         </nav>
         <div class="p-4 border-t border-gold/20">
             <form method="POST" action="{{ route('logout') }}">

@@ -135,7 +135,32 @@
                                     <textarea name="content" rows="4" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gold"></textarea>
                                     @error('content') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
-
+                                  <!-- تاريخ البداية والنهاية -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+    <div>
+        <label class="block text-sm font-bold text-gray-700 mb-2">
+            <i class="fas fa-calendar-plus text-gold ml-1"></i>
+            تاريخ البداية
+        </label>
+        <input type="datetime-local" 
+               name="start_date" 
+               value="{{ old('start_date') }}"
+               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold focus:ring-2 focus:ring-gold/20 transition">
+        <p class="text-xs text-gray-500 mt-1">اتركه فارغاً للبدء فوراً</p>
+    </div>
+    
+    <div>
+        <label class="block text-sm font-bold text-gray-700 mb-2">
+            <i class="fas fa-calendar-times text-gold ml-1"></i>
+            تاريخ النهاية
+        </label>
+        <input type="datetime-local" 
+               name="end_date" 
+               value="{{ old('end_date') }}"
+               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold focus:ring-2 focus:ring-gold/20 transition">
+        <p class="text-xs text-gray-500 mt-1">اتركه فارغاً للاستمرار indefinitely</p>
+    </div>
+</div>
                                 <div>
                                     <label class="block text-navy font-bold mb-2 text-sm">نوع الإعلان *</label>
                                     <select name="type" required class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-gold">

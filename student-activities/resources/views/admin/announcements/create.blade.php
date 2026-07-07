@@ -24,6 +24,32 @@
                 <textarea name="content" rows="5" required>{{ old('content') }}</textarea>
                 @error('content') <span class="error">{{ $message }}</span> @enderror
             </div>
+            <!-- تاريخ البداية والنهاية -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+    <div>
+        <label class="block text-sm font-bold text-gray-700 mb-2">
+            <i class="fas fa-calendar-plus text-gold ml-1"></i>
+            تاريخ البداية
+        </label>
+        <input type="datetime-local" 
+               name="start_date" 
+               value="{{ old('start_date') }}"
+               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold focus:ring-2 focus:ring-gold/20 transition">
+        <p class="text-xs text-gray-500 mt-1">اتركه فارغاً للبدء فوراً</p>
+    </div>
+    
+    <div>
+        <label class="block text-sm font-bold text-gray-700 mb-2">
+            <i class="fas fa-calendar-times text-gold ml-1"></i>
+            تاريخ النهاية
+        </label>
+        <input type="datetime-local" 
+               name="end_date" 
+               value="{{ old('end_date') }}"
+               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold focus:ring-2 focus:ring-gold/20 transition">
+        <p class="text-xs text-gray-500 mt-1">اتركه فارغاً للاستمرار indefinitely</p>
+    </div>
+</div>
 
             <div class="form-row">
                 <div class="form-group">

@@ -24,30 +24,25 @@ class AnnouncementController extends Controller
     }
 
     // حفظ إعلان جديد
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'type' => 'required|in:activity,general,warning',
-            'activity_id' => 'nullable|exists:activities,id',
-            'expires_at' => 'nullable|date|after:today',
-        ]);
+   public function store(Request $request)
+{
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'content' => 'required|string',
+        'type' => 'nullable|string|in:activity,warning,general',
+        'is_active' => 'boolean',
+        'start_date' => 'nullable|date',
+        'end_date' => 'nullable|date|after:start_date',
+    ]);
 
-        Announcement::create([
-            'title' => $request->title,
-            'content' => $request->content,
-            'type' => $request->type,
-            'activity_id' => $request->activity_id,
-            'user_id' => auth()->id(),
-            'is_active' => true,
-            'expires_at' => $request->expires_at,
-        ]);
+    $validated['created_by'] = auth()->id();
+    $validated['is_active'] = $request->has('is_active');
 
-        return redirect()->route('admin.announcements')
-            ->with('success', 'تم إضافة الإعلان بنجاح');
-    }
+    Announcement::create($validated);
 
+    return redirect()->route('admin.announcements')
+        ->with('success', 'تم إنشاء الإعلان بنجاح!');
+}
     // تعديل إعلان
     public function edit($id)
     {
@@ -56,24 +51,26 @@ class AnnouncementController extends Controller
     }
 
     // تحديث إعلان
-    public function update(Request $request, $id)
-    {
-        $announcement = Announcement::findOrFail($id);
+ public function update(Request $request, $id)
+{
+    $announcement = Announcement::findOrFail($id);
+    
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'content' => 'required|string',
+        'type' => 'nullable|string|in:activity,warning,general',
+        'is_active' => 'boolean',
+        'start_date' => 'nullable|date',
+        'end_date' => 'nullable|date|after:start_date',
+    ]);
 
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'type' => 'required|in:activity,general,warning',
-            'is_active' => 'required|boolean',
-            'expires_at' => 'nullable|date',
-        ]);
+    $validated['is_active'] = $request->has('is_active');
 
-        $announcement->update($request->all());
+    $announcement->update($validated);
 
-        return redirect()->route('admin.announcements')
-            ->with('success', 'تم تحديث الإعلان بنجاح');
-    }
-
+    return redirect()->route('admin.announcements')
+        ->with('success', 'تم تحديث الإعلان بنجاح!');
+}
     // حذف إعلان
     public function destroy($id)
     {

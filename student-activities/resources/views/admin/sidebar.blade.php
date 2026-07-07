@@ -1,6 +1,5 @@
 <aside class="sidebar" style="background: #0a1929 !important;">
 <style>
-    /* إجبار كامل على الألوان */
     aside.sidebar {
         background-color: #0a1929 !important;
     }
@@ -51,6 +50,7 @@
     <nav class="sidebar-nav" style="flex: 1; padding: 20px 15px;">
         <ul style="list-style: none; padding: 0; margin: 0;">
             
+            <!-- الرئيسية -->
             <li style="margin-bottom: 5px;">
                 <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; text-decoration: none;">
                     <i class="fas fa-home" style="font-size: 1.1rem; width: 22px; text-align: center;"></i>
@@ -58,10 +58,12 @@
                 </a>
             </li>
             
+            <!-- عنوان: الإدارة -->
             <li style="padding: 15px 16px 8px; font-size: 0.7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;" class="section-title">
                 الإدارة
             </li>
             
+            <!-- إدارة الطلاب -->
             <li style="margin-bottom: 5px;">
                 <a href="{{ route('admin.students') }}" class="{{ request()->routeIs('admin.students') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; text-decoration: none;">
                     <i class="fas fa-users" style="font-size: 1.1rem; width: 22px; text-align: center;"></i>
@@ -69,6 +71,7 @@
                 </a>
             </li>
             
+            <!-- إدارة الأنشطة -->
             <li style="margin-bottom: 5px;">
                 <a href="{{ route('activities.index') }}" class="{{ request()->routeIs('activities.*') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; text-decoration: none;">
                     <i class="fas fa-calendar-alt" style="font-size: 1.1rem; width: 22px; text-align: center;"></i>
@@ -76,7 +79,7 @@
                 </a>
             </li>
             
-<<<<<<< HEAD
+            <!-- إدارة الكادر -->
             <li style="margin-bottom: 5px;">
                 <a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; text-decoration: none;">
                     <i class="fas fa-chalkboard-teacher" style="font-size: 1.1rem; width: 22px; text-align: center;"></i>
@@ -84,44 +87,25 @@
                 </a>
             </li>
             
+            <!-- عنوان: التسجيلات -->
             <li style="padding: 15px 16px 8px; font-size: 0.7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;" class="section-title">
                 التسجيلات
             </li>
             
+            <!-- جميع التسجيلات -->
             <li style="margin-bottom: 5px;">
                 <a href="{{ route('admin.all-registrations') }}" class="{{ request()->routeIs('admin.all-registrations') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; text-decoration: none;">
                     <i class="fas fa-list-alt" style="font-size: 1.1rem; width: 22px; text-align: center;"></i>
-=======
-            <!-- إدارة المدربين -->
-            <li>
-                <a href="{{ route('admin.staff.index') }}" class="{{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
-    <i class="fas fa-chalkboard-teacher"></i>
-                 <span>إدارة المدربين</span>
-             </a>
-            </li>
-
-            <!-- 📋 إدارة الاستبيانات (جديد) -->
-            <li>
-                <a href="{{ route('admin.survey-questions.index') }}" 
-            class="{{ request()->routeIs('admin.survey-questions.*') ? 'active' : '' }}">
-          <i class="fas fa-poll"></i>
-          <span>إدارة الاستبيان</span>
-                </a>
-            </li>
-            
-            <!-- جميع التسجيلات -->
-            <li>
-                <a href="{{ route('admin.all-registrations') }}" class="{{ request()->routeIs('admin.all-registrations') ? 'active' : '' }}">
-                    <i class="fas fa-list-alt"></i>
->>>>>>> 9112325480efbc3901c4307c5e2becd5a8722997
                     <span>جميع التسجيلات</span>
                 </a>
             </li>
             
+            <!-- عنوان: الاستبيانات -->
             <li style="padding: 15px 16px 8px; font-size: 0.7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;" class="section-title">
                 الاستبيانات
             </li>
             
+            <!-- إدارة الاستبيان -->
             <li style="margin-bottom: 5px;">
                 <a href="{{ route('admin.survey-questions.index') }}" class="{{ request()->routeIs('admin.survey-questions.*') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; text-decoration: none;">
                     <i class="fas fa-poll" style="font-size: 1.1rem; width: 22px; text-align: center;"></i>
@@ -129,6 +113,7 @@
                 </a>
             </li>
             
+            <!-- إحصائيات الاستبيان -->
             <li style="margin-bottom: 5px;">
                 <a href="{{ route('admin.survey-stats.index') }}" class="{{ request()->routeIs('admin.survey-stats.*') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; text-decoration: none;">
                     <i class="fas fa-chart-bar" style="font-size: 1.1rem; width: 22px; text-align: center;"></i>
@@ -136,10 +121,20 @@
                 </a>
             </li>
             
+            <!-- ✅ إجابات الاستبيانات (جديد) -->
+            <li style="margin-bottom: 5px;">
+                <a href="{{ route('admin.survey-responses.index') }}" class="{{ request()->routeIs('admin.survey-responses.*') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; text-decoration: none;">
+                    <i class="fas fa-clipboard-check" style="font-size: 1.1rem; width: 22px; text-align: center;"></i>
+                    <span>إجابات الاستبيانات</span>
+                </a>
+            </li>
+            
+            <!-- عنوان: التواصل -->
             <li style="padding: 15px 16px 8px; font-size: 0.7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;" class="section-title">
                 التواصل
             </li>
             
+            <!-- الإعلانات -->
             <li style="margin-bottom: 5px;">
                 <a href="{{ route('admin.announcements') }}" class="{{ request()->routeIs('admin.announcements') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; text-decoration: none;">
                     <i class="fas fa-bullhorn" style="font-size: 1.1rem; width: 22px; text-align: center;"></i>
@@ -147,6 +142,7 @@
                 </a>
             </li>
             
+            <!-- الإعدادات -->
             <li style="margin-bottom: 5px;">
                 <a href="#" class="{{ request()->routeIs('admin.settings') ? 'active' : '' }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; text-decoration: none;">
                     <i class="fas fa-cog" style="font-size: 1.1rem; width: 22px; text-align: center;"></i>

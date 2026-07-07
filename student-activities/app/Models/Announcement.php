@@ -32,12 +32,16 @@ class Announcement extends Model
     }
 
     // ✅ Scope للإعلانات النشطة فقط )
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true)
-                     ->where(function($q) {
-                         $q->whereNull('end_date')
-                           ->orWhere('end_date', '>=', now());
-                     });
-    }
+   public function scopeActive($query)
+{
+    return $query->where('is_active', true)
+                 ->where(function($q) {
+                     $q->whereNull('start_date')
+                       ->orWhere('start_date', '<=', now());
+                 })
+                 ->where(function($q) {
+                     $q->whereNull('end_date')
+                       ->orWhere('end_date', '>=', now());
+                 });
+}
 }

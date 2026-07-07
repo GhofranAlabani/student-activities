@@ -64,11 +64,23 @@ class User extends Authenticatable
     }
 
     // ✅ علاقات الطالب
-    public function activities()
-    {
-        return $this->belongsToMany(Activity::class, 'registrations', 'student_id', 'activity_id');
-    }
+ public function activities()
+{
+    return $this->belongsToMany(Activity::class, 'registrations', 'student_id', 'activity_id')
+                ->withPivot('id', 'created_at')
+                ->withTimestamps();
+} 
 
+
+/**
+ * حساب النقاط الإجمالية من الحضور الفعلي فقط
+ */
+public function getEarnedPointsAttribute()
+{
+    return $this->attendanceRecords()
+        ->where('status', 'present')
+        ->sum('points_earned');
+}
     public function favorites()
     {
         return $this->belongsToMany(Activity::class, 'favorites');

@@ -60,9 +60,15 @@
         
         <!-- Back Button -->
         <div class="absolute top-6 right-6 z-10">
-            <a href="{{ route('activities.index') }}" class="bg-white/10 backdrop-blur-md border border-white/20 text-white px-5 py-2 rounded-xl hover:bg-white hover:text-navy transition font-bold flex items-center gap-2">
-                <i class="fas fa-arrow-right"></i> العودة
-            </a>
+         @php
+    $backUrl = auth()->check() && auth()->user()->role === 'student' 
+        ? route('student.my-activities') 
+        : route('activities.index');
+@endphp
+
+<a href="{{ $backUrl }}" class="bg-white/10 backdrop-blur-md border border-white/20 text-white px-5 py-2 rounded-xl hover:bg-white hover:text-navy transition font-bold flex items-center gap-2">
+    <i class="fas fa-arrow-right"></i> العودة
+</a>
         </div>
         
         <!-- Admin Buttons -->
@@ -168,22 +174,45 @@
                     </div>
                 </div>
 
-                <!-- Map -->
-                @if($activity->location)
-                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-                        <div class="p-4 flex justify-between items-center border-b border-gray-100 bg-gray-50">
-                            <h3 class="font-black text-navy flex items-center gap-2">
-                                <i class="fas fa-map text-gold"></i> موقع النشاط
-                            </h3>
-                            <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($activity->location) }}" target="_blank" class="text-blue-600 text-sm font-bold hover:underline flex items-center gap-1">
-                                فتح في Google Maps <i class="fas fa-external-link-alt text-xs"></i>
-                            </a>
-                        </div>
-                       <iframe width="100%" height="350" style="border:0" loading="lazy" allowfullscreen 
-src="https://maps.google.com/maps?q={{ urlencode($activity->location . ', ليبيا') }}&z=15&output=embed"></iframe>
-                    </div>
-                @endif
-
+            <!-- موقع النشاط -->
+<div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 mt-6">
+    <div class="p-4 border-b border-gray-100">
+        <h3 class="font-bold text-navy flex items-center gap-2">
+            <i class="fas fa-map-marker-alt text-gold"></i>
+            موقع النشاط
+        </h3>
+    </div>
+    
+    @if($activity->location)
+        <!-- الخريطة -->
+        <div style="width: 100%; height: 400px;">
+            <iframe 
+                width="100%" 
+                height="100%" 
+                frameborder="0" 
+                scrolling="no" 
+                marginheight="0" 
+                marginwidth="0"
+                src="https://maps.google.com/maps?q={{ urlencode($activity->location) }}&output=embed&z=15">
+            </iframe>
+        </div>
+        
+        <!-- زر الفتح في Google Maps -->
+        <div class="p-4">
+            <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($activity->location) }}" 
+               target="_blank" 
+               class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-bold">
+                <i class="fas fa-external-link-alt"></i>
+                فتح في Google Maps
+            </a>
+        </div>
+    @else
+        <div class="p-8 text-center text-gray-400">
+            <i class="fas fa-map-marked-alt text-5xl mb-3"></i>
+            <p>لم يتم تحديد موقع النشاط</p>
+        </div>
+    @endif
+</div>
                 <!-- Description -->
                 <div class="bg-white rounded-2xl shadow-lg p-8">
                     <h3 class="text-2xl font-black text-navy mb-6 flex items-center gap-2">

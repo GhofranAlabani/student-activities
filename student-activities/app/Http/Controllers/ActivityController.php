@@ -18,34 +18,46 @@ class ActivityController extends Controller
 {
     /**
      * عرض جميع الأنشطة (للطلاب والزوار)
-     */
-    public function index(Request $request)
-    {
-        $query = Activity::with(['activityType', 'users', 'ratings', 'creator']);
-        
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('title', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
-            });
-        }
-        
-        if ($request->filled('type')) {
-            $query->where('type_id', $request->type);
-        }
-        
-        $activities = $query->latest()->paginate(9);
-        
-        $favoriteIds = auth()->check() 
-            ? auth()->user()->favorites()->pluck('activity_id')->toArray() 
-            : [];
-
-        $registeredIds = auth()->check() 
-            ? DB::table('registrations')->where('student_id', auth()->id())->pluck('activity_id')->toArray()
-            : [];
-        
-        return view('activities.index', compact('activities', 'favoriteIds', 'registeredIds'));
+     */public function index(Request $request)
+{
+    $query = Activity::with(['activityType', 'users', 'ratings', 'creator']);
+    
+    // ✅ إذا المستخدم طالب، اعرض فقط الأنشطة المفتوحة
+    if (auth()->check() && auth()->user()->role === 'student') {
+        $query->where('status', 'مفتوح');
     }
+    
+    // البحث
+    if ($request->filled('search')) {
+        $query->where(function($q) use ($request) {
+            $q->where('title', 'like', '%' . $request->search . '%')
+              ->orWhere('description', 'like', '%' . $request->search . '%');
+        });
+    }
+    
+    // الفلترة حسب النوع
+    if ($request->filled('type')) {
+        $query->where('type_id', $request->type);
+    }
+    
+    $activities = $query->latest()->paginate(9);
+    
+    $favoriteIds = auth()->check() 
+        ? auth()->user()->favorites()->pluck('activity_id')->toArray() 
+        : [];
+
+    $registeredIds = auth()->check() 
+        ? DB::table('registrations')->where('student_id', auth()->id())->pluck('activity_id')->toArray()
+        : [];
+    
+    // ✅ إذا المستخدم طالب، يرجع view الطالب
+    if (auth()->check() && auth()->user()->role === 'student') {
+        return view('student.activities', compact('activities', 'favoriteIds', 'registeredIds'));
+    }
+    
+    // غير ذلك يرجع view الأدمن/المشرف
+    return view('activities.index', compact('activities', 'favoriteIds', 'registeredIds'));
+}
 
     /**
      * عرض نموذج إضافة نشاط (للمشرفين/المدير)
@@ -357,5 +369,17 @@ public function exportToCalendar(Activity $activity)
         . '&sprop=website:' . urlencode(url('/'));
 
     return redirect($googleCalendarUrl);
+}
+/**
+ * عرض الأنشطة للطلاب (واجهة منفصلة)
+ */
+public function studentIndex()
+{
+    $activities = Activity::where('status', 'مفتوح')
+        ->where('date', '>=', now())
+        ->orderBy('date', 'asc')
+        ->get();
+    
+    return view('student.activities', compact('activities'));
 }
 }
