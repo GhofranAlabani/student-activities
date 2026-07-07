@@ -10,7 +10,7 @@ class AnnouncementController extends Controller
     // عرض جميع الإعلانات (للأدمن)
     public function index()
     {
-        $announcements = Announcement::with(['user', 'activity'])
+       $announcements = Announcement::with(['creator'])
             ->latest()
             ->paginate(15);
         

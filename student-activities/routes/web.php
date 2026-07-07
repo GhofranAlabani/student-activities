@@ -308,6 +308,9 @@ Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->grou
     Route::get('/activities/{activity}/attendance/export', [App\Http\Controllers\Staff\AttendanceController::class, 'exportReport'])->name('attendance.export');
     Route::get('/staff/activities/{activity}/qr', [App\Http\Controllers\Staff\AttendanceController::class, 'showQR'])->name('staff.attendance.qr');
     Route::post('/attendance/check-in-qr', [App\Http\Controllers\Staff\AttendanceController::class, 'checkInQR'])
+    // عرض نتائج الاستبيانات (للمشرف)
+Route::get('/staff/survey-results/{activity}', [App\Http\Controllers\Staff\SurveyResultsController::class, 'index'])->name('staff.survey-results');
+Route::get('/staff/survey-results/{activity}/export', [App\Http\Controllers\Staff\SurveyResultsController::class, 'export'])->name('staff.survey-export');
         ->name('attendance.check-in-qr')
         ->middleware('auth');
 });
