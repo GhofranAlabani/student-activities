@@ -113,7 +113,63 @@ class AdminDashboardController extends Controller
         ));
     }
 
-    
+    /**
+     * عرض صفحة تعديل تسجيل
+     */
+    public function editRegistration($id)
+    {
+        $registration = DB::table('registrations')
+            ->join('users', 'registrations.student_id', '=', 'users.id')
+            ->join('activities', 'registrations.activity_id', '=', 'activities.id')
+            ->select('registrations.*', 'users.name as student_name', 'activities.title as activity_title')
+            ->where('registrations.id', $id)
+            ->first();
+
+        if (!$registration) {
+            return redirect()->route('admin.all-registrations')->with('error', 'التسجيل غير موجود');
+        }
+
+        $students = User::where('role', 'student')->get();
+        $activities = Activity::all();
+
+        return view('admin.edit-registration', compact('registration', 'students', 'activities'));
+    }
+
+    /**
+     * تحديث تسجيل
+     */
+    public function updateRegistration(Request $request, $id)
+    {
+        $request->validate([
+            'student_id' => 'required|exists:users,id',
+            'activity_id' => 'required|exists:activities,id',
+            'status' => 'required|in:مسجل,مؤكد,ملغي',
+        ]);
+
+        DB::table('registrations')
+            ->where('id', $id)
+            ->update([
+                'student_id' => $request->student_id,
+                'activity_id' => $request->activity_id,
+                'status' => $request->status,
+                'updated_at' => now(),
+            ]);
+
+        return redirect()->route('admin.all-registrations')->with('success', 'تم تحديث التسجيل بنجاح');
+    }
+
+    /**
+     * حذف تسجيل
+     */
+    public function destroyRegistration($id)
+    {
+        try {
+            DB::table('registrations')->where('id', $id)->delete();
+            return redirect()->route('admin.all-registrations')->with('success', 'تم حذف التسجيل بنجاح');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.all-registrations')->with('error', 'حدث خطأ أثناء الحذف');
+        }
+    }
 
     /**
      * عرض تسجيلات نشاط معين

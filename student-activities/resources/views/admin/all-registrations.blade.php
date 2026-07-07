@@ -2,6 +2,22 @@
 
 @section('content')
 <div class="all-registrations">
+    
+    <!-- رسائل النجاح/الخطأ -->
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4 mx-6 flex items-center gap-2">
+            <i class="fas fa-check-circle"></i>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 mx-6 flex items-center gap-2">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ session('error') }}
+        </div>
+    @endif
+
     <!-- رأس الصفحة -->
     <div class="page-header">
         <h1><i class="fas fa-list-alt"></i> جميع التسجيلات</h1>
@@ -83,19 +99,38 @@
                         </td>
                         <td>{{ \Carbon\Carbon::parse($registration->created_at)->format('Y/m/d h:i A') }}</td>
                         <td>
-                            <span class="status-badge status-active">
+                            @php
+                                $statusColors = [
+                                    'مسجل' => 'bg-blue-100 text-blue-700',
+                                    'مؤكد' => 'bg-green-100 text-green-700',
+                                    'ملغي' => 'bg-red-100 text-red-700'
+                                ];
+                                $statusClass = $statusColors[$registration->status ?? 'مسجل'] ?? 'bg-gray-100 text-gray-700';
+                            @endphp
+                            <span class="status-badge {{ $statusClass }}">
                                 <i class="fas fa-check-circle"></i>
-                                مسجل
+                                {{ $registration->status ?? 'مسجل' }}
                             </span>
                         </td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-view" title="عرض">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn-delete" title="حذف">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <!-- ✅ زر التعديل - رابط حقيقي -->
+                                <a href="{{ route('admin.registrations.edit', $registration->id) }}" 
+                                   class="btn-edit" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                
+                                <!-- ✅ زر الحذف - فورم حقيقي -->
+                                <form action="{{ route('admin.registrations.destroy', $registration->id) }}" 
+                                      method="POST" 
+                                      onsubmit="return confirm('⚠️ هل أنت متأكد من حذف هذا التسجيل؟\n\nهذا الإجراء لا يمكن التراجع عنه.')"
+                                      class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-delete" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -177,17 +212,9 @@
         color: white;
     }
 
-    .stat-icon.blue {
-        background: linear-gradient(135deg, #3b82f6, #1e40af);
-    }
-
-    .stat-icon.green {
-        background: linear-gradient(135deg, #10b981, #059669);
-    }
-
-    .stat-icon.purple {
-        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-    }
+    .stat-icon.blue { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+    .stat-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
+    .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
 
     .stat-info h3 {
         font-size: 14px;
@@ -331,30 +358,30 @@
         gap: 6px;
     }
 
-    .status-active {
-        background: #d1fae5;
-        color: #065f46;
-    }
-
     .action-buttons {
         display: flex;
         gap: 8px;
     }
 
+    .action-buttons a,
     .action-buttons button {
         padding: 8px 12px;
         border: none;
         border-radius: 6px;
         cursor: pointer;
         transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .btn-view {
+    .btn-edit {
         background: #3b82f6;
         color: white;
+        text-decoration: none;
     }
 
-    .btn-view:hover {
+    .btn-edit:hover {
         background: #2563eb;
     }
 
@@ -387,7 +414,7 @@
 @push('scripts')
 <script>
     // البحث في الجدول
-    document.getElementById('searchInput').addEventListener('keyup', function() {
+    document.getElementById('searchInput')?.addEventListener('keyup', function() {
         const searchText = this.value.toLowerCase();
         const rows = document.querySelectorAll('#registrationsTable tbody tr');
         
