@@ -34,7 +34,6 @@ Route::get('/dashboard', function () {
     }
 })->middleware(['auth'])->name('dashboard');
 
-
 // ===== لوحة تحكم الطالب =====
 Route::get('/student/dashboard', function () {
     return view('student.dashboard', [
@@ -62,7 +61,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/students', [AdminDashboardController::class, 'showAllStudents'])->name('admin.students');
     Route::get('/admin/all-registrations', [AdminDashboardController::class, 'allRegistrations'])->name('admin.all-registrations');
     
-    // ✅ مسارات إدارة التسجيلات (جديد)
+    // ✅ مسارات إدارة التسجيلات
     Route::get('/admin/registrations/{id}/edit', [AdminDashboardController::class, 'editRegistration'])->name('admin.registrations.edit');
     Route::put('/admin/registrations/{id}', [AdminDashboardController::class, 'updateRegistration'])->name('admin.registrations.update');
     Route::delete('/admin/registrations/{id}', [AdminDashboardController::class, 'destroyRegistration'])->name('admin.registrations.destroy');
@@ -139,11 +138,8 @@ Route::middleware('auth')->group(function () {
         $user = auth()->user();
         $activities = $user->activities()->latest()->get();
         $favorites = $user->favorites()->count();
-        
-        // جلب الشارات
         $badges = \App\Models\Badge::where('is_active', true)->orderBy('requirement')->get();
         $userBadges = $user->badges()->pluck('badges.id')->toArray();
-        
         return view('student.profile', compact('user', 'activities', 'favorites', 'badges', 'userBadges'));
     })->name('student.profile');
 
@@ -181,6 +177,12 @@ Route::middleware('auth')->group(function () {
     // ========== الإشعارات ==========
     Route::middleware('auth')->group(function () {
         
+        // ✅ مسار جديد: تحديث عداد الإشعارات (لإنقاص الرقم عند الضغط)
+        Route::post('/admin/notifications/decrement', function () {
+            // هذا المسار يستخدم لتقليل العداد في الواجهة فقط
+            return response()->json(['success' => true]);
+        })->name('admin.notifications.decrement');
+
         Route::get('/notifications', function () {
             $user = auth()->user();
             $notifications = \App\Models\Notification::where('user_id', $user->id)->latest()->paginate(20);
@@ -190,11 +192,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/notifications/mark-read/{id}', function ($id) {
             $notification = \App\Models\Notification::where('id', $id)->where('user_id', auth()->id())->first();
-            
             if ($notification) {
                 $notification->update(['is_read' => true, 'read_at' => now()]);
-                
-                // إذا فيه رابط، روح له
                 if ($notification->action_url) {
                     return redirect($notification->action_url);
                 }
@@ -224,59 +223,35 @@ Route::middleware('auth')->group(function () {
                 ->get()
                 ->map(function ($n) {
                     return [
-                        'id' => $n->id,
-                        'type' => $n->type,
-                        'title' => $n->title,
-                        'message' => $n->message,
-                        'icon' => $n->icon,
-                        'color' => $n->color,
-                        'action_url' => $n->action_url,
-                        'is_read' => $n->is_read,
+                        'id' => $n->id, 'type' => $n->type, 'title' => $n->title,
+                        'message' => $n->message, 'icon' => $n->icon, 'color' => $n->color,
+                        'action_url' => $n->action_url, 'is_read' => $n->is_read,
                         'created_at' => $n->created_at->diffForHumans(),
                     ];
                 });
-            
-            $unreadCount = \App\Models\Notification::where('user_id', $user->id)
-                ->where('is_read', false)
-                ->count();
-            
-            return response()->json([
-                'notifications' => $notifications,
-                'unread_count' => $unreadCount,
-            ]);
+            $unreadCount = \App\Models\Notification::where('user_id', $user->id)->where('is_read', false)->count();
+            return response()->json(['notifications' => $notifications, 'unread_count' => $unreadCount]);
         })->name('notifications.latest');
 
         Route::post('/notifications/{id}/read', function ($id) {
-            $notification = \App\Models\Notification::where('id', $id)
-                ->where('user_id', auth()->id())
-                ->first();
-            
+            $notification = \App\Models\Notification::where('id', $id)->where('user_id', auth()->id())->first();
             if ($notification) {
                 $notification->update(['is_read' => true, 'read_at' => now()]);
-                
-                return response()->json([
-                    'success' => true,
-                    'action_url' => $notification->action_url,
-                ]);
+                return response()->json(['success' => true, 'action_url' => $notification->action_url]);
             }
-            
             return response()->json(['success' => false], 404);
         })->name('notifications.ajax-read');
 
-    });
+    }); // نهاية مجموعة الإشعارات
+
 }); // نهاية مجموعة المصادقة العامة
 
 // ========== 🆕 مسارات المشرف (Staff) ==========
 Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->group(function () {
-    // Dashboard المشرف
     Route::get('/dashboard', [App\Http\Controllers\Staff\StaffDashboardController::class, 'index'])->name('dashboard');
-    
-    // مسار اختبار مباشر
     Route::get('/test', function () {
         return "✅ أنت الآن في واجهة المشرف! المستخدم: " . auth()->user()->name . " | الدور: " . auth()->user()->role;
     })->name('test');
-    
-    // إدارة أنشطته فقط
     Route::get('/activities', [App\Http\Controllers\Staff\StaffActivityController::class, 'index'])->name('activities.index');
     Route::get('/activities/create', [App\Http\Controllers\Staff\StaffActivityController::class, 'create'])->name('activities.create');
     Route::post('/activities', [App\Http\Controllers\Staff\StaffActivityController::class, 'store'])->name('activities.store');
@@ -284,40 +259,25 @@ Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->grou
     Route::get('/activities/{activity}/edit', [App\Http\Controllers\Staff\StaffActivityController::class, 'edit'])->name('activities.edit');
     Route::put('/activities/{activity}', [App\Http\Controllers\Staff\StaffActivityController::class, 'update'])->name('activities.update');
     Route::delete('/activities/{activity}', [App\Http\Controllers\Staff\StaffActivityController::class, 'destroy'])->name('activities.destroy');
-    
-    // إدارة التسجيلات
     Route::get('/activities/{activity}/registrations', [App\Http\Controllers\Staff\StaffRegistrationController::class, 'index'])->name('registrations.index');
     Route::post('/registrations/{registration}/approve', [App\Http\Controllers\Staff\StaffRegistrationController::class, 'approve'])->name('registrations.approve');
     Route::post('/registrations/{registration}/reject', [App\Http\Controllers\Staff\StaffRegistrationController::class, 'reject'])->name('registrations.reject');
-      
-    // الطلاب المسجلين
     Route::get('/students', [App\Http\Controllers\Staff\StaffStudentController::class, 'index'])->name('students.index');
-
-    // التقارير العامة
     Route::get('/reports', [App\Http\Controllers\Staff\StaffReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export-pdf', [App\Http\Controllers\Staff\StaffReportController::class, 'exportPDF'])->name('reports.export.pdf');
     Route::get('/reports/export-excel', [App\Http\Controllers\Staff\StaffReportController::class, 'exportExcel'])->name('reports.export.excel');
-
-    // التقارير
     Route::get('/activities/{activity}/report', [App\Http\Controllers\Staff\StaffReportController::class, 'show'])->name('report.show');
     Route::get('/activities/{activity}/report/export', [App\Http\Controllers\Staff\StaffReportController::class, 'export'])->name('report.export');
-
-    // الإعلانات
     Route::get('/announcements', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'index'])->name('announcements.index');
     Route::post('/announcements', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'store'])->name('announcements.store');
     Route::delete('/announcements/{announcement}', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'destroy'])->name('announcements.destroy');
-
-    // الإعدادات
     Route::get('/settings', [App\Http\Controllers\Staff\StaffSettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings/profile', [App\Http\Controllers\Staff\StaffSettingsController::class, 'updateProfile'])->name('settings.profile.update');
     Route::put('/settings/password', [App\Http\Controllers\Staff\StaffSettingsController::class, 'updatePassword'])->name('settings.password.update');
-
-    // مسارات الحضور للمشرف
     Route::get('/activities/{activity}/attendance', [App\Http\Controllers\Staff\AttendanceController::class, 'index'])->name('attendance.index');
     Route::get('/activities/{activity}/attendance/qr', [App\Http\Controllers\Staff\AttendanceController::class, 'showQR'])->name('attendance.qr');
     Route::post('/activities/{activity}/attendance/manual', [App\Http\Controllers\Staff\AttendanceController::class, 'manualCheckIn'])->name('attendance.manual');
     Route::get('/activities/{activity}/attendance/export', [App\Http\Controllers\Staff\AttendanceController::class, 'exportReport'])->name('attendance.export');
-
     Route::get('/staff/activities/{activity}/qr', [App\Http\Controllers\Staff\AttendanceController::class, 'showQR'])->name('staff.attendance.qr');
     Route::post('/attendance/check-in-qr', [App\Http\Controllers\Staff\AttendanceController::class, 'checkInQR'])
         ->name('attendance.check-in-qr')
