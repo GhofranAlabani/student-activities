@@ -83,7 +83,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/activity/{id}/registrations', [AdminDashboardController::class, 'showRegistrations'])->name('admin.registrations');
     Route::get('/admin/students', [AdminDashboardController::class, 'showAllStudents'])->name('admin.students');
     Route::get('/admin/all-registrations', [AdminDashboardController::class, 'allRegistrations'])->name('admin.all-registrations');
-    
+    // تغيير صلاحية المستخدم (للأدمن فقط)
+Route::middleware('role:admin')->patch('/admin/users/{id}/role', [
+    App\Http\Controllers\AdminDashboardController::class, 
+    'updateRole'
+])->name('admin.users.updateRole');
+
     // ✅ مسارات إدارة التسجيلات
     Route::get('/admin/registrations/{id}/edit', [AdminDashboardController::class, 'editRegistration'])->name('admin.registrations.edit');
     Route::put('/admin/registrations/{id}', [AdminDashboardController::class, 'updateRegistration'])->name('admin.registrations.update');

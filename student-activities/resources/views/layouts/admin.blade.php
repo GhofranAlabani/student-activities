@@ -49,6 +49,155 @@
         .content-scroll::-webkit-scrollbar-thumb:hover {
             background: #94a3b8; 
         }
+        /* ============================================ */
+/* 🌙 Dark Mode Styles - باستخدام Tailwind + CSS Variables */
+/* ============================================ */
+
+/* الألوان الأساسية للوضع الداكن */
+html.dark {
+    color-scheme: dark;
+}
+
+html.dark body {
+    background-color: #0f172a !important; /* slate-900 */
+    color: #f1f5f9 !important; /* slate-100 */
+}
+
+/* البطاقات والجداول */
+html.dark .bg-white,
+html.dark .stat-card,
+html.dark .table-container,
+html.dark .advanced-filters,
+html.dark .modal-content-large,
+html.dark .modal-content-small {
+    background-color: #1e293b !important; /* slate-800 */
+    border-color: #334155 !important; /* slate-700 */
+}
+
+/* النصوص */
+html.dark .text-slate-800,
+html.dark .text-slate-900,
+html.dark .text-slate-700 {
+    color: #f1f5f9 !important;
+}
+
+html.dark .text-slate-500,
+html.dark .text-slate-600 {
+    color: #94a3b8 !important; /* slate-400 */
+}
+
+/* حقول الإدخال */
+html.dark input,
+html.dark select,
+html.dark textarea {
+    background-color: #334155 !important;
+    border-color: #475569 !important;
+    color: #f1f5f9 !important;
+}
+
+html.dark input::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* الجداول */
+html.dark .students-table th {
+    background-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+html.dark .students-table tbody tr:hover {
+    background-color: #334155 !important;
+}
+
+/* البطاقات الإحصائية */
+html.dark .stat-number {
+    color: #f1f5f9 !important;
+}
+
+/* الأزرار الثانوية */
+html.dark .btn-modal-secondary,
+html.dark .btn-cancel {
+    background-color: #334155 !important;
+    color: #f1f5f9 !important;
+    border-color: #475569 !important;
+}
+
+html.dark .btn-modal-secondary:hover,
+html.dark .btn-cancel:hover {
+    background-color: #475569 !important;
+}
+
+/* بطاقات التفاصيل */
+html.dark .detail-card,
+html.dark .activity-item {
+    background-color: #334155 !important;
+}
+
+/* القوائم والـ Badges */
+html.dark .role-badge.admin {
+    background-color: #7f1d1d !important; /* red-900 */
+    color: #fecaca !important;
+}
+
+html.dark .role-badge.student {
+    background-color: #1e3a8a !important; /* blue-900 */
+    color: #bfdbfe !important;
+}
+
+/* الفلاتر */
+html.dark .advanced-filters {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+/* الرسوم البيانية - خلفية */
+html.dark canvas {
+    /* ملاحظة: Chart.js يحتاج إعداد خاص للألوان */
+}
+
+/* تأثيرات hover */
+html.dark .hover\:bg-slate-50:hover {
+    background-color: #334155 !important;
+}
+
+html.dark .hover\:bg-blue-50:hover {
+    background-color: #1e3a8a !important;
+}
+
+html.dark .hover\:bg-green-50:hover {
+    background-color: #064e3b !important;
+}
+
+/* Modal footer */
+html.dark .modal-footer {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+/* Scrollbar للوضع الداكن */
+html.dark ::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* تحسينات إضافية */
+html.dark .shadow-sm,
+html.dark .shadow,
+html.dark .shadow-lg {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Transition ناعم للتبديل */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
     </style>
     
     @stack('styles')
@@ -166,6 +315,50 @@
         </main>
 
     </div>
+
+@push('scripts')
+<script>
+// ✅ دالة تبديل الوضع الليلي
+function toggleDarkMode() {
+    const html = document.documentElement;
+    const icon = document.getElementById('darkModeIcon');
+    const text = document.getElementById('darkModeText');
+    
+    if (html.classList.contains('dark')) {
+        // تحويل للوضع الفاتح
+        html.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+        icon.className = 'fas fa-moon';
+        text.textContent = 'الوضع الليلي';
+    } else {
+        // تحويل للوضع الداكن
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+        icon.className = 'fas fa-sun';
+        text.textContent = 'الوضع الفاتح';
+    }
+}
+
+// ✅ تطبيق الإعداد المحفوظ عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    const html = document.documentElement;
+    const icon = document.getElementById('darkModeIcon');
+    const text = document.getElementById('darkModeText');
+    const savedTheme = localStorage.getItem('theme');
+    
+    // إذا فيه إعداد محفوظ، طبقه
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        html.classList.add('dark');
+        icon.className = 'fas fa-sun';
+        text.textContent = 'الوضع الفاتح';
+    } else {
+        html.classList.remove('dark');
+        icon.className = 'fas fa-moon';
+        text.textContent = 'الوضع الليلي';
+    }
+});
+</script>
+@endpush
 
     @stack('scripts')
 </body>

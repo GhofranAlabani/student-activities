@@ -118,22 +118,35 @@
                             </div>
                         </td>
                         <td>{{ $student->email ?? 'غير متوفر' }}</td>
-                        <td>
-                            <span class="role-badge {{ ($student->role ?? 'student') === 'admin' ? 'admin' : 'student' }}">
-                                @if(($student->role ?? 'student') === 'admin')
-                                    👨‍💼 مدير
-                                @else
-                                    👨‍🎓 طالب
+                        
+                        <!-- ✅ عمود الصلاحية مع زر التغيير -->
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <!-- Badge الصلاحية الحالية -->
+                                <span class="role-badge {{ $student->role === 'admin' ? 'admin' : 'student' }}" id="role-badge-{{ $student->id }}">
+                                    {{ $student->role === 'admin' ? '👨‍ مدير' : '🎓 طالب' }}
+                                </span>
+                                
+                                <!-- زر تغيير الصلاحية (يظهر فقط للأدمن ولا يظهر للأدمن الحالي) -->
+                                @if(auth()->user()->role === 'admin' && $student->id !== auth()->id())
+                                    <button onclick="openRoleModal({{ $student->id }}, '{{ $student->name }}', '{{ $student->role }}')" 
+                                            class="w-8 h-8 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-700 flex items-center justify-center transition" 
+                                            title="تغيير الصلاحية">
+                                        <i class="fas fa-exchange-alt text-sm"></i>
+                                    </button>
                                 @endif
-                            </span>
+                            </div>
                         </td>
+                        
                         <td>{{ $student->created_at ? $student->created_at->format('Y/m/d') : 'غير محدد' }}</td>
+                        
+                        <!-- ✅ عمود الإجراءات -->
                         <td>
                             <div class="actions-buttons">
-                                <button onclick="viewStudent({{ $student->id }})" class="action-btn view" title="عرض">
+                                <button onclick="viewStudent({{ $student->id }}, @json($student))" class="action-btn view" title="عرض">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button onclick="deleteStudent({{ $student->id }})" class="action-btn delete" title="حذف">
+                                <button onclick="openDeleteModal({{ $student->id }}, '{{ $student->name }}')" class="action-btn delete" title="حذف">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -153,19 +166,105 @@
     </div>
 </div>
 
-<!-- Modal عرض الطالب -->
-<div id="studentModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-user"></i> تفاصيل الطالب</h3>
-            <button class="close-modal" onclick="closeStudentModal()">&times;</button>
-        </div>
-        <div class="modal-body" id="modalBody">
-            <div class="loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>جاري تحميل البيانات...</p>
+<!-- ============================================ -->
+<!-- Modal عرض تفاصيل الطالب (تصميم احترافي) -->
+<!-- ============================================ -->
+<div id="viewModal" class="modal">
+    <div class="modal-content-large">
+        <div class="modal-header-blue">
+            <div class="modal-header-content">
+                <div class="modal-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <h3 id="viewModalTitle">تفاصيل الطالب</h3>
+                    <p class="modal-subtitle">معلومات الحساب والنشاط</p>
+                </div>
             </div>
+            <button class="close-modal" onclick="closeViewModal()">&times;</button>
         </div>
+        
+        <div class="modal-body" id="viewModalBody">
+            <!-- سيتم ملء المحتوى بواسطة JavaScript -->
+        </div>
+        
+        <div class="modal-footer">
+            <button onclick="closeViewModal()" class="btn-modal-secondary">
+                إغلاق
+            </button>
+            <button onclick="editCurrentStudent()" class="btn-modal-primary">
+                <i class="fas fa-edit"></i> تعديل البيانات
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- Modal تأكيد الحذف (نفس تصميم صورتك) -->
+<!-- ============================================ -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content-small">
+        <div class="delete-warning-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <h2 class="delete-title">تأكيد حذف الحساب</h2>
+        
+        <p class="delete-message">
+            هل أنت متأكد من حذف حساب <span id="deleteUserName" class="highlight-red"></span>؟<br>
+            هذا الإجراء لا يمكن التراجع عنه.
+        </p>
+        
+        <div class="password-field">
+            <label class="password-label">أدخل كلمة المرور للتأكيد</label>
+            <input type="password" id="deletePassword" placeholder="••••••••" class="password-input">
+        </div>
+        
+        <div class="delete-actions">
+            <button onclick="closeDeleteModal()" class="btn-cancel">إلغاء</button>
+            <button onclick="confirmDelete()" class="btn-delete-confirm">
+                نعم، احذف الحساب
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- ✅ Modal تغيير الصلاحية (جديد) -->
+<!-- ============================================ -->
+<div id="roleModal" class="modal">
+    <div class="modal-content-small">
+        <!-- أيقونة -->
+        <div class="delete-warning-icon" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+            <i class="fas fa-user-shield" style="color: #d97706;"></i>
+        </div>
+        
+        <h2 class="delete-title">تغيير صلاحية المستخدم</h2>
+        
+        <p class="delete-message">
+            هل تريد تغيير صلاحية <span id="roleUserName" class="highlight-red"></span>؟
+        </p>
+        
+        <!-- خيارات الصلاحية -->
+        <form id="roleForm" method="POST" style="text-align: right;">
+            @csrf
+            @method('PATCH')
+            
+            <div style="margin-bottom: 20px;">
+                <label class="password-label">اختر الصلاحية الجديدة:</label>
+                <select name="role" id="roleSelect" class="password-input" style="width: 100%; margin-top: 8px;">
+                    <option value="student">🎓 طالب</option>
+                    <option value="admin">👨‍💼 مدير نظام</option>
+                </select>
+            </div>
+            
+            <div class="delete-actions">
+                <button type="button" onclick="closeRoleModal()" class="btn-cancel">إلغاء</button>
+                <button type="submit" class="btn-delete-confirm" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                    تأكيد التغيير
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -488,7 +587,9 @@
         display: block;
     }
 
-    /* Modal */
+    /* ============================================ */
+    /* Modal Styles - التصاميم الاحترافية */
+    /* ============================================ */
     .modal {
         display: none;
         position: fixed;
@@ -496,96 +597,339 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.5);
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
         z-index: 1000;
         align-items: center;
         justify-content: center;
+        animation: fadeIn 0.3s ease;
     }
 
     .modal.show {
         display: flex;
     }
 
-    .modal-content {
-        background: white;
-        border-radius: 16px;
-        width: 90%;
-        max-width: 600px;
-        max-height: 80vh;
-        overflow: hidden;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 
-    .modal-header {
-        padding: 20px;
-        border-bottom: 2px solid #e5e7eb;
+    .modal-content-large {
+        background: white;
+        border-radius: 24px;
+        width: 90%;
+        max-width: 700px;
+        max-height: 85vh;
+        overflow: hidden;
+        box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+        animation: slideUp 0.4s ease;
+    }
+
+    .modal-content-small {
+        background: white;
+        border-radius: 24px;
+        width: 90%;
+        max-width: 450px;
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+        animation: slideUp 0.4s ease;
+    }
+
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Modal Header - أزرق متدرج */
+    .modal-header-blue {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        padding: 30px;
+        color: white;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
 
-    .modal-header h3 {
-        margin: 0;
-        color: #1e3a8a;
-        font-size: 20px;
+    .modal-header-content {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 15px;
+    }
+
+    .modal-avatar {
+        width: 64px;
+        height: 64px;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .modal-subtitle {
+        margin: 4px 0 0 0;
+        font-size: 14px;
+        opacity: 0.9;
     }
 
     .close-modal {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
         border: none;
-        background: #f3f4f6;
+        background: rgba(255,255,255,0.2);
         border-radius: 50%;
         cursor: pointer;
         font-size: 24px;
-        color: #6b7280;
+        color: white;
         transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .close-modal:hover {
-        background: #e5e7eb;
-        color: #111827;
+        background: rgba(255,255,255,0.3);
+        transform: rotate(90deg);
     }
 
     .modal-body {
-        padding: 20px;
+        padding: 30px;
         overflow-y: auto;
-        max-height: 60vh;
+        max-height: 55vh;
     }
 
-    .loading {
-        text-align: center;
-        padding: 40px;
-        color: #6b7280;
-    }
-
-    .loading i {
-        font-size: 48px;
-        color: #4f46e5;
-        margin-bottom: 15px;
-    }
-
-    .student-detail {
-        padding: 15px;
+    .modal-footer {
+        padding: 20px 30px;
+        border-top: 2px solid #e5e7eb;
         background: #f9fafb;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        border-right: 4px solid #4f46e5;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
     }
 
-    .student-detail h4 {
-        margin: 0 0 8px 0;
-        color: #1e3a8a;
-        font-size: 16px;
-    }
-
-    .student-detail p {
-        margin: 4px 0;
-        color: #6b7280;
+    /* أزرار Modal */
+    .btn-modal-primary,
+    .btn-modal-secondary {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
         font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-modal-primary {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-modal-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-modal-secondary {
+        background: white;
+        border: 2px solid #d1d5db;
+        color: #374151;
+    }
+
+    .btn-modal-secondary:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+    }
+
+    /* Delete Modal Styles */
+    .delete-warning-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px auto;
+    }
+
+    .delete-warning-icon i {
+        font-size: 40px;
+        color: #dc2626;
+    }
+
+    .delete-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0 0 16px 0;
+    }
+
+    .delete-message {
+        font-size: 15px;
+        color: #64748b;
+        line-height: 1.8;
+        margin-bottom: 24px;
+    }
+
+    .highlight-red {
+        color: #dc2626;
+        font-weight: 700;
+    }
+
+    .password-field {
+        margin-bottom: 24px;
+        text-align: right;
+    }
+
+    .password-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 8px;
+    }
+
+    .password-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 15px;
+        transition: all 0.3s;
+        box-sizing: border-box;
+    }
+
+    .password-input:focus {
+        outline: none;
+        border-color: #dc2626;
+        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+    }
+
+    .delete-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-cancel,
+    .btn-delete-confirm {
+        flex: 1;
+        padding: 14px 20px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 14px;
+    }
+
+    .btn-cancel {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .btn-cancel:hover {
+        background: #e2e8f0;
+    }
+
+    .btn-delete-confirm {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        color: white;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+
+    .btn-delete-confirm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+    }
+
+    /* Student Details in Modal */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .detail-card {
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 12px;
+        border-right: 4px solid #3b82f6;
+    }
+
+    .detail-card.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .detail-label {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .detail-value {
+        font-size: 15px;
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    .activities-list {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        padding: 20px;
+        border-radius: 12px;
+        border: 2px solid #fcd34d;
+    }
+
+    .activities-list h4 {
+        margin: 0 0 12px 0;
+        color: #92400e;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .activity-item {
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .activity-name {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .activity-date {
+        font-size: 12px;
+        color: #64748b;
+        background: #f1f5f9;
+        padding: 4px 8px;
+        border-radius: 6px;
     }
 
     @media (max-width: 768px) {
@@ -598,52 +942,222 @@
         .filters-grid {
             grid-template-columns: 1fr;
         }
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+        .modal-content-small {
+            padding: 30px 20px;
+        }
     }
 </style>
 
 <script>
-    // عرض تفاصيل الطالب
-    function viewStudent(studentId) {
-        const modal = document.getElementById('studentModal');
-        const modalBody = document.getElementById('modalBody');
-        
-        modal.classList.add('show');
-        modalBody.innerHTML = `
-            <div class="loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>جاري تحميل البيانات...</p>
+let currentStudentId = null;
+let currentStudentData = null;
+
+// عرض تفاصيل الطالب
+function viewStudent(studentId, studentData) {
+    currentStudentId = studentId;
+    currentStudentData = studentData;
+    
+    const modal = document.getElementById('viewModal');
+    const modalBody = document.getElementById('viewModalBody');
+    const modalTitle = document.getElementById('viewModalTitle');
+    
+    modalTitle.textContent = studentData.name;
+    
+    modalBody.innerHTML = `
+        <div class="detail-grid">
+            <div class="detail-card">
+                <div class="detail-label"><i class="fas fa-user"></i> الاسم الكامل</div>
+                <div class="detail-value">${studentData.name}</div>
             </div>
-        `;
-
-        // محاكاة تحميل البيانات
-        setTimeout(() => {
-            modalBody.innerHTML = `
-                <div class="student-detail">
-                    <h4><i class="fas fa-user"></i> معلومات الطالب</h4>
-                    <p><strong>رقم الطالب:</strong> ${studentId}</p>
-                    <p><strong>ملاحظة:</strong> هذه الصفحة تحتاج إلى تعديل الـ Controller لعرض التفاصيل الكاملة</p>
+            
+            <div class="detail-card">
+                <div class="detail-label"><i class="fas fa-envelope"></i> البريد الإلكتروني</div>
+                <div class="detail-value">${studentData.email}</div>
+            </div>
+            
+            <div class="detail-card">
+                <div class="detail-label"><i class="fas fa-user-tag"></i> الصلاحية</div>
+                <div class="detail-value">
+                    <span class="role-badge ${studentData.role === 'admin' ? 'admin' : 'student'}">
+                        ${studentData.role === 'admin' ? '👨‍💼 مدير' : '🎓 طالب'}
+                    </span>
                 </div>
-            `;
-        }, 500);
-    }
+            </div>
+            
+            <div class="detail-card">
+                <div class="detail-label"><i class="fas fa-calendar"></i> تاريخ التسجيل</div>
+                <div class="detail-value">${studentData.created_at ? new Date(studentData.created_at).toLocaleDateString('ar-SA') : 'غير محدد'}</div>
+            </div>
+            
+            ${studentData.phone ? `
+            <div class="detail-card">
+                <div class="detail-label"><i class="fas fa-phone"></i> رقم الهاتف</div>
+                <div class="detail-value">${studentData.phone}</div>
+            </div>
+            ` : ''}
+            
+            <div class="detail-card full-width activities-list">
+                <h4><i class="fas fa-chart-bar"></i> معلومات إضافية</h4>
+                <p style="margin: 0; color: #92400e;">
+                    عدد الأنشطة المسجلة: <strong>0</strong> نشاط
+                </p>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.add('show');
+}
 
-    // حذف الطالب
-    function deleteStudent(studentId) {
-        if (confirm('هل أنت متأكد من حذف هذا الطالب؟')) {
-            alert('الوظيفة تحتاج إلى إعداد الـ Controller والـ Routes');
+// فتح Modal الحذف
+function openDeleteModal(studentId, studentName) {
+    currentStudentId = studentId;
+    document.getElementById('deleteUserName').textContent = studentName;
+    document.getElementById('deletePassword').value = '';
+    document.getElementById('deleteModal').classList.add('show');
+}
+
+// ✅ فتح Modal تغيير الصلاحية
+function openRoleModal(userId, userName, currentRole) {
+    currentStudentId = userId;
+    document.getElementById('roleUserName').textContent = userName;
+    document.getElementById('roleSelect').value = currentRole;
+    
+    // تحديث رابط الـ Form
+    document.getElementById('roleForm').action = `/admin/users/${userId}/role`;
+    
+    document.getElementById('roleModal').classList.add('show');
+}
+
+// ✅ إغلاق Modal الصلاحية
+function closeRoleModal() {
+    document.getElementById('roleModal').classList.remove('show');
+}
+
+// إغلاق Modal العرض
+function closeViewModal() {
+    document.getElementById('viewModal').classList.remove('show');
+}
+
+// إغلاق Modal الحذف
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+}
+
+// تعديل الطالب الحالي
+function editCurrentStudent() {
+    if (currentStudentId) {
+        window.location.href = `/admin/students/${currentStudentId}/edit`;
+    }
+}
+
+// تأكيد الحذف
+function confirmDelete() {
+    const password = document.getElementById('deletePassword').value;
+    
+    if (!password) {
+        alert('الرجاء إدخال كلمة المرور للتأكيد');
+        return;
+    }
+    
+    // إرسال طلب الحذف
+    fetch(`/admin/students/${currentStudentId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'X-Password': password
         }
-    }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'كلمة المرور غير صحيحة!');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء الحذف');
+    });
+}
 
-    // إغلاق Modal
-    function closeStudentModal() {
-        document.getElementById('studentModal').classList.remove('show');
-    }
+// ✅ معالجة إرسال فورم تغيير الصلاحية
+document.getElementById('roleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // حالة التحميل
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التغيير...';
+    
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            _method: 'PATCH',
+            role: document.getElementById('roleSelect').value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success || data.message) {
+            // تحديث الواجهة دون إعادة تحميل الصفحة
+            const badge = document.getElementById(`role-badge-${currentStudentId}`);
+            const newRole = document.getElementById('roleSelect').value;
+            
+            if (newRole === 'admin') {
+                badge.className = 'role-badge admin';
+                badge.innerHTML = '👨💼 مدير';
+            } else {
+                badge.className = 'role-badge student';
+                badge.innerHTML = '🎓 طالب';
+            }
+            
+            closeRoleModal();
+            // عرض رسالة نجاح بسيطة
+            alert('✅ ' + (data.message || 'تم تحديث الصلاحية بنجاح'));
+        } else {
+            alert('❌ حدث خطأ: ' + (data.message || 'غير معروف'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ فشل الاتصال بالخادم');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+});
 
-    // إغلاق modal عند النقر خارجه
-    document.getElementById('studentModal').addEventListener('click', function(e) {
+// إغلاق الـ Modals عند النقر خارجها
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', function(e) {
         if (e.target === this) {
-            closeStudentModal();
+            closeViewModal();
+            closeDeleteModal();
+            closeRoleModal();
         }
     });
+});
+
+// إغلاق الـ Modals بزر Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeViewModal();
+        closeDeleteModal();
+        closeRoleModal();
+    }
+});
 </script>
 @endsection
