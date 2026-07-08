@@ -1,62 +1,30 @@
 @extends('layouts.admin')
 
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-<div class="min-h-screen bg-[#f8f6f0]" style="font-family: 'Cairo', sans-serif;">
+<!-- الشريط العلوي المدمج (Dark Header) -->
+<div class="bg-[#0f172a] rounded-2xl p-6 mb-8 shadow-lg flex justify-between items-center text-white">
     
-    <!-- Header (Top Bar) - بدون إشعارات -->
-    <!-- Header (Top Bar) - بدون قائمة منسدلة -->
-<!-- Header (Top Bar) - التاريخ والمشرف في اليسار -->
-<header class="bg-[#0f172a] text-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-50">
-    
-    <!-- اليسار: التاريخ والمستخدم -->
-    <div class="flex items-center gap-6">
-        
-        <!-- التاريخ -->
-        <div class="hidden md:block bg-slate-800 px-3 py-1.5 rounded-lg text-sm text-slate-300 border border-slate-700">
-            <i class="far fa-calendar-alt ml-2 text-amber-500"></i>
-            {{ now()->format('Y/m/d') }}
-        </div>
-
-        <!-- 👤 اسم المستخدم والصورة -->
-        <div class="flex items-center gap-3 pl-2 border-l border-slate-700">
-            <div class="text-right hidden md:block">
-                <p class="text-sm font-bold text-white">المشرف العام</p>
-                <p class="text-xs text-slate-400">مدير النظام</p>
-            </div>
-            <img src="https://ui-avatars.com/api/?name=Admin&background=d4a017&color=fff" 
-                 class="w-10 h-10 rounded-full border-2 border-slate-700 shadow-sm">
-        </div>
-
-    </div>
-
-    <!-- اليمين: الشعار/العنوان -->
+    <!-- اليمين: رسالة الترحيب (نقلنا المحتوى الأخضر لهنا) -->
     <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-[#0f172a] font-bold shadow-lg shadow-amber-500/20">
-            <i class="fas fa-user-shield"></i>
-        </div>
+        <i class="fas fa-graduation-cap text-amber-500 text-3xl"></i>
         <div>
-            <h1 class="text-lg font-bold text-amber-500 leading-none">لوحة الإدارة</h1>
-            <p class="text-xs text-slate-400">نظام الأنشطة الطلابية</p>
+            <h1 class="text-2xl font-bold text-white mb-1">مرحباً بك، المشرف العام</h1>
+            <p class="text-slate-400 text-sm">لوحة تحكم إدارة الأنشطة الطلابية</p>
         </div>
     </div>
+
+    <!-- اليسار: التاريخ (نقلناه لجهة ثانية) -->
+    <div class="bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 flex items-center gap-2">
+        <span class="font-semibold">{{ now()->format('d/m/Y') }}</span>
+        <i class="far fa-calendar-alt text-amber-500"></i>
+    </div>
+</div>
 
 </header>
 
     <!-- Main Content -->
     <main class="p-6 md:p-8">
-        
-        <!-- Welcome Section -->
-        <div class="mb-8">
-            <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-1">
-                مرحباً بك، المشرف العام
-                <i class="fas fa-graduation-cap text-amber-500 text-2xl mr-2"></i>
-            </h1>
-            <p class="text-slate-500">لوحة تحكم إدارة الأنشطة الطلابية</p>
-        </div>
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -131,90 +99,124 @@
             </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
-            <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <i class="fas fa-bolt text-amber-500"></i>
-                إجراءات سريعة
-            </h2>
+       <!-- Quick Actions (الإجراءات السريعة) -->
+<div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+    <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+        <i class="fas fa-bolt text-amber-500"></i>
+        إجراءات سريعة
+    </h2>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <a href="{{ route('activities.create') }}" class="flex flex-col items-center justify-center p-5 bg-slate-50 rounded-2xl hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition-colors gap-3 group border border-transparent hover:border-blue-100">
-                    <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-plus-circle text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold">إضافة نشاط جديد</span>
-                </a>
-
-                <a href="{{ route('admin.students') }}" class="flex flex-col items-center justify-center p-5 bg-slate-50 rounded-2xl hover:bg-green-50 text-slate-600 hover:text-green-600 transition-colors gap-3 group border border-transparent hover:border-green-100">
-                    <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-green-500 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-users text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold">إدارة الطلاب</span>
-                </a>
-
-                <a href="{{ url('/admin/survey-questions') }}" class="flex flex-col items-center justify-center p-5 bg-slate-50 rounded-2xl hover:bg-purple-50 text-slate-600 hover:text-purple-600 transition-colors gap-3 group border border-transparent hover:border-purple-100">
-                    <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-poll text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold">الاستبيانات</span>
-                </a>
-                
-                <a href="{{ route('admin.announcements') }}" class="flex flex-col items-center justify-center p-5 bg-slate-50 rounded-2xl hover:bg-red-50 text-slate-600 hover:text-red-500 transition-colors gap-3 group border border-transparent hover:border-red-100">
-                    <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-bullhorn text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold">الإعلانات</span>
-                </a>
-                
-                <a href="#" class="flex flex-col items-center justify-center p-5 bg-slate-50 rounded-2xl hover:bg-slate-100 text-slate-600 hover:text-slate-800 transition-colors gap-3 group">
-                    <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-slate-500 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-file-export text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold">تصدير تقرير</span>
-                </a>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Action 1: إضافة نشاط جديد -->
+        <a href="{{ route('activities.create') }}" 
+           class="flex flex-col items-center justify-center p-8 bg-white rounded-2xl border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition-all gap-4 group shadow-sm h-40">
+            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 group-hover:bg-white group-hover:text-blue-500 transition-all shadow-sm">
+                <i class="fas fa-plus-circle text-2xl"></i>
             </div>
-        </div>
+            <span class="text-base font-bold">إضافة نشاط جديد</span>
+        </a>
 
-        <!-- Recent Activity Feed -->
-        <div class="mt-8 bg-[#1e293b] rounded-2xl shadow-lg border border-slate-700 p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                    <i class="fas fa-history text-amber-500"></i>
-                    آخر النشاطات
-                </h2>
-                <a href="{{ route('admin.all-registrations') }}" class="text-sm text-amber-400 hover:text-amber-300 font-bold">
-                    عرض الكل <i class="fas fa-arrow-left mr-1"></i>
-                </a>
+        <!-- Action 2: إدارة الطلاب -->
+        <a href="{{ route('admin.students') }}" 
+           class="flex flex-col items-center justify-center p-8 bg-white rounded-2xl border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 transition-all gap-4 group shadow-sm h-40">
+            <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 group-hover:bg-white group-hover:text-emerald-500 transition-all shadow-sm">
+                <i class="fas fa-users text-2xl"></i>
             </div>
+            <span class="text-base font-bold">إدارة الطلاب</span>
+        </a>
 
-            <div class="space-y-4">
-                @forelse($recentActivities as $activity)
-                    <div class="flex items-start gap-4 p-4 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-amber-500/30 transition-all">
-                        <div class="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400 shrink-0">
-                            <i class="fas fa-user-check"></i>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-white font-semibold text-sm">
-                                سجل الطالب <span class="text-amber-400">{{ $activity->student_name }}</span> 
-                                في نشاط <span class="text-blue-400">"{{ $activity->activity_title }}"</span>
-                            </p>
-                            <p class="text-slate-400 text-xs mt-1">
-                                <i class="far fa-clock ml-1"></i>
-                                {{ \Carbon\Carbon::parse($activity->created_at)->diffForHumans() }}
-                            </p>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center py-8 text-slate-400">
-                        <i class="fas fa-inbox text-4xl mb-3 text-slate-600"></i>
-                        <p>لا توجد نشاطات حديثة</p>
-                    </div>
-                @endforelse
+        <!-- Action 3: الاستبيانات -->
+        <a href="{{ route('admin.survey-questions.index') }}" 
+           class="flex flex-col items-center justify-center p-8 bg-white rounded-2xl border-2 border-slate-200 hover:border-purple-500 hover:bg-purple-50 text-slate-600 hover:text-purple-600 transition-all gap-4 group shadow-sm h-40">
+            <div class="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center text-purple-500 group-hover:bg-white group-hover:text-purple-500 transition-all shadow-sm">
+                <i class="fas fa-poll text-2xl"></i>
             </div>
-        </div>
+            <span class="text-base font-bold">الاستبيانات</span>
+        </a>
 
-    </main>
+        <!-- Action 4: الإعلانات -->
+        <a href="{{ route('admin.announcements') }}" 
+           class="flex flex-col items-center justify-center p-8 bg-white rounded-2xl border-2 border-slate-200 hover:border-red-500 hover:bg-red-50 text-slate-600 hover:text-red-600 transition-all gap-4 group shadow-sm h-40">
+            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-500 group-hover:bg-white group-hover:text-red-500 transition-all shadow-sm">
+                <i class="fas fa-bullhorn text-2xl"></i>
+            </div>
+            <span class="text-base font-bold">الإعلانات</span>
+        </a>
+
+        <!-- Action 5: إدارة التسجيلات -->
+        <a href="{{ route('admin.all-registrations') }}" 
+           class="flex flex-col items-center justify-center p-8 bg-white rounded-2xl border-2 border-slate-200 hover:border-amber-500 hover:bg-amber-50 text-slate-600 hover:text-amber-600 transition-all gap-4 group shadow-sm h-40">
+            <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 group-hover:bg-white group-hover:text-amber-500 transition-all shadow-sm">
+                <i class="fas fa-clipboard-list text-2xl"></i>
+            </div>
+            <span class="text-base font-bold">إدارة التسجيلات</span>
+        </a>
+
+        <!-- Action 6: تصدير تقرير -->
+        <a href="#" 
+           class="flex flex-col items-center justify-center p-8 bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-500 hover:bg-slate-50 text-slate-600 hover:text-slate-700 transition-all gap-4 group shadow-sm h-40">
+            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-500 group-hover:bg-white group-hover:text-slate-600 transition-all shadow-sm">
+                <i class="fas fa-file-export text-2xl"></i>
+            </div>
+            <span class="text-base font-bold">تصدير تقرير</span>
+        </a>
+
+    </div>
+</div>
+<!-- آخر النشاطات (Recent Activities) -->
+<div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8 mt-8">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <i class="fas fa-history text-amber-500"></i>
+            آخر النشاطات
+        </h2>
+        <a href="{{ route('admin.all-registrations') }}" class="text-sm text-amber-600 hover:text-amber-700 font-bold flex items-center gap-1">
+            عرض الكل
+            <i class="fas fa-arrow-left mr-1"></i>
+        </a>
+    </div>
+
+    <div class="space-y-4">
+        @forelse($recentActivities as $activity)
+            <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-amber-300 hover:shadow-md transition-all">
+                <!-- أيقونة النشاط -->
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 shrink-0">
+                    <i class="fas fa-user-check text-lg"></i>
+                </div>
+
+                <!-- معلومات النشاط -->
+                <div class="flex-1">
+                    <p class="text-slate-800 font-semibold text-sm">
+                        سجل الطالب <span class="text-amber-600 font-bold">{{ $activity->student_name }}</span> 
+                        في نشاط <span class="text-blue-600 font-bold">"{{ $activity->activity_title }}"</span>
+                    </p>
+                    <p class="text-slate-500 text-xs mt-1 flex items-center gap-1">
+                        <i class="far fa-clock"></i>
+                        {{ \Carbon\Carbon::parse($activity->created_at)->diffForHumans() }}
+                    </p>
+                </div>
+
+                <!-- حالة التسجيل -->
+                <div class="hidden md:block">
+                    <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                        <i class="fas fa-check-circle ml-1"></i>
+                        مسجل بنجاح
+                    </span>
+                </div>
+            </div>
+        @empty
+            <!-- رسالة في حال عدم وجود نشاطات -->
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-inbox text-4xl text-slate-400"></i>
+                </div>
+                <p class="text-slate-500 font-semibold">لا توجد نشاطات حديثة</p>
+                <p class="text-slate-400 text-sm mt-1">ستظهر هنا آخر عمليات التسجيل في الأنشطة</p>
+            </div>
+        @endforelse
+    </div>
+</div>
 
     <!-- Charts Scripts Only -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

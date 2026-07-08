@@ -63,12 +63,13 @@ Route::get('/student/dashboard', function () {
         'totalPoints' => $totalPoints,
         'favoritesCount' => $favoritesCount,
        'announcements' => \App\Models\Announcement::with('creator')
-    ->active()
-    ->latest()
-    ->take(5)
-    ->get(),
+        ->active()
+        ->latest()
+        ->take(5)
+        ->get(),
     ]);
 })->middleware(['auth'])->name('student.dashboard');
+
 // ===== عرض الأنشطة العامة =====
 Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
 Route::get('/activities/create', [ActivityController::class, 'create'])->name('activities.create');
@@ -89,9 +90,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/admin/registrations/{id}', [AdminDashboardController::class, 'destroyRegistration'])->name('admin.registrations.destroy');
     
     Route::get('/admin/staff', [StaffController::class, 'index'])->name('admin.staff');
+    
     // ========== إجابات الاستبيانات ==========
-Route::get('/admin/survey-responses', [App\Http\Controllers\Admin\SurveyResponseController::class, 'index'])->name('admin.survey-responses.index');
-Route::get('/admin/survey-responses/{id}', [App\Http\Controllers\Admin\SurveyResponseController::class, 'show'])->name('admin.survey-responses.show');
+    Route::get('/admin/survey-responses', [App\Http\Controllers\Admin\SurveyResponseController::class, 'index'])->name('admin.survey-responses.index');
+    Route::get('/admin/survey-responses/{id}', [App\Http\Controllers\Admin\SurveyResponseController::class, 'show'])->name('admin.survey-responses.show');
+    
     // ========== إدارة المشرفين (للأدمن فقط) ==========
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
@@ -147,10 +150,11 @@ Route::get('/admin/survey-responses/{id}', [App\Http\Controllers\Admin\SurveyRes
         ->name('activities.export-calendar')
         ->middleware('auth');
 
-// تصفح الأنشطة للطالب
-Route::get('/student/activities', [ActivityController::class, 'index'])
-    ->name('student.activities')
-    ->middleware(['auth']);
+    // تصفح الأنشطة للطالب
+    Route::get('/student/activities', [ActivityController::class, 'index'])
+        ->name('student.activities')
+        ->middleware(['auth']);
+    
     // ========== صفحات الطالب ==========
     Route::get('/student/my-activities', function () {
         $activities = auth()->user()->activities()->paginate(9);
@@ -307,12 +311,16 @@ Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->grou
     Route::post('/activities/{activity}/attendance/manual', [App\Http\Controllers\Staff\AttendanceController::class, 'manualCheckIn'])->name('attendance.manual');
     Route::get('/activities/{activity}/attendance/export', [App\Http\Controllers\Staff\AttendanceController::class, 'exportReport'])->name('attendance.export');
     Route::get('/staff/activities/{activity}/qr', [App\Http\Controllers\Staff\AttendanceController::class, 'showQR'])->name('staff.attendance.qr');
+    
+   
     Route::post('/attendance/check-in-qr', [App\Http\Controllers\Staff\AttendanceController::class, 'checkInQR'])
-    // عرض نتائج الاستبيانات (للمشرف)
-Route::get('/staff/survey-results/{activity}', [App\Http\Controllers\Staff\SurveyResultsController::class, 'index'])->name('staff.survey-results');
-Route::get('/staff/survey-results/{activity}/export', [App\Http\Controllers\Staff\SurveyResultsController::class, 'export'])->name('staff.survey-export');
         ->name('attendance.check-in-qr')
         ->middleware('auth');
+    
+    // ✅ ثم Routes الاستبيانات الجديدة (بعد ما قفلنا اللي قبلها)
+    // عرض نتائج الاستبيانات (للمشرف)
+    Route::get('/staff/survey-results/{activity}', [App\Http\Controllers\Staff\SurveyResultsController::class, 'index'])->name('staff.survey-results');
+    Route::get('/staff/survey-results/{activity}/export', [App\Http\Controllers\Staff\SurveyResultsController::class, 'export'])->name('staff.survey-export');
 });
 
 require __DIR__.'/auth.php';
