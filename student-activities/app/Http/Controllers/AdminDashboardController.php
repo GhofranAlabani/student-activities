@@ -270,4 +270,50 @@ class AdminDashboardController extends Controller
 
         return view('admin.all-registrations', compact('registrations'));
     }
+
+    /**
+     * ✅ عرض صفحة إدارة المشرفين
+     */
+    public function showStaff()
+    {
+        $staff = User::where('role', 'admin')
+            ->latest()
+            ->paginate(15);
+        
+        $totalStaff = User::where('role', 'admin')->count();
+        $activeStaff = User::where('role', 'admin')->count(); // يمكن تعديل الشرط لاحقاً
+        $totalAdmins = User::where('role', 'admin')->where('id', auth()->id())->count();
+        
+        return view('admin.staff', compact('staff', 'totalStaff', 'activeStaff', 'totalAdmins'));
+    }
+
+    /**
+     * ✅ حذف مشرف
+     */
+    public function destroyStaff($id)
+    {
+        try {
+            $staff = User::findOrFail($id);
+            
+            // منع الأدمن من حذف نفسه
+            if ($staff->id === auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لا يمكنك حذف حسابك الحالي!'
+                ], 403);
+            }
+            
+            $staff->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'تم حذف المشرف بنجاح'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء الحذف: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
