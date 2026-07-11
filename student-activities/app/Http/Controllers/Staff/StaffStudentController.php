@@ -64,25 +64,24 @@ public function edit($id)
 /**
  * تحديث بيانات الطالب
  */
+/**
+ * تحديث بيانات الطالب
+ */
 public function update(Request $request, $id)
 {
     $student = \App\Models\User::findOrFail($id);
     
-    // التحقق من صحة البيانات
+    // التحقق من صحة البيانات (بدون phone و student_number)
     $validated = $request->validate([
         'name' => 'required|string|max:255',
         'email' => 'required|email|unique:users,email,' . $id,
-        'phone' => 'nullable|string|max:20',
-        'student_number' => 'nullable|string|max:50',
         'total_points' => 'nullable|integer|min:0',
         'password' => 'nullable|string|min:8|confirmed',
-    ]);  // ← هذا السطر مهم جداً!
+    ]);
     
     // تحديث البيانات الأساسية
     $student->name = $validated['name'];
     $student->email = $validated['email'];
-    $student->phone = $validated['phone'] ?? null;
-    $student->student_number = $validated['student_number'] ?? null;
     $student->total_points = $validated['total_points'] ?? 0;
     
     // تحديث كلمة المرور إذا تم تقديمها
