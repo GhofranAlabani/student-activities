@@ -2,28 +2,28 @@
 
 @section('content')
 
-<!-- Header (Top Bar) - مطابق للوحة الرئيسية -->
+<!-- Header (Top Bar) -->
 <header class="bg-[#0f172a] rounded-2xl p-4 mb-8 shadow-lg flex justify-between items-center text-white relative overflow-hidden">
     
-    <!-- اليمين: عنوان القسم / معلومات الإدارة -->
+    <!-- اليمين: عنوان القسم -->
     <div class="flex items-center gap-3 z-10">
-        <i class="fas fa-user-shield text-amber-500 text-3xl"></i>
+        <i class="fas fa-user-tie text-amber-500 text-3xl"></i>
         <div>
-            <h1 class="text-2xl font-bold text-white mb-1">لوحة إدارة الطلاب</h1>
-            <p class="text-slate-400 text-sm">إدارة جميع المستخدمين والطلاب في النظام</p>
+            <h1 class="text-2xl font-bold text-white mb-1">إدارة المشرفين</h1>
+            <p class="text-slate-400 text-sm">إدارة جميع المشرفين والمديرين في النظام</p>
         </div>
     </div>
 
     <!-- اليسار: التاريخ + زر الوضع الليلي -->
     <div class="flex flex-col items-end gap-2 z-10">
         
-        <!-- 1. التاريخ -->
+        <!-- التاريخ -->
         <div class="bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 flex items-center gap-2">
             <span class="font-semibold text-sm">{{ now()->format('d/m/Y') }}</span>
             <i class="far fa-calendar-alt text-amber-500"></i>
         </div>
 
-        <!-- 2. زر الوضع الليلي -->
+        <!-- زر الوضع الليلي -->
         <button onclick="toggleDarkMode()" 
                 class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-amber-500 hover:border-amber-500 transition-all shadow-md"
                 title="تبديل الوضع الليلي">
@@ -40,18 +40,18 @@
             <i class="fas fa-users"></i>
         </div>
         <div class="stat-info">
-            <h3>إجمالي المستخدمين</h3>
-            <p class="stat-number">{{ $totalUsers ?? $students->count() ?? 0 }}</p>
+            <h3>إجمالي المشرفين</h3>
+            <p class="stat-number">{{ $totalStaff ?? 0 }}</p>
         </div>
     </div>
 
     <div class="stat-card">
         <div class="stat-icon green">
-            <i class="fas fa-user-graduate"></i>
+            <i class="fas fa-user-check"></i>
         </div>
         <div class="stat-info">
-            <h3>الطلاب</h3>
-            <p class="stat-number">{{ $totalStudents ?? 0 }}</p>
+            <h3>نشطون</h3>
+            <p class="stat-number">{{ $activeStaff ?? 0 }}</p>
         </div>
     </div>
 
@@ -60,7 +60,7 @@
             <i class="fas fa-user-shield"></i>
         </div>
         <div class="stat-info">
-            <h3>المدراء</h3>
+            <h3>مديرو النظام</h3>
             <p class="stat-number">{{ $totalAdmins ?? 0 }}</p>
         </div>
     </div>
@@ -70,7 +70,7 @@
 <div class="table-container">
     <!-- شريط البحث والفلترة -->
     <div class="table-header">
-        <h2 class="table-title">قائمة الطلاب</h2>
+        <h2 class="table-title">قائمة المشرفين</h2>
     </div>
 
     <!-- الفلاتر المتقدمة -->
@@ -81,16 +81,6 @@
                 <div class="filter-group">
                     <label><i class="fas fa-search"></i> البحث</label>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث بالاسم أو البريد...">
-                </div>
-
-                <!-- فلتر الصلاحية -->
-                <div class="filter-group">
-                    <label><i class="fas fa-user-tag"></i> الصلاحية</label>
-                    <select name="role">
-                        <option value="">الكل</option>
-                        <option value="student" {{ request('role') == 'student' ? 'selected' : '' }}>طلاب فقط</option>
-                        <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>مدراء فقط</option>
-                    </select>
                 </div>
 
                 <!-- زر البحث -->
@@ -118,62 +108,47 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>المستخدم</th>
+                    <th>المشرف</th>
                     <th>البريد الإلكتروني</th>
-                    <th>الصلاحية</th>
-                    <th>تاريخ التسجيل</th>
+                    <th>تاريخ التعيين</th>
+                    <th>الحالة</th>
                     <th>الإجراءات</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($students ?? [] as $index => $student)
+                @forelse($staff ?? [] as $index => $member)
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>
                         <div class="user-info">
-                            <div class="avatar" style="background: {{ ($student->role ?? 'student') === 'admin' ? '#dc2626' : '#4f46e5' }}">
-                                {{ substr($student->name ?? '?', 0, 1) }}
+                            <div class="avatar" style="background: #dc2626">
+                                {{ substr($member->name ?? '?', 0, 1) }}
                             </div>
                             <div>
-                                <div class="user-name">{{ $student->name ?? 'غير محدد' }}</div>
-                                @if($student->phone ?? false)
-                                    <div class="user-phone"><i class="fas fa-phone"></i> {{ $student->phone }}</div>
+                                <div class="user-name">{{ $member->name ?? 'غير محدد' }}</div>
+                                @if($member->phone ?? false)
+                                    <div class="user-phone"><i class="fas fa-phone"></i> {{ $member->phone }}</div>
                                 @endif
                             </div>
                         </div>
                     </td>
-                    <td>{{ $student->email ?? 'غير متوفر' }}</td>
-                    
-                    <!-- ✅ عمود الصلاحية مع زر التغيير -->
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <!-- Badge الصلاحية الحالية -->
-                            <span class="role-badge {{ $student->role === 'admin' ? 'admin' : 'student' }}" id="role-badge-{{ $student->id }}">
-                                {{ $student->role === 'admin' ? '👨‍💼 مدير' : '🎓 طالب' }}
-                            </span>
-                            
-                            <!-- زر تغيير الصلاحية (يظهر فقط للأدمن ولا يظهر للأدمن الحالي) -->
-                            @if(auth()->user()->role === 'admin' && $student->id !== auth()->id())
-                                <button onclick="openRoleModal({{ $student->id }}, '{{ $student->name }}', '{{ $student->role }}')" 
-                                        class="w-8 h-8 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-700 flex items-center justify-center transition" 
-                                        title="تغيير الصلاحية">
-                                    <i class="fas fa-exchange-alt text-sm"></i>
-                                </button>
-                            @endif
-                        </div>
+                    <td>{{ $member->email ?? 'غير متوفر' }}</td>
+                    <td>{{ $member->created_at ? $member->created_at->format('Y/m/d') : 'غير محدد' }}</td>
+                    <td>
+                        <span class="role-badge admin">
+                            👨‍💼 {{ $member->role === 'admin' ? 'مدير' : 'مشرف' }}
+                        </span>
                     </td>
-                    
-                    <td>{{ $student->created_at ? $student->created_at->format('Y/m/d') : 'غير محدد' }}</td>
-                    
-                    <!-- ✅ عمود الإجراءات -->
                     <td>
                         <div class="actions-buttons">
-                            <button onclick="viewStudent({{ $student->id }}, @json($student))" class="action-btn view" title="عرض">
+                            <button onclick="viewStaff({{ $member->id }}, @json($member))" class="action-btn view" title="عرض">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button onclick="openDeleteModal({{ $student->id }}, '{{ $student->name }}')" class="action-btn delete" title="حذف">
+                            @if($member->id !== auth()->id())
+                            <button onclick="deleteStaff({{ $member->id }}, '{{ $member->name }}')" class="action-btn delete" title="حذف">
                                 <i class="fas fa-trash"></i>
                             </button>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -181,7 +156,7 @@
                 <tr>
                     <td colspan="6" class="no-data">
                         <i class="fas fa-inbox"></i>
-                        <p>لا يوجد طلاب مسجلين حالياً</p>
+                        <p>لا يوجد مشرفين مسجلين حالياً</p>
                     </td>
                 </tr>
                 @endforelse
@@ -190,19 +165,17 @@
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- Modal عرض تفاصيل الطالب (تصميم احترافي) -->
-<!-- ============================================ -->
+<!-- Modal عرض تفاصيل المشرف -->
 <div id="viewModal" class="modal">
     <div class="modal-content-large">
         <div class="modal-header-blue">
             <div class="modal-header-content">
                 <div class="modal-avatar">
-                    <i class="fas fa-user"></i>
+                    <i class="fas fa-user-tie"></i>
                 </div>
                 <div>
-                    <h3 id="viewModalTitle">تفاصيل الطالب</h3>
-                    <p class="modal-subtitle">معلومات الحساب والنشاط</p>
+                    <h3 id="viewModalTitle">تفاصيل المشرف</h3>
+                    <p class="modal-subtitle">معلومات الحساب والصلاحيات</p>
                 </div>
             </div>
             <button class="close-modal" onclick="closeViewModal()">&times;</button>
@@ -216,16 +189,14 @@
             <button onclick="closeViewModal()" class="btn-modal-secondary">
                 إغلاق
             </button>
-            <button onclick="editCurrentStudent()" class="btn-modal-primary">
+            <button onclick="editCurrentStaff()" class="btn-modal-primary">
                 <i class="fas fa-edit"></i> تعديل البيانات
             </button>
         </div>
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- ✅ Modal تأكيد الحذف (مبسط - بدون كلمة مرور) -->
-<!-- ============================================ -->
+<!-- Modal تأكيد الحذف -->
 <div id="deleteModal" class="modal">
     <div class="modal-content-small">
         <div class="delete-warning-icon">
@@ -247,70 +218,8 @@
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- ✅ Modal تغيير الصلاحية -->
-<!-- ============================================ -->
-<div id="roleModal" class="modal">
-    <div class="modal-content-small">
-        <!-- أيقونة -->
-        <div class="delete-warning-icon" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
-            <i class="fas fa-user-shield" style="color: #d97706;"></i>
-        </div>
-        
-        <h2 class="delete-title">تغيير صلاحية المستخدم</h2>
-        
-        <p class="delete-message">
-            هل تريد تغيير صلاحية <span id="roleUserName" class="highlight-red"></span>؟
-        </p>
-        
-        <!-- خيارات الصلاحية -->
-        <form id="roleForm" method="POST" style="text-align: right;">
-            @csrf
-            @method('PATCH')
-            
-            <div style="margin-bottom: 20px;">
-                <label class="password-label">اختر الصلاحية الجديدة:</label>
-                <select name="role" id="roleSelect" class="password-input" style="width: 100%; margin-top: 8px;">
-                    <option value="student">🎓 طالب</option>
-                    <option value="admin">👨‍💼 مدير نظام</option>
-                </select>
-            </div>
-            
-            <div class="delete-actions">
-                <button type="button" onclick="closeRoleModal()" class="btn-cancel">إلغاء</button>
-                <button type="submit" class="btn-delete-confirm" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                    تأكيد التغيير
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <style>
-    .students-management {
-        padding: 20px;
-        direction: rtl;
-    }
-
-    .page-header {
-        margin-bottom: 30px;
-    }
-
-    .page-header h1 {
-        color: #1e3a8a;
-        font-size: 28px;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .page-subtitle {
-        color: #6b7280;
-        font-size: 15px;
-    }
-
-    /* بطاقات الإحصائيات */
+    /* نفس الـ CSS اللي في صفحة الطلاب */
     .stats-cards {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -372,7 +281,6 @@
         line-height: 1;
     }
 
-    /* الجدول */
     .table-container {
         background: white;
         border-radius: 12px;
@@ -381,12 +289,7 @@
     }
 
     .table-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         margin-bottom: 20px;
-        flex-wrap: wrap;
-        gap: 15px;
     }
 
     .table-title {
@@ -395,7 +298,6 @@
         margin: 0;
     }
 
-    /* الفلاتر المتقدمة */
     .advanced-filters {
         background: #f9fafb;
         border-radius: 12px;
@@ -476,7 +378,6 @@
         background: #4b5563;
     }
 
-    /* الجدول */
     .table-responsive {
         overflow-x: auto;
     }
@@ -549,12 +450,6 @@
         color: #991b1b;
     }
 
-    .role-badge.student {
-        background: #dbeafe;
-        color: #1e40af;
-    }
-
-    /* أزرار الإجراءات */
     .actions-buttons {
         display: flex;
         gap: 8px;
@@ -605,9 +500,7 @@
         display: block;
     }
 
-    /* ============================================ */
-    /* Modal Styles - التصاميم الاحترافية */
-    /* ============================================ */
+    /* Modal Styles */
     .modal {
         display: none;
         position: fixed;
@@ -665,7 +558,6 @@
         }
     }
 
-    /* Modal Header - أزرق متدرج */
     .modal-header-blue {
         background: linear-gradient(135deg, #2563eb, #1d4ed8);
         padding: 30px;
@@ -740,7 +632,6 @@
         gap: 12px;
     }
 
-    /* أزرار Modal */
     .btn-modal-primary,
     .btn-modal-secondary {
         padding: 12px 24px;
@@ -777,7 +668,6 @@
         border-color: #9ca3af;
     }
 
-    /* Delete Modal Styles */
     .delete-warning-icon {
         width: 80px;
         height: 80px;
@@ -850,7 +740,6 @@
         box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
     }
 
-    /* Student Details in Modal */
     .detail-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -882,49 +771,7 @@
         font-weight: 700;
     }
 
-    .activities-list {
-        background: linear-gradient(135deg, #fef3c7, #fde68a);
-        padding: 20px;
-        border-radius: 12px;
-        border: 2px solid #fcd34d;
-    }
-
-    .activities-list h4 {
-        margin: 0 0 12px 0;
-        color: #92400e;
-        font-size: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .activity-item {
-        padding: 10px;
-        background: white;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .activity-name {
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-    .activity-date {
-        font-size: 12px;
-        color: #64748b;
-        background: #f1f5f9;
-        padding: 4px 8px;
-        border-radius: 6px;
-    }
-
     @media (max-width: 768px) {
-        .students-management {
-            padding: 10px;
-        }
         .stats-cards {
             grid-template-columns: 1fr;
         }
@@ -941,87 +788,63 @@
 </style>
 
 <script>
-let currentStudentId = null;
-let currentStudentData = null;
+let currentStaffId = null;
+let currentStaffData = null;
 
-// عرض تفاصيل الطالب
-function viewStudent(studentId, studentData) {
-    currentStudentId = studentId;
-    currentStudentData = studentData;
+// عرض تفاصيل المشرف
+function viewStaff(staffId, staffData) {
+    currentStaffId = staffId;
+    currentStaffData = staffData;
     
     const modal = document.getElementById('viewModal');
     const modalBody = document.getElementById('viewModalBody');
     const modalTitle = document.getElementById('viewModalTitle');
     
-    modalTitle.textContent = studentData.name;
+    modalTitle.textContent = staffData.name;
     
     modalBody.innerHTML = `
         <div class="detail-grid">
             <div class="detail-card">
                 <div class="detail-label"><i class="fas fa-user"></i> الاسم الكامل</div>
-                <div class="detail-value">${studentData.name}</div>
+                <div class="detail-value">${staffData.name}</div>
             </div>
             
             <div class="detail-card">
                 <div class="detail-label"><i class="fas fa-envelope"></i> البريد الإلكتروني</div>
-                <div class="detail-value">${studentData.email}</div>
+                <div class="detail-value">${staffData.email}</div>
             </div>
             
             <div class="detail-card">
                 <div class="detail-label"><i class="fas fa-user-tag"></i> الصلاحية</div>
                 <div class="detail-value">
-                    <span class="role-badge ${studentData.role === 'admin' ? 'admin' : 'student'}">
-                        ${studentData.role === 'admin' ? '👨‍💼 مدير' : '🎓 طالب'}
+                    <span class="role-badge admin">
+                        👨‍ ${staffData.role === 'admin' ? 'مدير نظام' : 'مشرف'}
                     </span>
                 </div>
             </div>
             
             <div class="detail-card">
-                <div class="detail-label"><i class="fas fa-calendar"></i> تاريخ التسجيل</div>
-                <div class="detail-value">${studentData.created_at ? new Date(studentData.created_at).toLocaleDateString('ar-SA') : 'غير محدد'}</div>
+                <div class="detail-label"><i class="fas fa-calendar"></i> تاريخ التعيين</div>
+                <div class="detail-value">${staffData.created_at ? new Date(staffData.created_at).toLocaleDateString('ar-SA') : 'غير محدد'}</div>
             </div>
             
-            ${studentData.phone ? `
+            ${staffData.phone ? `
             <div class="detail-card">
                 <div class="detail-label"><i class="fas fa-phone"></i> رقم الهاتف</div>
-                <div class="detail-value">${studentData.phone}</div>
+                <div class="detail-value">${staffData.phone}</div>
             </div>
             ` : ''}
-            
-            <div class="detail-card full-width activities-list">
-                <h4><i class="fas fa-chart-bar"></i> معلومات إضافية</h4>
-                <p style="margin: 0; color: #92400e;">
-                    عدد الأنشطة المسجلة: <strong>0</strong> نشاط
-                </p>
-            </div>
         </div>
     `;
     
     modal.classList.add('show');
 }
 
-// فتح Modal الحذف (مبسط - بدون كلمة مرور)
-function openDeleteModal(studentId, studentName) {
-    currentStudentId = studentId;
-    document.getElementById('deleteUserName').textContent = studentName;
+// فتح Modal الحذف
+function openDeleteModal(staffId, staffName) {
+    currentStaffId = staffId;
+    document.getElementById('deleteUserName').textContent = staffName;
     document.getElementById('deleteModal').classList.add('show');
-}
-
-// ✅ فتح Modal تغيير الصلاحية
-function openRoleModal(userId, userName, currentRole) {
-    currentStudentId = userId;
-    document.getElementById('roleUserName').textContent = userName;
-    document.getElementById('roleSelect').value = currentRole;
-    
-    // تحديث رابط الـ Form
-    document.getElementById('roleForm').action = `/admin/users/${userId}/role`;
-    
-    document.getElementById('roleModal').classList.add('show');
-}
-
-// ✅ إغلاق Modal الصلاحية
-function closeRoleModal() {
-    document.getElementById('roleModal').classList.remove('show');
 }
 
 // إغلاق Modal العرض
@@ -1034,22 +857,21 @@ function closeDeleteModal() {
     document.getElementById('deleteModal').classList.remove('show');
 }
 
-// تعديل الطالب الحالي
-function editCurrentStudent() {
-    if (currentStudentId) {
-        window.location.href = `/admin/students/${currentStudentId}/edit`;
+// تعديل المشرف الحالي
+function editCurrentStaff() {
+    if (currentStaffId) {
+        window.location.href = `/admin/staff/${currentStaffId}/edit`;
     }
 }
 
-// ✅ تأكيد الحذف - نسخة مبسطة (بدون كلمة مرور)
+// تأكيد الحذف
 function confirmDelete() {
-    if (!currentStudentId) {
+    if (!currentStaffId) {
         alert('حدث خطأ، الرجاء المحاولة مرة أخرى');
         return;
     }
     
-    // إرسال طلب الحذف بدون كلمة مرور
-    fetch(`/admin/students/${currentStudentId}`, {
+    fetch(`/admin/staff/${currentStaffId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
@@ -1060,9 +882,7 @@ function confirmDelete() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // إغلاق المودال
             closeDeleteModal();
-            // إعادة تحميل الصفحة
             location.reload();
         } else {
             alert(data.message || 'حدث خطأ أثناء الحذف');
@@ -1074,68 +894,12 @@ function confirmDelete() {
     });
 }
 
-// ✅ معالجة إرسال فورم تغيير الصلاحية
-document.getElementById('roleForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    
-    // حالة التحميل
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التغيير...';
-    
-    fetch(form.action, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            _method: 'PATCH',
-            role: document.getElementById('roleSelect').value
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success || data.message) {
-            // تحديث الواجهة دون إعادة تحميل الصفحة
-            const badge = document.getElementById(`role-badge-${currentStudentId}`);
-            const newRole = document.getElementById('roleSelect').value;
-            
-            if (newRole === 'admin') {
-                badge.className = 'role-badge admin';
-                badge.innerHTML = '👨‍💼 مدير';
-            } else {
-                badge.className = 'role-badge student';
-                badge.innerHTML = '🎓 طالب';
-            }
-            
-            closeRoleModal();
-            // عرض رسالة نجاح بسيطة
-            alert('✅ ' + (data.message || 'تم تحديث الصلاحية بنجاح'));
-        } else {
-            alert('❌ حدث خطأ: ' + (data.message || 'غير معروف'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('❌ فشل الاتصال بالخادم');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    });
-});
-
 // إغلاق الـ Modals عند النقر خارجها
 document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('click', function(e) {
         if (e.target === this) {
             closeViewModal();
             closeDeleteModal();
-            closeRoleModal();
         }
     });
 });
@@ -1145,11 +909,10 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeViewModal();
         closeDeleteModal();
-        closeRoleModal();
     }
 });
 
-// ✅ دالة تبديل الوضع الليلي (لزر الهيدر)
+// دالة تبديل الوضع الليلي
 function toggleDarkMode() {
     const html = document.documentElement;
     const icon = document.getElementById('darkModeIcon');

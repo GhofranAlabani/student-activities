@@ -8,114 +8,164 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AdminDashboardController extends Controller
 {
-   public function index()
-{
-    // الإحصائيات الأساسية
-    $totalActivities = Activity::count();
-    $totalStudents = User::where('role', 'student')->count();
-    $totalRegistrations = DB::table('registrations')->count();
+    /**
+     * عرض لوحة تحكم الأدمن
+     */
+    public function index()
+    {
+        // الإحصائيات الأساسية
+        $totalActivities = Activity::count();
+        $totalStudents = User::where('role', 'student')->count();
+        $totalRegistrations = DB::table('registrations')->count();
 
-    // ============================================
-    // 🔔 بيانات الإشعارات - نسخة مبسطة وآمنة
-    // ============================================
-    
-    // 1. الأنشطة المكتملة (فقط إذا كان العمود موجوداً)
-    $fullActivities = collect([]);
-    
-    // تحقق من وجود العمود قبل الاستخدام
-    if (Schema::hasColumn('activities', 'max_participants')) {
-        $fullActivities = DB::table('activities')
-            ->leftJoin('registrations', 'activities.id', '=', 'registrations.activity_id')
-            ->select(
-                'activities.id', 
-                'activities.title', 
-                'activities.max_participants',
-                DB::raw('COUNT(registrations.id) as registered_count')
-            )
-            ->whereNotNull('activities.max_participants')
-            ->groupBy('activities.id', 'activities.title', 'activities.max_participants')
-            ->havingRaw('COUNT(registrations.id) >= activities.max_participants')
+        // ============================================
+        // 🔔 بيانات الإشعارات - نسخة مبسطة وآمنة
+        // ============================================
+        
+        // 1. الأنشطة المكتملة (فقط إذا كان العمود موجوداً)
+        $fullActivities = collect([]);
+        
+        if (Schema::hasColumn('activities', 'max_participants')) {
+            $fullActivities = DB::table('activities')
+                ->leftJoin('registrations', 'activities.id', '=', 'registrations.activity_id')
+                ->select(
+                    'activities.id', 
+                    'activities.title', 
+                    'activities.max_participants',
+                    DB::raw('COUNT(registrations.id) as registered_count')
+                )
+                ->whereNotNull('activities.max_participants')
+                ->groupBy('activities.id', 'activities.title', 'activities.max_participants')
+                ->havingRaw('COUNT(registrations.id) >= activities.max_participants')
+                ->limit(5)
+                ->get();
+        }
+
+        // 2. الاستبيانات الجديدة (آخر 7 أيام)
+        $newSurveys = DB::table('survey_questions')
+            ->select('id', 'question', 'created_at')
+            ->where('created_at', '>=', now()->subDays(7))
+            ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
+
+        // 3. التسجيلات الجديدة (آخر 24 ساعة)
+        $newRegistrations = DB::table('registrations')
+            ->where('created_at', '>=', now()->subHours(24))
+            ->count();
+
+        // حساب العدد الكلي للإشعارات
+        $notificationsCount = $fullActivities->count() + $newSurveys->count() + ($newRegistrations > 10 ? 1 : 0);
+
+        // ============================================
+        // 📊 الرسوم البيانية
+        // ============================================
+        $monthlyRegistrations = DB::table('registrations')
+            ->select(DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'), DB::raw('count(*) as count'))
+            ->groupBy(DB::raw('DATE_FORMAT(created_at, "%Y-%m")'))
+            ->orderBy('month', 'asc')
+            ->get();
+
+        $months = [];
+        $counts = [];
+        foreach ($monthlyRegistrations as $item) {
+            $date = Carbon::parse($item->month . '-01');
+            $months[] = $date->format('M');
+            $counts[] = $item->count;
+        }
+
+        $activityTypes = DB::table('registrations')
+            ->join('activities', 'registrations.activity_id', '=', 'activities.id')
+            ->join('activity_types', 'activities.type_id', '=', 'activity_types.id')
+            ->select('activity_types.name', DB::raw('count(registrations.id) as count'))
+            ->groupBy('activity_types.name')
+            ->pluck('count', 'name');
+
+        $typeLabels = $activityTypes->keys()->toArray();
+        $typeData = $activityTypes->values()->toArray();
+
+        // ============================================
+        // 🕐 آخر النشاطات
+        // ============================================
+        $recentActivities = DB::table('registrations')
+            ->join('users', 'registrations.student_id', '=', 'users.id')
+            ->join('activities', 'registrations.activity_id', '=', 'activities.id')
+            ->select(
+                'registrations.created_at',
+                'users.name as student_name',
+                'activities.title as activity_title'
+            )
+            ->orderBy('registrations.created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        // ============================================
+        return view('admin.dashboard', compact(
+            'totalActivities',
+            'totalStudents',
+            'totalRegistrations',
+            'months',
+            'counts',
+            'typeLabels',
+            'typeData',
+            'recentActivities',
+            'fullActivities',
+            'newSurveys',
+            'newRegistrations',
+            'notificationsCount'
+        ));
     }
 
-    // 2. الاستبيانات الجديدة (آخر 7 أيام)
-    $newSurveys = DB::table('survey_questions')
-        ->select('id', 'question', 'created_at')
-        ->where('created_at', '>=', now()->subDays(7))
-        ->orderBy('created_at', 'desc')
-        ->limit(5)
-        ->get();
+    /**
+     * ✅ تغيير صلاحية المستخدم (طالب ↔ مدير)
+     */
+    public function updateRole(Request $request, $id)
+    {
+        // 1. التحقق من أن المستخدم الحالي أدمن
+        if (Auth::user()->role !== 'admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'غير مصرح لك بهذه العملية'
+            ], 403);
+        }
 
-    // 3. التسجيلات الجديدة (آخر 24 ساعة)
-    $newRegistrations = DB::table('registrations')
-        ->where('created_at', '>=', now()->subHours(24))
-        ->count();
+        // 2. جلب المستخدم المستهدف
+        $user = User::findOrFail($id);
+        
+        // 3. منع الأدمن من تغيير صلاحيته هو نفسه
+        if ($user->id === Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكنك تغيير صلاحية حسابك الحالي!'
+            ], 400);
+        }
 
-    // حساب العدد الكلي للإشعارات
-    $notificationsCount = $fullActivities->count() + $newSurveys->count() + ($newRegistrations > 10 ? 1 : 0);
+        // 4. التحقق من صحة البيانات
+        $validated = $request->validate([
+            'role' => 'required|in:student,admin',
+        ]);
 
-    // ============================================
-    // 📊 الرسوم البيانية
-    // ============================================
-    $monthlyRegistrations = DB::table('registrations')
-        ->select(DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'), DB::raw('count(*) as count'))
-        ->groupBy(DB::raw('DATE_FORMAT(created_at, "%Y-%m")'))
-        ->orderBy('month', 'asc')
-        ->get();
+        // 5. تحديث الصلاحية
+        $oldRole = $user->role;
+        $user->update(['role' => $validated['role']]);
 
-    $months = [];
-    $counts = [];
-    foreach ($monthlyRegistrations as $item) {
-        $date = Carbon::parse($item->month . '-01');
-        $months[] = $date->format('M');
-        $counts[] = $item->count;
+        // 6. إرجاع استجابة JSON للواجهة
+        return response()->json([
+            'success' => true,
+            'message' => "✅ تم تغيير صلاحية {$user->name} من '{$oldRole}' إلى '{$validated['role']}'",
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'role' => $user->role
+            ]
+        ]);
     }
 
-    $activityTypes = DB::table('registrations')
-        ->join('activities', 'registrations.activity_id', '=', 'activities.id')
-        ->join('activity_types', 'activities.type_id', '=', 'activity_types.id')
-        ->select('activity_types.name', DB::raw('count(registrations.id) as count'))
-        ->groupBy('activity_types.name')
-        ->pluck('count', 'name');
-
-    $typeLabels = $activityTypes->keys()->toArray();
-    $typeData = $activityTypes->values()->toArray();
-
-    // ============================================
-    // 🕐 آخر النشاطات
-    // ============================================
-    $recentActivities = DB::table('registrations')
-        ->join('users', 'registrations.student_id', '=', 'users.id')
-        ->join('activities', 'registrations.activity_id', '=', 'activities.id')
-        ->select(
-            'registrations.created_at',
-            'users.name as student_name',
-            'activities.title as activity_title'
-        )
-        ->orderBy('registrations.created_at', 'desc')
-        ->limit(5)
-        ->get();
-
-    // ============================================
-    return view('admin.dashboard', compact(
-        'totalActivities',
-        'totalStudents',
-        'totalRegistrations',
-        'months',
-        'counts',
-        'typeLabels',
-        'typeData',
-        'recentActivities',
-        'fullActivities',      // ✅ للإشعارات
-        'newSurveys',          // ✅ للإشعارات
-        'newRegistrations',    // ✅ للإشعارات
-        'notificationsCount'   // ✅ عدد الإشعارات
-    ));
-}
     /**
      * عرض صفحة تعديل تسجيل
      */
@@ -170,7 +220,7 @@ class AdminDashboardController extends Controller
             DB::table('registrations')->where('id', $id)->delete();
             return redirect()->route('admin.all-registrations')->with('success', 'تم حذف التسجيل بنجاح');
         } catch (\Exception $e) {
-            return redirect()->route('admin.all-registrations')->with('error', 'حدث خطأ أثناء الحذف');
+            return redirect()->route('admin.all-registrations')->with('error', 'حدث خطأ أثناء الحذف: ' . $e->getMessage());
         }
     }
 
@@ -219,5 +269,51 @@ class AdminDashboardController extends Controller
             ->paginate(15);
 
         return view('admin.all-registrations', compact('registrations'));
+    }
+
+    /**
+     * ✅ عرض صفحة إدارة المشرفين
+     */
+    public function showStaff()
+    {
+        $staff = User::where('role', 'admin')
+            ->latest()
+            ->paginate(15);
+        
+        $totalStaff = User::where('role', 'admin')->count();
+        $activeStaff = User::where('role', 'admin')->count(); // يمكن تعديل الشرط لاحقاً
+        $totalAdmins = User::where('role', 'admin')->where('id', auth()->id())->count();
+        
+        return view('admin.staff', compact('staff', 'totalStaff', 'activeStaff', 'totalAdmins'));
+    }
+
+    /**
+     * ✅ حذف مشرف
+     */
+    public function destroyStaff($id)
+    {
+        try {
+            $staff = User::findOrFail($id);
+            
+            // منع الأدمن من حذف نفسه
+            if ($staff->id === auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لا يمكنك حذف حسابك الحالي!'
+                ], 403);
+            }
+            
+            $staff->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'تم حذف المشرف بنجاح'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء الحذف: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

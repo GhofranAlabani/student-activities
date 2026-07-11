@@ -38,7 +38,6 @@ Route::get('/dashboard', function () {
 Route::get('/student/dashboard', function () {
     $user = auth()->user();
     
-    // جلب الأنشطة المسجلة القادمة (لجدول المواعيد)
     $registeredActivities = \App\Models\Activity::join('registrations', 'activities.id', '=', 'registrations.activity_id')
         ->where('registrations.student_id', $user->id)
         ->where('activities.date', '>=', now())
@@ -47,7 +46,6 @@ Route::get('/student/dashboard', function () {
         ->limit(5)
         ->get();
     
-    // حساب الإحصائيات
     $totalRegistered = \DB::table('registrations')
         ->where('student_id', $user->id)
         ->count();
@@ -62,11 +60,11 @@ Route::get('/student/dashboard', function () {
         'totalRegistered' => $totalRegistered,
         'totalPoints' => $totalPoints,
         'favoritesCount' => $favoritesCount,
-       'announcements' => \App\Models\Announcement::with('creator')
-        ->active()
-        ->latest()
-        ->take(5)
-        ->get(),
+        'announcements' => \App\Models\Announcement::with('creator')
+            ->active()
+            ->latest()
+            ->take(5)
+            ->get(),
     ]);
 })->middleware(['auth'])->name('student.dashboard');
 
@@ -78,62 +76,68 @@ Route::get('/activities/{id}', [ActivityController::class, 'show'])->name('activ
 // ===== المسارات المحمية بالمصادقة =====
 Route::middleware('auth')->group(function () {
 
+    // ========== الملف الشخصي (لجميع المستخدمين) ==========
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
     // ========== لوحة تحكم الأدمن ==========
-    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/admin/activity/{id}/registrations', [AdminDashboardController::class, 'showRegistrations'])->name('admin.registrations');
-    Route::get('/admin/students', [AdminDashboardController::class, 'showAllStudents'])->name('admin.students');
-    Route::get('/admin/all-registrations', [AdminDashboardController::class, 'allRegistrations'])->name('admin.all-registrations');
-    
-    // ✅ مسارات إدارة التسجيلات
-    Route::get('/admin/registrations/{id}/edit', [AdminDashboardController::class, 'editRegistration'])->name('admin.registrations.edit');
-    Route::put('/admin/registrations/{id}', [AdminDashboardController::class, 'updateRegistration'])->name('admin.registrations.update');
-    Route::delete('/admin/registrations/{id}', [AdminDashboardController::class, 'destroyRegistration'])->name('admin.registrations.destroy');
-    
-    Route::get('/admin/staff', [StaffController::class, 'index'])->name('admin.staff');
-    
-    // ========== إجابات الاستبيانات ==========
-    Route::get('/admin/survey-responses', [App\Http\Controllers\Admin\SurveyResponseController::class, 'index'])->name('admin.survey-responses.index');
-    Route::get('/admin/survey-responses/{id}', [App\Http\Controllers\Admin\SurveyResponseController::class, 'show'])->name('admin.survey-responses.show');
-    
-    // ========== إدارة المشرفين (للأدمن فقط) ==========
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
+        
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        
+        // الطلاب
+        Route::get('/students', [AdminDashboardController::class, 'showAllStudents'])->name('students');
+        
+        // المشرفين
+        Route::get('/staff', [AdminDashboardController::class, 'showStaff'])->name('staff');
+        Route::delete('/staff/{id}', [AdminDashboardController::class, 'destroyStaff'])->name('staff.destroy');
+        
+        // التسجيلات
+        Route::get('/all-registrations', [AdminDashboardController::class, 'allRegistrations'])->name('all-registrations');
+        Route::get('/activity/{id}/registrations', [AdminDashboardController::class, 'showRegistrations'])->name('activity.registrations');
+        Route::get('/registrations/{id}/edit', [AdminDashboardController::class, 'editRegistration'])->name('registrations.edit');
+        Route::put('/registrations/{id}', [AdminDashboardController::class, 'updateRegistration'])->name('registrations.update');
+        Route::delete('/registrations/{id}', [AdminDashboardController::class, 'destroyRegistration'])->name('registrations.destroy');
+        
+        // إدارة المشرفين (CRUD كامل)
         Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
         Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
         Route::get('/staff/{id}', [StaffController::class, 'show'])->name('staff.show');
         Route::get('/staff/{id}/edit', [StaffController::class, 'edit'])->name('staff.edit');
         Route::put('/staff/{id}', [StaffController::class, 'update'])->name('staff.update');
-        Route::delete('/staff/{id}', [StaffController::class, 'destroy'])->name('staff.destroy');
+        
+        // تغيير صلاحية المستخدم
+        Route::patch('/users/{id}/role', [AdminDashboardController::class, 'updateRole'])->name('users.updateRole');
+        
+        // ✅ الإعلانات (للأدمن فقط)
+        Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements');
+        Route::get('/announcements/create', [AnnouncementController::class, 'create'])->name('announcements.create');
+        Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+        Route::get('/announcements/{id}/edit', [AnnouncementController::class, 'edit'])->name('announcements.edit');
+        Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
+        Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+
+        // الاستبيانات
+        Route::get('/survey-questions', [SurveyQuestionController::class, 'index'])->name('survey-questions.index');
+        Route::get('/survey-questions/create', [SurveyQuestionController::class, 'create'])->name('survey-questions.create');
+        Route::post('/survey-questions', [SurveyQuestionController::class, 'store'])->name('survey-questions.store');
+        Route::get('/survey-questions/{id}/edit', [SurveyQuestionController::class, 'edit'])->name('survey-questions.edit');
+        Route::put('/survey-questions/{id}', [SurveyQuestionController::class, 'update'])->name('survey-questions.update');
+        Route::delete('/survey-questions/{id}', [SurveyQuestionController::class, 'destroy'])->name('survey-questions.destroy');
+        Route::post('/survey-questions/reset', [SurveyQuestionController::class, 'resetToDefault'])->name('survey-questions.reset');
+
+        // إجابات الاستبيانات
+        Route::get('/survey-responses', [App\Http\Controllers\Admin\SurveyResponseController::class, 'index'])->name('survey-responses.index');
+        Route::get('/survey-responses/{id}', [App\Http\Controllers\Admin\SurveyResponseController::class, 'show'])->name('survey-responses.show');
+
+        // إحصائيات الاستبيان
+        Route::get('/survey-stats', [App\Http\Controllers\Admin\SurveyStatsController::class, 'index'])->name('survey-stats.index');
+        Route::get('/survey-stats/activity/{activityId}', [App\Http\Controllers\Admin\SurveyStatsController::class, 'activityStats'])->name('survey-stats.activity');
+        Route::get('/survey-stats/export-pdf', [App\Http\Controllers\Admin\SurveyStatsController::class, 'exportPDF'])->name('survey-stats.export.pdf');
+        Route::get('/survey-stats/export-excel', [App\Http\Controllers\Admin\SurveyStatsController::class, 'exportExcel'])->name('survey-stats.export.excel');
     });
 
-    // ========== الإعلانات ==========
-    Route::get('/admin/announcements', [AnnouncementController::class, 'index'])->name('admin.announcements');
-    Route::get('/admin/announcements/create', [AnnouncementController::class, 'create'])->name('admin.announcements.create');
-    Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('admin.announcements.store');
-    Route::get('/admin/announcements/{id}/edit', [AnnouncementController::class, 'edit'])->name('admin.announcements.edit');
-    Route::put('/admin/announcements/{id}', [AnnouncementController::class, 'update'])->name('admin.announcements.update');
-    Route::delete('/admin/announcements/{id}', [AnnouncementController::class, 'destroy'])->name('admin.announcements.destroy');
-
-    // ========== الاستبيانات ==========
-    Route::get('/admin/survey-questions', [SurveyQuestionController::class, 'index'])->name('admin.survey-questions.index');
-    Route::get('/admin/survey-questions/create', [SurveyQuestionController::class, 'create'])->name('admin.survey-questions.create');
-    Route::post('/admin/survey-questions', [SurveyQuestionController::class, 'store'])->name('admin.survey-questions.store');
-    Route::get('/admin/survey-questions/{id}/edit', [SurveyQuestionController::class, 'edit'])->name('admin.survey-questions.edit');
-    Route::put('/admin/survey-questions/{id}', [SurveyQuestionController::class, 'update'])->name('admin.survey-questions.update');
-    Route::delete('/admin/survey-questions/{id}', [SurveyQuestionController::class, 'destroy'])->name('admin.survey-questions.destroy');
-    Route::post('/admin/survey-questions/reset', [SurveyQuestionController::class, 'resetToDefault'])->name('admin.survey-questions.reset');
-
-    // إحصائيات الاستبيان
-    Route::get('/admin/survey-stats', [App\Http\Controllers\Admin\SurveyStatsController::class, 'index'])->name('admin.survey-stats.index');
-    Route::get('/admin/survey-stats/activity/{activityId}', [App\Http\Controllers\Admin\SurveyStatsController::class, 'activityStats'])->name('admin.survey-stats.activity');
-    Route::get('/admin/survey-stats/export-pdf', [App\Http\Controllers\Admin\SurveyStatsController::class, 'exportPDF'])->name('admin.survey-stats.export.pdf');
-    Route::get('/admin/survey-stats/export-excel', [App\Http\Controllers\Admin\SurveyStatsController::class, 'exportExcel'])->name('admin.survey-stats.export.excel');
-
-    // استبيانات الطالب
-    Route::get('/activities/{activity}/survey', [SurveyResponseController::class, 'show'])->name('student.survey.show');
-    Route::post('/activities/{activity}/survey', [SurveyResponseController::class, 'submit'])->name('student.survey.submit');
-
-    // ========== الأنشطة ==========
+    // ========== الأنشطة (لجميع المستخدمين) ==========
     Route::post('/activities', [ActivityController::class, 'store'])->name('activities.store');
     Route::get('/activities/{id}/edit', [ActivityController::class, 'edit'])->name('activities.edit');
     Route::put('/activities/{id}', [ActivityController::class, 'update'])->name('activities.update');
@@ -147,13 +151,11 @@ Route::middleware('auth')->group(function () {
     
     // تصدير النشاط إلى Google Calendar
     Route::get('/activities/{activity}/export-calendar', [App\Http\Controllers\ActivityController::class, 'exportToCalendar'])
-        ->name('activities.export-calendar')
-        ->middleware('auth');
+        ->name('activities.export-calendar');
 
     // تصفح الأنشطة للطالب
     Route::get('/student/activities', [ActivityController::class, 'index'])
-        ->name('student.activities')
-        ->middleware(['auth']);
+        ->name('student.activities');
     
     // ========== صفحات الطالب ==========
     Route::get('/student/my-activities', function () {
@@ -184,11 +186,6 @@ Route::middleware('auth')->group(function () {
     // ========== التقارير ==========
     Route::post('/reports', [ActivityReportController::class, 'store'])->name('reports.store');
 
-    // ========== الملف الشخصي ==========
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     // ========== إدارة المستخدمين ==========
     Route::patch('/admin/users/{id}/role', function (\Illuminate\Http\Request $request, $id) {
         $user = \App\Models\User::findOrFail($id);
@@ -209,9 +206,7 @@ Route::middleware('auth')->group(function () {
     // ========== الإشعارات ==========
     Route::middleware('auth')->group(function () {
         
-        // ✅ مسار جديد: تحديث عداد الإشعارات (لإنقاص الرقم عند الضغط)
         Route::post('/admin/notifications/decrement', function () {
-            // هذا المسار يستخدم لتقليل العداد في الواجهة فقط
             return response()->json(['success' => true]);
         })->name('admin.notifications.decrement');
 
@@ -274,7 +269,7 @@ Route::middleware('auth')->group(function () {
             return response()->json(['success' => false], 404);
         })->name('notifications.ajax-read');
 
-    }); // نهاية مجموعة الإشعارات
+    });
 
 }); // نهاية مجموعة المصادقة العامة
 
@@ -296,7 +291,7 @@ Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->grou
     Route::delete('/activities/{activity}', [App\Http\Controllers\Staff\StaffActivityController::class, 'destroy'])->name('activities.destroy');
     
     // الطلاب المسجلين في نشاط
-   Route::get('/activities/{activity}/students', [App\Http\Controllers\Staff\StaffActivityController::class, 'showStudents'])->name('activity.students');
+    Route::get('/activities/{activity}/students', [App\Http\Controllers\Staff\StaffActivityController::class, 'showStudents'])->name('activity.students');
     
     // ==================== التسجيلات ====================
     Route::get('/activities/{activity}/registrations', [App\Http\Controllers\Staff\StaffRegistrationController::class, 'index'])->name('registrations.index');
@@ -305,13 +300,9 @@ Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->grou
     
     // ==================== الطلاب ====================
     Route::get('/students', [App\Http\Controllers\Staff\StaffStudentController::class, 'index'])->name('students.index');
-
-
-    // الطلاب المسجلين - CRUD
-Route::get('/students', [App\Http\Controllers\Staff\StaffStudentController::class, 'index'])->name('students.index');
-Route::get('/students/{student}/edit', [App\Http\Controllers\Staff\StaffStudentController::class, 'edit'])->name('students.edit');
-Route::put('/students/{student}', [App\Http\Controllers\Staff\StaffStudentController::class, 'update'])->name('students.update');
-Route::delete('/students/{student}', [App\Http\Controllers\Staff\StaffStudentController::class, 'destroy'])->name('students.destroy');
+    Route::get('/students/{student}/edit', [App\Http\Controllers\Staff\StaffStudentController::class, 'edit'])->name('students.edit');
+    Route::put('/students/{student}', [App\Http\Controllers\Staff\StaffStudentController::class, 'update'])->name('students.update');
+    Route::delete('/students/{student}', [App\Http\Controllers\Staff\StaffStudentController::class, 'destroy'])->name('students.destroy');
     
     // ==================== التقارير ====================
     Route::get('/reports', [App\Http\Controllers\Staff\StaffReportController::class, 'index'])->name('reports.index');
@@ -324,8 +315,8 @@ Route::delete('/students/{student}', [App\Http\Controllers\Staff\StaffStudentCon
     Route::get('/announcements', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'index'])->name('announcements.index');
     Route::post('/announcements', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'store'])->name('announcements.store');
     Route::delete('/announcements/{announcement}', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'destroy'])->name('announcements.destroy');
-
-    // ==================== تعديل الملف الشخصي  ====================
+    
+    // ==================== الإعدادات ====================
     Route::get('/settings', [App\Http\Controllers\Staff\StaffSettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings/profile', [App\Http\Controllers\Staff\StaffSettingsController::class, 'updateProfile'])->name('settings.profile.update');
     Route::put('/settings/password', [App\Http\Controllers\Staff\StaffSettingsController::class, 'updatePassword'])->name('settings.password.update');
@@ -343,4 +334,3 @@ Route::delete('/students/{student}', [App\Http\Controllers\Staff\StaffStudentCon
 });
 
 require __DIR__.'/auth.php';
-

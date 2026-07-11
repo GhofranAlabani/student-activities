@@ -2,43 +2,58 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * عرض صفحة الملف الشخصي
      */
-    public function edit(Request $request): View
+    public function show(): View
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        return view('profile');
     }
 
     /**
-     * Update the user's profile information.
+     * تحديث المعلومات الشخصية أو كلمة المرور
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = Auth::user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // 1. إذا كان الطلب لتحديث كلمة المرور
+        if ($request->has('update_password')) {
+            $validated = $request->validate([
+                'current_password' => ['required', 'current_password'],
+                'password' => ['required', Password::defaults(), 'confirmed'],
+            ]);
+
+            $user->update([
+                'password' => Hash::make($validated['password']),
+            ]);
+
+            return back()->with('success', '✅ تم تغيير كلمة المرور بنجاح!');
         }
 
-        $request->user()->save();
+        // 2. تحديث المعلومات الشخصية
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'phone' => ['nullable', 'string', 'max:20'],
+        ]);
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        $user->update($validated);
+
+        return back()->with('success', '✅ تم تحديث المعلومات بنجاح!');
     }
 
     /**
-     * Delete the user's account.
+     * حذف حساب المستخدم (اختياري)
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -55,6 +70,6 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Redirect::to('/');
+        return redirect('/');
     }
 }
