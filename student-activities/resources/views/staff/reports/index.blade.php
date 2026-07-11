@@ -66,7 +66,7 @@
                 <div class="border-t border-white/10 my-4"></div>
                <a href="{{ route('staff.announcements.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
     <i class="fas fa-bullhorn text-gold w-5"></i>
-    <span class="font-bold">الإعلانات</span>
+    <span class="font-bold">ادارة الملف الشخصي</span>
 </a>
             </nav>
 
@@ -186,6 +186,36 @@
                     </div>
                 </div>
 
+
+                 <!-- أفضل الأنشطة -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-black text-navy mb-6 flex items-center gap-2">
+                            <i class="fas fa-trophy text-gold"></i>
+                            أفضل 5 أنشطة
+                        </h3>
+                        <div class="space-y-3">
+                            @forelse($topActivities as $index => $activity)
+                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                                    <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-navy font-black">
+                                        {{ $index + 1 }}
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-bold text-navy">{{ $activity['title'] }}</p>
+                                        <p class="text-xs text-gray-500">{{ $activity['date'] }}</p>
+                                    </div>
+                                    <div class="text-left">
+                                        <p class="font-black text-gold">{{ $activity['registrations'] }}</p>
+                                        <p class="text-xs text-gray-500">مسجل</p>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-center text-gray-500 py-8">لا توجد بيانات</p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    
+
                 <!-- الرسوم البيانية -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     
@@ -222,32 +252,7 @@
                         </div>
                     </div>
 
-                    <!-- أفضل الأنشطة -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-xl font-black text-navy mb-6 flex items-center gap-2">
-                            <i class="fas fa-trophy text-gold"></i>
-                            أفضل 5 أنشطة
-                        </h3>
-                        <div class="space-y-3">
-                            @forelse($topActivities as $index => $activity)
-                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                                    <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-navy font-black">
-                                        {{ $index + 1 }}
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="font-bold text-navy">{{ $activity['title'] }}</p>
-                                        <p class="text-xs text-gray-500">{{ $activity['date'] }}</p>
-                                    </div>
-                                    <div class="text-left">
-                                        <p class="font-black text-gold">{{ $activity['registrations'] }}</p>
-                                        <p class="text-xs text-gray-500">مسجل</p>
-                                    </div>
-                                </div>
-                            @empty
-                                <p class="text-center text-gray-500 py-8">لا توجد بيانات</p>
-                            @endforelse
-                        </div>
-                    </div>
+        
                 </div>
 
               <!-- أزرار التصدير -->

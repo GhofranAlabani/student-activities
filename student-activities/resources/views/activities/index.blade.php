@@ -636,31 +636,52 @@
                     </span>
                 </div>
 
-                <div class="activity-actions">
+               <div class="activity-actions">
+                    <!-- زر التفاصيل (لجميع المستخدمين) -->
                     <a href="{{ route('activities.show', $activity->id) }}" class="btn-action btn-primary">
                         <i class="fas fa-eye"></i>
                         التفاصيل
                     </a>
                     
-                    <button class="btn-action btn-success">
-                        <i class="fas fa-users"></i>
-                        عرض المسجلين ({{ $activity->registered_count ?? rand(2, 10) }})
-                    </button>
+                    <!-- زر التسجيل (للطلاب فقط) -->
+                    @if(auth()->check() && auth()->user()->role == 'student')
+                        @php
+                            $isRegistered = auth()->user()->activities()->where('activity_id', $activity->id)->exists();
+                        @endphp
+                        
+                        @if($isRegistered)
+                            <!-- زر يظهر إذا كان مسجل بالفعل -->
+                            <button disabled class="btn-action btn-secondary" style="background: #10b981; cursor: default;">
+                                <i class="fas fa-check-circle"></i>
+                                مسجل بالفعل
+                            </button>
+                        @else
+                            <!-- زر التسجيل الفعلي (Form) -->
+                            <form action="{{ route('activities.register', $activity->id) }}" method="POST" class="w-full">
+                                @csrf
+                                <button type="submit" class="btn-action btn-success w-full">
+                                    <i class="fas fa-user-plus"></i>
+                                    تسجيل الآن
+                                </button>
+                            </form>
+                        @endif
+                    @endif
                     
-                    @if(auth()->user()->role == 'admin')
-                    <a href="{{ route('activities.edit', $activity->id) }}" class="btn-action btn-warning">
-                        <i class="fas fa-edit"></i>
-                        تعديل
-                    </a>
-                    
-                    <form action="{{ route('activities.destroy', $activity->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا النشاط؟')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn-action btn-danger" style="width: 100%;">
-                            <i class="fas fa-trash"></i>
-                            حذف
-                        </button>
-                    </form>
+                    <!-- أزرار الإدارة (للمشرفين فقط) -->
+                    @if(auth()->check() && auth()->user()->role == 'admin')
+                        <a href="{{ route('activities.edit', $activity->id) }}" class="btn-action btn-warning">
+                            <i class="fas fa-edit"></i>
+                            تعديل
+                        </a>
+                        
+                        <form action="{{ route('activities.destroy', $activity->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا النشاط؟')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn-action btn-danger" style="width: 100%;">
+                                <i class="fas fa-trash"></i>
+                                حذف
+                            </button>
+                        </form>
                     @endif
                 </div>
             </div>

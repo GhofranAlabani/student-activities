@@ -39,4 +39,78 @@ class StaffStudentController extends Controller
             'totalRegistrations'
         ));
     }
+    /**
+ * عرض صفحة تعديل الطالب
+ */
+public function edit($id)
+{
+    $student = \App\Models\User::findOrFail($id);
+    
+    // التحقق من أن الطالب مسجل في أنشطة المشرف
+    $isRegistered = \App\Models\Registration::where('student_id', $student->id)
+        ->whereHas('activity', function($query) {
+            $query->where('supervisor_id', auth()->id());
+        })
+        ->exists();
+    
+    if (!$isRegistered) {
+        return redirect()->route('staff.students.index')
+            ->with('error', 'هذا الطالب غير مسجل في أنشطتك');
+    }
+    
+    return view('staff.students.edit', compact('student'));
+}
+
+/**
+ * تحديث بيانات الطالب
+ */
+public function update(Request $request, $id)
+{
+    $student = \App\Models\User::findOrFail($id);
+    
+    // التحقق من صحة البيانات
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email,' . $id,
+        'phone' => 'nullable|string|max:20',
+        'student_number' => 'nullable|string|max:50',
+        'total_points' => 'nullable|integer|min:0',
+        'password' => 'nullable|string|min:8|confirmed',
+    ]);  // ← هذا السطر مهم جداً!
+    
+    // تحديث البيانات الأساسية
+    $student->name = $validated['name'];
+    $student->email = $validated['email'];
+    $student->phone = $validated['phone'] ?? null;
+    $student->student_number = $validated['student_number'] ?? null;
+    $student->total_points = $validated['total_points'] ?? 0;
+    
+    // تحديث كلمة المرور إذا تم تقديمها
+    if (!empty($validated['password'])) {
+        $student->password = \Illuminate\Support\Facades\Hash::make($validated['password']);
+    }
+    
+    // حفظ التغييرات
+    $student->save();
+    
+    return redirect()->route('staff.students.index')
+        ->with('success', 'تم تحديث بيانات الطالب بنجاح! ✅');
+}
+/**
+ * حذف الطالب من قائمة التسجيلات
+ */
+public function destroy($id)
+{
+    $student = \App\Models\User::findOrFail($id);
+    
+    // حذف جميع تسجيلات الطالب في أنشطة المشرف
+    \App\Models\Registration::where('student_id', $student->id)
+        ->whereHas('activity', function($query) {
+            $query->where('supervisor_id', auth()->id());
+        })
+        ->delete();
+    
+    return redirect()->route('staff.students.index')
+        ->with('success', 'تم حذف الطالب من قائمة التسجيلات بنجاح! ️');
+}
 }

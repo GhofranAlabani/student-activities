@@ -66,7 +66,7 @@
                 <div class="border-t border-white/10 my-4"></div>
                 <a href="{{ route('staff.settings.index') }}" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
                     <i class="fas fa-cog text-gold w-5"></i>
-                    <span class="font-bold">الإعدادات</span>
+                    <span class="font-bold">ادارة الملف الشخصي </span>
                 </a>
             </nav>
 
@@ -88,7 +88,7 @@
             <header class="bg-white shadow-sm border-b border-gray-200 px-8 py-4 sticky top-0 z-40">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl font-black text-navy">الإعدادات</h1>
+                        <h1 class="text-2xl font-black text-navy">ادارة الملف الشخصي</h1>
                         <p class="text-sm text-gray-500 mt-1">إدارة حسابك وتفضيلاتك</p>
                     </div>
                     <div class="flex items-center gap-4">

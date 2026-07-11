@@ -382,4 +382,57 @@ public function studentIndex()
     
     return view('student.activities', compact('activities'));
 }
+/**
+ * إضافة/إزالة نشاط من المفضلة
+ */
+public function toggleFavorite($id)
+{
+    $userId = auth()->id();
+    
+    // التحقق من وجود النشاط
+    $activity = \App\Models\Activity::find($id);
+    if (!$activity) {
+        return response()->json(['error' => 'النشاط غير موجود'], 404);
+    }
+    
+    // التحقق من وجوده في المفضلة
+    $favorite = \DB::table('favorites')
+        ->where('user_id', $userId)
+        ->where('activity_id', $id)
+        ->first();
+    
+    if ($favorite) {
+        // إزالته من المفضلة
+        \DB::table('favorites')
+            ->where('user_id', $userId)
+            ->where('activity_id', $id)
+            ->delete();
+        
+        $message = 'تم إزالة النشاط من المفضلة';
+        $isFavorite = false;
+    } else {
+        // إضافته للمفضلة
+        \DB::table('favorites')->insert([
+            'user_id' => $userId,
+            'activity_id' => $id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        
+        $message = 'تم إضافة النشاط للمفضلة ❤️';
+        $isFavorite = true;
+    }
+    
+    // إذا كان الطلب AJAX
+    if (request()->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'is_favorite' => $isFavorite,
+        ]);
+    }
+    
+    // إذا كان طلب عادي
+    return back()->with('success', $message);
+}
 }

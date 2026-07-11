@@ -91,7 +91,7 @@
 
                 <a href="{{ route('staff.settings.index') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
                     <i class="fas fa-cog text-gold w-5"></i>
-                    <span class="font-bold">الإعدادات</span>
+                    <span class="font-bold">ادارة الملف الشخصي</span>
                 </a>
             </nav>
 
@@ -277,6 +277,7 @@
             <span class="absolute -top-8 right-1/2 translate-x-1/2 bg-navy text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
                 QR Code
             </span>
+
         </a>
         
         <a href="{{ route('staff.report.show', $activity->id) }}" 
