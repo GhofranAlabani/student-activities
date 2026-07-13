@@ -293,4 +293,16 @@ class StaffActivityController extends Controller
         return redirect()->route('staff.activities.index')
             ->with('success', 'تم حذف النشاط بنجاح');
     }
+    public function showStudents($activityId)
+{
+    $activity = \App\Models\Activity::with(['type', 'supervisor'])->findOrFail($activityId);
+    
+    $students = \DB::table('registrations')
+        ->join('users', 'registrations.student_id', '=', 'users.id')
+        ->where('registrations.activity_id', $activityId)
+        ->select('users.*', 'registrations.created_at as registered_at', 'registrations.status')
+        ->get();
+    
+    return view('staff.activity-students', compact('activity', 'students'));
+}
 }

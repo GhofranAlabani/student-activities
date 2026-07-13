@@ -60,11 +60,11 @@ Route::get('/student/dashboard', function () {
         'totalRegistered' => $totalRegistered,
         'totalPoints' => $totalPoints,
         'favoritesCount' => $favoritesCount,
-       'announcements' => \App\Models\Announcement::with('creator')
-        ->active()
-        ->latest()
-        ->take(5)
-        ->get(),
+        'announcements' => \App\Models\Announcement::with('creator')
+            ->active()
+            ->latest()
+            ->take(5)
+            ->get(),
     ]);
 })->middleware(['auth'])->name('student.dashboard');
 
@@ -278,9 +278,12 @@ Route::middleware('auth')->group(function () {
 // ========== 🆕 مسارات المشرف (Staff) ==========
 Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Staff\StaffDashboardController::class, 'index'])->name('dashboard');
+    
     Route::get('/test', function () {
         return "✅ أنت الآن في واجهة المشرف! المستخدم: " . auth()->user()->name . " | الدور: " . auth()->user()->role;
     })->name('test');
+    
+    // ==================== الأنشطة ====================
     Route::get('/activities', [App\Http\Controllers\Staff\StaffActivityController::class, 'index'])->name('activities.index');
     Route::get('/activities/create', [App\Http\Controllers\Staff\StaffActivityController::class, 'create'])->name('activities.create');
     Route::post('/activities', [App\Http\Controllers\Staff\StaffActivityController::class, 'store'])->name('activities.store');
@@ -288,36 +291,48 @@ Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->grou
     Route::get('/activities/{activity}/edit', [App\Http\Controllers\Staff\StaffActivityController::class, 'edit'])->name('activities.edit');
     Route::put('/activities/{activity}', [App\Http\Controllers\Staff\StaffActivityController::class, 'update'])->name('activities.update');
     Route::delete('/activities/{activity}', [App\Http\Controllers\Staff\StaffActivityController::class, 'destroy'])->name('activities.destroy');
+    
+    // الطلاب المسجلين في نشاط
+    Route::get('/activities/{activity}/students', [App\Http\Controllers\Staff\StaffActivityController::class, 'showStudents'])->name('activity.students');
+    
+    // ==================== التسجيلات ====================
     Route::get('/activities/{activity}/registrations', [App\Http\Controllers\Staff\StaffRegistrationController::class, 'index'])->name('registrations.index');
     Route::post('/registrations/{registration}/approve', [App\Http\Controllers\Staff\StaffRegistrationController::class, 'approve'])->name('registrations.approve');
     Route::post('/registrations/{registration}/reject', [App\Http\Controllers\Staff\StaffRegistrationController::class, 'reject'])->name('registrations.reject');
+    
+    // ==================== الطلاب ====================
     Route::get('/students', [App\Http\Controllers\Staff\StaffStudentController::class, 'index'])->name('students.index');
+    Route::get('/students/{student}/edit', [App\Http\Controllers\Staff\StaffStudentController::class, 'edit'])->name('students.edit');
+    Route::put('/students/{student}', [App\Http\Controllers\Staff\StaffStudentController::class, 'update'])->name('students.update');
+    Route::delete('/students/{student}', [App\Http\Controllers\Staff\StaffStudentController::class, 'destroy'])->name('students.destroy');
+    
+    // ==================== التقارير ====================
     Route::get('/reports', [App\Http\Controllers\Staff\StaffReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export-pdf', [App\Http\Controllers\Staff\StaffReportController::class, 'exportPDF'])->name('reports.export.pdf');
     Route::get('/reports/export-excel', [App\Http\Controllers\Staff\StaffReportController::class, 'exportExcel'])->name('reports.export.excel');
     Route::get('/activities/{activity}/report', [App\Http\Controllers\Staff\StaffReportController::class, 'show'])->name('report.show');
     Route::get('/activities/{activity}/report/export', [App\Http\Controllers\Staff\StaffReportController::class, 'export'])->name('report.export');
     
-    // ✅ إعلانات المشرف (مسار منفصل عن أدمن)
+    // ==================== الإعلانات ====================
     Route::get('/announcements', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'index'])->name('announcements.index');
     Route::post('/announcements', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'store'])->name('announcements.store');
     Route::delete('/announcements/{announcement}', [App\Http\Controllers\Staff\StaffAnnouncementController::class, 'destroy'])->name('announcements.destroy');
     
+    // ==================== الإعدادات ====================
     Route::get('/settings', [App\Http\Controllers\Staff\StaffSettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings/profile', [App\Http\Controllers\Staff\StaffSettingsController::class, 'updateProfile'])->name('settings.profile.update');
     Route::put('/settings/password', [App\Http\Controllers\Staff\StaffSettingsController::class, 'updatePassword'])->name('settings.password.update');
+    
+    // ==================== الحضور ====================
     Route::get('/activities/{activity}/attendance', [App\Http\Controllers\Staff\AttendanceController::class, 'index'])->name('attendance.index');
     Route::get('/activities/{activity}/attendance/qr', [App\Http\Controllers\Staff\AttendanceController::class, 'showQR'])->name('attendance.qr');
     Route::post('/activities/{activity}/attendance/manual', [App\Http\Controllers\Staff\AttendanceController::class, 'manualCheckIn'])->name('attendance.manual');
     Route::get('/activities/{activity}/attendance/export', [App\Http\Controllers\Staff\AttendanceController::class, 'exportReport'])->name('attendance.export');
-    Route::get('/staff/activities/{activity}/qr', [App\Http\Controllers\Staff\AttendanceController::class, 'showQR'])->name('staff.attendance.qr');
+    Route::post('/attendance/check-in-qr', [App\Http\Controllers\Staff\AttendanceController::class, 'checkInQR'])->name('attendance.check-in-qr');
     
-    Route::post('/attendance/check-in-qr', [App\Http\Controllers\Staff\AttendanceController::class, 'checkInQR'])
-        ->name('attendance.check-in-qr');
-    
-    // استبيانات المشرف
-    Route::get('/staff/survey-results/{activity}', [App\Http\Controllers\Staff\SurveyResultsController::class, 'index'])->name('survey-results');
-    Route::get('/staff/survey-results/{activity}/export', [App\Http\Controllers\Staff\SurveyResultsController::class, 'export'])->name('survey-export');
+    // ==================== الاستبيانات ====================
+    Route::get('/survey-results/{activity}', [App\Http\Controllers\Staff\SurveyResultsController::class, 'index'])->name('survey-results');
+    Route::get('/survey-results/{activity}/export', [App\Http\Controllers\Staff\SurveyResultsController::class, 'export'])->name('survey-export');
 });
 
 require __DIR__.'/auth.php';

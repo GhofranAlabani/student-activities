@@ -65,7 +65,7 @@
                 <div class="border-t border-white/10 my-4"></div>
                 <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
                     <i class="fas fa-cog text-gray-400 w-5"></i>
-                    <span class="font-bold">الإعدادات</span>
+                    <span class="font-bold">ادارة الملف الشخصي </span>
                 </a>
             </nav>
 
@@ -148,35 +148,74 @@
                                         <th class="px-4 py-3 text-right text-sm font-bold text-navy">البريد الإلكتروني</th>
                                         <th class="px-4 py-3 text-right text-sm font-bold text-navy">عدد التسجيلات</th>
                                         <th class="px-4 py-3 text-right text-sm font-bold text-navy">تاريخ الانضمام</th>
+                                        <th class="px-4 py-3 text-center font-bold text-navy">الإجراءات</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
                                     @foreach($students as $index => $student)
                                         <tr class="hover:bg-gray-50 transition">
                                             <td class="px-4 py-4 text-sm text-gray-600">{{ $students->firstItem() + $index }}</td>
-                                            <td class="px-4 py-4">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-10 h-10 bg-navy rounded-full flex items-center justify-center text-white font-bold">
-                                                        {{ substr($student->name, 0, 1) }}
-                                                    </div>
-                                                    <span class="font-bold text-navy">{{ $student->name }}</span>
-                                                </div>
-                                            </td>
-                                            <td class="px-4 py-4 text-sm text-gray-600">{{ $student->email }}</td>
-                                            <td class="px-4 py-4">
-                                                <span class="bg-gold/20 text-navy text-sm px-3 py-1 rounded-full font-bold">
-                                                    {{ $student->registrations->count() }} تسجيل
-                                                </span>
-                                            </td>
-                                            <td class="px-4 py-4 text-sm text-gray-600">
-                                                {{ $student->created_at->format('Y/m/d') }}
+                                           <!-- الطالب -->
+<td class="px-4 py-4">
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-navy rounded-full flex items-center justify-center text-white font-bold">
+            {{ substr($student->name, 0, 1) }}
+        </div>
+        <span class="font-bold text-navy">{{ $student->name }}</span>
+    </div>
+</td>
+
+<!-- البريد الإلكتروني -->
+<td class="px-4 py-4 text-gray-600">{{ $student->email }}</td>
+
+<!-- عدد التسجيلات -->
+<td class="px-4 py-4">
+    <span class="bg-gold/20 text-gold px-3 py-1 rounded-full text-sm font-bold">
+        {{ $student->registrations_count }} تسجيل
+    </span>
+</td>
+
+<!-- تاريخ الانضمام -->
+<td class="px-4 py-4 text-gray-600">{{ $student->created_at->format('Y/m/d') }}</td>
+
+<!-- الإجراءات -->
+<td class="px-4 py-4">
+    <div class="flex items-center justify-center gap-2">
+        <!-- زر التعديل -->
+        <a href="{{ route('staff.students.edit', $student->id) }}" 
+           class="inline-flex items-center justify-center w-9 h-9 text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md" 
+           title="تعديل بيانات الطالب">
+            <i class="fas fa-edit text-sm"></i>
+        </a>
+        
+        <!-- زر الحذف -->
+        <form action="{{ route('staff.students.destroy', $student->id) }}" 
+              method="POST" 
+              onsubmit="return confirm('⚠️ هل أنت متأكد من حذف هذا الطالب من قائمة التسجيلات؟');"
+              class="inline">
+            @csrf
+            @method('DELETE')
+            <button type="submit" 
+                    class="inline-flex items-center justify-center w-9 h-9 text-red-600 hover:text-white bg-red-50 hover:bg-red-600 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md" 
+                    title="حذف الطالب">
+                <i class="fas fa-trash text-sm"></i>
+            </button>
+        </form>
+    </div>
+</td>
                                             </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
-
+                        <td class="px-4 py-4">
+    <div class="flex gap-2">
+       <td class="px-4 py-4">
+    <div class="flex items-center justify-center gap-2">
+       <td class="px-4 py-4">
+   
+</td>
                         <div class="mt-6">
                             {{ $students->links() }}
                         </div>

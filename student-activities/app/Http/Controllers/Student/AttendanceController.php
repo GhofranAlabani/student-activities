@@ -114,17 +114,17 @@ public function checkInWithQR(Request $request)
     }
 
     // إرسال إيميل تأكيد
-    try {
-        \Mail::to($user->email)->send(new \App\Mail\AttendanceConfirmationMail(
-            $user, 
-            $activity, 
-            $pointsEarned,
-            now()
-        ));
-        \Log::info('✅ Attendance email sent to: ' . $user->email);
-    } catch (\Exception $e) {
-        \Log::error('❌ Failed to send attendance email: ' . $e->getMessage());
-    }
+    // try {
+//     \Mail::to($user->email)->send(new \App\Mail\AttendanceConfirmationMail(
+//         $user, 
+//         $activity, 
+//         $pointsEarned,
+//         now()
+//     ));
+//     \Log::info('✅ Attendance email sent to: ' . $user->email);
+// } catch (\Exception $e) {
+//     \Log::error('❌ Failed to send attendance email: ' . $e->getMessage());
+// }
 
     return response()->json([
         'success' => true,

@@ -65,7 +65,7 @@
                 <div class="border-t border-white/10 my-4"></div>
                 <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-white">
                     <i class="fas fa-cog text-gray-400 w-5"></i>
-                    <span class="font-bold">الإعدادات</span>
+                    <span class="font-bold">ادارة الملف الشخصي </span>
                 </a>
             </nav>
 
