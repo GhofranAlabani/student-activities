@@ -137,14 +137,9 @@
     <!-- شريط الأدوات -->
     <div class="table-header">
         <h2 class="table-title">توزيع الإجابات العام</h2>
-        <div class="flex gap-3">
-            <a href="{{ route('admin.survey-stats.export.pdf') }}" class="btn-export">
-                <i class="fas fa-file-pdf"></i> تصدير PDF
-            </a>
-            <a href="{{ route('admin.survey-stats.export.excel') }}" class="btn-export-excel">
-                <i class="fas fa-file-excel"></i> تصدير Excel
-            </a>
-        </div>
+        <button onclick="window.print()" class="btn-print no-print">
+            <i class="fas fa-print"></i> طباعة / حفظ PDF
+        </button>
     </div>
 
     <!-- الرسم البياني -->
@@ -301,9 +296,9 @@
         margin: 0;
     }
 
-    .btn-export {
+    .btn-print {
         padding: 10px 20px;
-        background: #dc2626;
+        background: #3b82f6;
         color: white;
         border: none;
         border-radius: 8px;
@@ -318,29 +313,8 @@
         text-decoration: none;
     }
 
-    .btn-export:hover {
-        background: #b91c1c;
-    }
-
-    .btn-export-excel {
-        padding: 10px 20px;
-        background: #16a34a;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-family: inherit;
-        font-size: 14px;
-        font-weight: 600;
-        transition: all 0.3s;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-    }
-
-    .btn-export-excel:hover {
-        background: #15803d;
+    .btn-print:hover {
+        background: #2563eb;
     }
 
     .chart-container {
@@ -433,6 +407,26 @@
     
     html.dark .students-table tbody tr {
         border-bottom-color: #475569;
+    }
+
+    /* Print Styles */
+    @media print {
+        .sidebar, .header-actions, .no-print, button, .dark-mode-toggle {
+            display: none !important;
+        }
+        .stats-container, .table-container {
+            width: 100%;
+            padding: 0;
+            box-shadow: none;
+        }
+        body {
+            background: white !important;
+            color: black !important;
+        }
+        .stat-card, .table-container {
+            box-shadow: none !important;
+            border: 1px solid #ddd;
+        }
     }
 </style>
 

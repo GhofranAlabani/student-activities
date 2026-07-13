@@ -121,49 +121,43 @@ class AdminDashboardController extends Controller
         ));
     }
 
-    /**
-     * ✅ تغيير صلاحية المستخدم (طالب ↔ مدير)
+       /**
+     * تحديث صلاحية المستخدم (مشرف، مدير، طالب)
      */
     public function updateRole(Request $request, $id)
     {
-        // 1. التحقق من أن المستخدم الحالي أدمن
-        if (Auth::user()->role !== 'admin') {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح لك بهذه العملية'
-            ], 403);
-        }
+        $user = \App\Models\User::findOrFail($id);
 
-        // 2. جلب المستخدم المستهدف
-        $user = User::findOrFail($id);
-        
-        // 3. منع الأدمن من تغيير صلاحيته هو نفسه
-        if ($user->id === Auth::id()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'لا يمكنك تغيير صلاحية حسابك الحالي!'
-            ], 400);
-        }
-
-        // 4. التحقق من صحة البيانات
-        $validated = $request->validate([
-            'role' => 'required|in:student,admin',
+        // التحقق من أن الصلاحية مسموحة
+        $request->validate([
+            'role' => 'required|in:admin,staff,student'
         ]);
 
-        // 5. تحديث الصلاحية
-        $oldRole = $user->role;
-        $user->update(['role' => $validated['role']]);
+        // منع تغيير صلاحية الأدمن الرئيسي إذا كان مسجل دخوله
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'لا يمكنك تغيير صلاحية حسابك الحالي من هنا.');
+        }
 
-        // 6. إرجاع استجابة JSON للواجهة
-        return response()->json([
-            'success' => true,
-            'message' => "✅ تم تغيير صلاحية {$user->name} من '{$oldRole}' إلى '{$validated['role']}'",
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'role' => $user->role
-            ]
-        ]);
+        $user->update(['role' => $request->role]);
+
+        return back()->with('success', 'تم تحديث صلاحية "' . $user->name . '" بنجاح إلى: ' . ($request->role === 'admin' ? 'مدير' : ($request->role === 'staff' ? 'مشرف' : 'طالب')));
+    }
+
+    /**
+     * حذف المشرف نهائياً
+     */
+    public function destroyStaff($id)
+    {
+        $user = \App\Models\User::findOrFail($id);
+
+        // منع حذف الذات
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'لا يمكنك حذف حسابك الخاص.');
+        }
+
+        $user->delete();
+
+        return back()->with('success', 'تم حذف المستخدم "' . $user->name . '" نهائياً.');
     }
 
     /**

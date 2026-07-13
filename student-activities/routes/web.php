@@ -90,6 +90,11 @@ Route::middleware('auth')->group(function () {
         
         // المشرفين
         Route::get('/staff', [AdminDashboardController::class, 'showStaff'])->name('staff');
+        
+        // ✅ تحديث صلاحية المشرف (مدير/مشرف/طالب)
+        Route::put('/staff/{id}/role', [AdminDashboardController::class, 'updateRole'])->name('staff.updateRole');
+        
+        // ✅ حذف المشرف
         Route::delete('/staff/{id}', [AdminDashboardController::class, 'destroyStaff'])->name('staff.destroy');
         
         // التسجيلات
@@ -106,10 +111,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/staff/{id}/edit', [StaffController::class, 'edit'])->name('staff.edit');
         Route::put('/staff/{id}', [StaffController::class, 'update'])->name('staff.update');
         
-        // تغيير صلاحية المستخدم
-        Route::patch('/users/{id}/role', [AdminDashboardController::class, 'updateRole'])->name('users.updateRole');
-        
-        // ✅ الإعلانات (للأدمن فقط)
+        // الإعلانات
         Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements');
         Route::get('/announcements/create', [AnnouncementController::class, 'create'])->name('announcements.create');
         Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
