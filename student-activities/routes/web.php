@@ -10,11 +10,38 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\Admin\SurveyQuestionController;
 use App\Http\Controllers\Student\SurveyResponseController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
 
 // ===== الصفحة الرئيسية =====
 Route::get('/', function () {
     return view('welcome');
 });
+
+// ===== مسارات المصادقة (للضيوف فقط) =====
+Route::middleware('guest')->group(function () {
+    
+    // تسجيل الدخول
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+    
+    // التسجيل
+    Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
+    Route::post('/register', [RegisteredUserController::class, 'store']);
+    
+    // استعادة كلمة المرور
+    Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    
+    // إعادة تعيين كلمة المرور
+    Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
+});
+
+// ===== تسجيل الخروج (للمستخدمين المسجلين) =====
+Route::middleware('auth')->post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
 // ===== التوجيه الذكي حسب الدور =====
 Route::get('/dashboard', function () {
@@ -85,24 +112,19 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         
-        // الطلاب
+        // ✅ إدارة الطلاب (CRUD كامل + تغيير الصلاحية)
         Route::get('/students', [AdminDashboardController::class, 'showAllStudents'])->name('students');
+        Route::get('/students/{id}/edit', [AdminDashboardController::class, 'editStudent'])->name('students.edit');
+        Route::put('/students/{id}', [AdminDashboardController::class, 'updateStudent'])->name('students.update'); // ✅ مُضاف: تحديث بيانات الطالب
+        Route::delete('/students/{id}', [AdminDashboardController::class, 'destroyStudent'])->name('students.destroy');
+        
+        // ✅ تحديث صلاحية أي مستخدم (طالب/مشرف/مدير)
+        Route::patch('/users/{id}/role', [AdminDashboardController::class, 'updateRole'])->name('users.updateRole');
         
         // المشرفين
         Route::get('/staff', [AdminDashboardController::class, 'showStaff'])->name('staff');
-        
-        // ✅ تحديث صلاحية المشرف (مدير/مشرف/طالب)
         Route::put('/staff/{id}/role', [AdminDashboardController::class, 'updateRole'])->name('staff.updateRole');
-        
-        // ✅ حذف المشرف
         Route::delete('/staff/{id}', [AdminDashboardController::class, 'destroyStaff'])->name('staff.destroy');
-        
-        // التسجيلات
-        Route::get('/all-registrations', [AdminDashboardController::class, 'allRegistrations'])->name('all-registrations');
-        Route::get('/activity/{id}/registrations', [AdminDashboardController::class, 'showRegistrations'])->name('activity.registrations');
-        Route::get('/registrations/{id}/edit', [AdminDashboardController::class, 'editRegistration'])->name('registrations.edit');
-        Route::put('/registrations/{id}', [AdminDashboardController::class, 'updateRegistration'])->name('registrations.update');
-        Route::delete('/registrations/{id}', [AdminDashboardController::class, 'destroyRegistration'])->name('registrations.destroy');
         
         // إدارة المشرفين (CRUD كامل)
         Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
@@ -110,6 +132,22 @@ Route::middleware('auth')->group(function () {
         Route::get('/staff/{id}', [StaffController::class, 'show'])->name('staff.show');
         Route::get('/staff/{id}/edit', [StaffController::class, 'edit'])->name('staff.edit');
         Route::put('/staff/{id}', [StaffController::class, 'update'])->name('staff.update');
+        
+        // ✅ إدارة الأنشطة (للأدمن فقط)
+        Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
+        Route::get('/activities/create', [ActivityController::class, 'create'])->name('activities.create');
+        Route::post('/activities', [ActivityController::class, 'store'])->name('activities.store');
+        Route::get('/activities/{id}', [ActivityController::class, 'show'])->name('activities.show');
+        Route::get('/activities/{id}/edit', [ActivityController::class, 'edit'])->name('activities.edit');
+        Route::put('/activities/{id}', [ActivityController::class, 'update'])->name('activities.update');
+        Route::delete('/activities/{id}', [ActivityController::class, 'destroy'])->name('activities.destroy');
+        
+        // التسجيلات
+        Route::get('/all-registrations', [AdminDashboardController::class, 'allRegistrations'])->name('all-registrations');
+        Route::get('/activity/{id}/registrations', [AdminDashboardController::class, 'showRegistrations'])->name('activity.registrations');
+        Route::get('/registrations/{id}/edit', [AdminDashboardController::class, 'editRegistration'])->name('registrations.edit');
+        Route::put('/registrations/{id}', [AdminDashboardController::class, 'updateRegistration'])->name('registrations.update');
+        Route::delete('/registrations/{id}', [AdminDashboardController::class, 'destroyRegistration'])->name('registrations.destroy');
         
         // الإعلانات
         Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements');
@@ -187,13 +225,6 @@ Route::middleware('auth')->group(function () {
     
     // ========== التقارير ==========
     Route::post('/reports', [ActivityReportController::class, 'store'])->name('reports.store');
-
-    // ========== إدارة المستخدمين ==========
-    Route::patch('/admin/users/{id}/role', function (\Illuminate\Http\Request $request, $id) {
-        $user = \App\Models\User::findOrFail($id);
-        $user->update(['role' => $request->role]);
-        return back()->with('success', 'تم تغيير الصلاحية بنجاح');
-    })->name('admin.user.role');
 
     // ========== التقييمات ==========
     Route::post('/activities/{id}/rate', function (\Illuminate\Http\Request $request, $id) {
@@ -275,7 +306,7 @@ Route::middleware('auth')->group(function () {
 
 }); // نهاية مجموعة المصادقة العامة
 
-// ========== 🆕 مسارات المشرف (Staff) ==========
+// ==========  مسارات المشرف (Staff) ==========
 Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Staff\StaffDashboardController::class, 'index'])->name('dashboard');
     

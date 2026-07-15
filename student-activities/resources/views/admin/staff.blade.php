@@ -174,13 +174,9 @@
                             </button>
                             
                             @if($member->id !== auth()->id())
-                            <form action="{{ route('admin.staff.destroy', $member->id) }}" method="POST" onsubmit="return confirm('⚠️ هل أنت متأكد من حذف حساب {{ $member->name }} نهائياً؟\n\nهذا الإجراء لا يمكن التراجع عنه.');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="action-btn delete" title="حذف">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
+                            <button onclick="openDeleteModal({{ $member->id }}, '{{ addslashes($member->name) }}')" class="action-btn delete" title="حذف">
+                                <i class="fas fa-trash"></i>
+                            </button>
                             @endif
                         </div>
                     </td>
@@ -195,6 +191,41 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- ✅ Modal عرض تفاصيل المشرف (مُحسّن) -->
+<div id="viewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-8">
+        <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-user text-4xl text-blue-600"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800 mb-2 text-center" id="viewModalTitle">تفاصيل المشرف</h2>
+        <div id="viewModalBody" class="text-center text-slate-600 space-y-2"></div>
+        <div class="mt-6 text-center">
+            <button onclick="closeViewModal()" class="px-6 py-2 bg-slate-500 text-white rounded-xl font-bold hover:bg-slate-600 transition">إغلاق</button>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Modal تأكيد الحذف -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center">
+        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-exclamation-triangle text-4xl text-red-600"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800 mb-4">تأكيد الحذف</h2>
+        <p class="text-slate-600 mb-6">
+            هل أنت متأكد من حذف <span id="deleteUserName" class="text-red-600 font-bold"></span> نهائياً؟
+        </p>
+        <form id="deleteForm" method="POST">
+            @csrf
+            @method('DELETE')
+            <div class="flex gap-3">
+                <button type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition">إلغاء</button>
+                <button type="submit" class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition">نعم، احذف</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -432,6 +463,11 @@
     html.dark .students-table tbody tr {
         border-bottom-color: #475569;
     }
+    
+    /* Modal Styles */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 50; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+    .modal.show { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 
 <script>
@@ -459,6 +495,112 @@ document.addEventListener('DOMContentLoaded', function() {
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         html.classList.add('dark');
         icon.className = 'fas fa-sun text-xs';
+    }
+});
+
+// ✅ دالة عرض تفاصيل المشرف (مُحسّنة)
+function viewStaff(id, data) {
+    document.getElementById('viewModalTitle').textContent = data.name;
+    document.getElementById('viewModalBody').innerHTML = `
+        <div class="space-y-3 text-right">
+            <div class="bg-slate-50 p-3 rounded-lg">
+                <p class="text-sm text-slate-500 mb-1"><i class="fas fa-user ml-2"></i>الاسم الكامل</p>
+                <p class="font-bold text-slate-800">${data.name}</p>
+            </div>
+            
+            <div class="bg-slate-50 p-3 rounded-lg">
+                <p class="text-sm text-slate-500 mb-1"><i class="fas fa-envelope ml-2"></i>البريد الإلكتروني</p>
+                <p class="font-bold text-slate-800 break-all">${data.email}</p>
+            </div>
+            
+            <div class="bg-slate-50 p-3 rounded-lg">
+                <p class="text-sm text-slate-500 mb-1"><i class="fas fa-phone ml-2"></i>رقم الهاتف</p>
+                <p class="font-bold text-slate-800">${data.phone || 'غير متوفر'}</p>
+            </div>
+            
+            <div class="bg-slate-50 p-3 rounded-lg">
+                <p class="text-sm text-slate-500 mb-1"><i class="fas fa-user-tag ml-2"></i>الصلاحية</p>
+                <p class="font-bold text-slate-800">
+                    ${data.role === 'admin' ? '👨‍💼 مدير نظام' : 
+                      data.role === 'staff' ? '🎓 مشرف' : '🎓 طالب'}
+                </p>
+            </div>
+            
+            <div class="bg-slate-50 p-3 rounded-lg">
+                <p class="text-sm text-slate-500 mb-1"><i class="fas fa-calendar ml-2"></i>تاريخ التعيين</p>
+                <p class="font-bold text-slate-800">${new Date(data.created_at).toLocaleDateString('ar-SA')}</p>
+            </div>
+        </div>
+    `;
+    document.getElementById('viewModal').classList.remove('hidden');
+}
+
+// ✅ إغلاق Modal العرض
+function closeViewModal() {
+    document.getElementById('viewModal').classList.add('hidden');
+}
+
+// ✅ فتح Modal الحذف
+function openDeleteModal(id, name) {
+    document.getElementById('deleteUserName').textContent = name;
+    document.getElementById('deleteForm').action = '/admin/staff/' + id;
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+// ✅ إغلاق Modal الحذف
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+
+// ✅ معالجة إرسال نموذج الحذف
+document.getElementById('deleteForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...';
+    
+    fetch(this.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new FormData(this)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message);
+            closeDeleteModal();
+            location.reload();
+        } else {
+            alert('❌ ' + (data.message || 'حدث خطأ'));
+        }
+    })
+    .catch(() => alert('❌ فشل الاتصال'))
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+});
+
+// إغلاق المودالات عند النقر خارجها
+document.querySelectorAll('#viewModal, #deleteModal').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeViewModal();
+            closeDeleteModal();
+        }
+    });
+});
+
+// إغلاق المودالات بزر Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeViewModal();
+        closeDeleteModal();
     }
 });
 </script>

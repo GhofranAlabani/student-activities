@@ -2,1179 +2,625 @@
 
 @section('content')
 
-<!-- Header (Top Bar) - مطابق للوحة الرئيسية -->
-<header class="bg-[#0f172a] rounded-2xl p-4 mb-8 shadow-lg flex justify-between items-center text-white relative overflow-hidden">
-    
-    <!-- اليمين: عنوان القسم / معلومات الإدارة -->
-    <div class="flex items-center gap-3 z-10">
+<!-- Header -->
+<header class="bg-[#0f172a] rounded-2xl p-4 mb-8 shadow-lg flex justify-between items-center text-white">
+    <div class="flex items-center gap-3">
         <i class="fas fa-user-shield text-amber-500 text-3xl"></i>
         <div>
-            <h1 class="text-2xl font-bold text-white mb-1">لوحة إدارة الطلاب</h1>
-            <p class="text-slate-400 text-sm">إدارة جميع المستخدمين والطلاب في النظام</p>
+            <h1 class="text-2xl font-bold">إدارة الطلاب</h1>
+            <p class="text-slate-400 text-sm">عرض وإدارة جميع الطلاب في النظام</p>
         </div>
     </div>
-
-    <!-- اليسار: التاريخ + زر الوضع الليلي -->
-    <div class="flex flex-col items-end gap-2 z-10">
-        
-        <!-- 1. التاريخ -->
-        <div class="bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 flex items-center gap-2">
-            <span class="font-semibold text-sm">{{ now()->format('d/m/Y') }}</span>
+    <div class="flex flex-col items-end gap-2">
+        <div class="bg-slate-800 px-4 py-2 rounded-xl flex items-center gap-2">
+            <span class="text-sm">{{ now()->format('d/m/Y') }}</span>
             <i class="far fa-calendar-alt text-amber-500"></i>
         </div>
-
-        <!-- 2. زر الوضع الليلي -->
-        <button onclick="toggleDarkMode()" 
-                class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-amber-500 hover:border-amber-500 transition-all shadow-md"
-                title="تبديل الوضع الليلي">
-            <i class="fas fa-moon text-xs" id="darkModeIcon"></i>
-        </button>
-
     </div>
 </header>
 
-<!-- بطاقات الإحصائيات -->
-<div class="stats-cards">
-    <div class="stat-card">
-        <div class="stat-icon purple">
-            <i class="fas fa-users"></i>
-        </div>
-        <div class="stat-info">
-            <h3>إجمالي المستخدمين</h3>
-            <p class="stat-number">{{ $totalUsers ?? $students->count() ?? 0 }}</p>
+<!-- رسائل التنبيه -->
+@if(session('success'))
+<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
+    <i class="fas fa-check-circle"></i> {{ session('success') }}
+</div>
+@endif
+
+@if(session('error'))
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+        <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+    </div>
+    <button onclick="location.reload()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm">
+        <i class="fas fa-redo ml-1"></i> إعادة تحميل
+    </button>
+</div>
+@endif
+
+<!-- ✅ زر إضافة مشرف جديد (مضاف) -->
+<div class="mb-6 flex justify-end">
+    <button onclick="openAddStaffModal()" 
+            class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-xl font-bold transition flex items-center gap-2 shadow-lg">
+        <i class="fas fa-user-plus"></i>
+        إضافة مشرف جديد
+    </button>
+</div>
+
+<!-- ✅ بطاقات الإحصائيات (معدلة لتظهر البيانات الحقيقية) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-slate-500 mb-1">إجمالي المستخدمين</p>
+                <h3 class="text-3xl font-bold text-slate-800">{{ \App\Models\User::count() }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <i class="fas fa-users text-blue-600 text-xl"></i>
+            </div>
         </div>
     </div>
-
-    <div class="stat-card">
-        <div class="stat-icon green">
-            <i class="fas fa-user-graduate"></i>
-        </div>
-        <div class="stat-info">
-            <h3>الطلاب</h3>
-            <p class="stat-number">{{ $totalStudents ?? 0 }}</p>
+    
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-slate-500 mb-1">الطلاب</p>
+                <h3 class="text-3xl font-bold text-slate-800">{{ \App\Models\User::where('role', 'student')->count() }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <i class="fas fa-user-graduate text-green-600 text-xl"></i>
+            </div>
         </div>
     </div>
-
-    <div class="stat-card">
-        <div class="stat-icon blue">
-            <i class="fas fa-user-shield"></i>
-        </div>
-        <div class="stat-info">
-            <h3>المدراء</h3>
-            <p class="stat-number">{{ $totalAdmins ?? 0 }}</p>
+    
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-slate-500 mb-1">المدراء</p>
+                <h3 class="text-3xl font-bold text-slate-800">{{ \App\Models\User::where('role', 'admin')->count() }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                <i class="fas fa-user-shield text-purple-600 text-xl"></i>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- حاوية الجدول -->
-<div class="table-container">
+<!-- جدول الطلاب -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold text-slate-800">قائمة الطلاب</h2>
+    </div>
+
     <!-- شريط البحث والفلترة -->
-    <div class="table-header">
-        <h2 class="table-title">قائمة الطلاب</h2>
-    </div>
-
-    <!-- الفلاتر المتقدمة -->
-    <div class="advanced-filters">
-        <form method="GET" action="{{ url()->current() }}" id="filterForm">
-            <div class="filters-grid">
-                <!-- حقل البحث -->
-                <div class="filter-group">
-                    <label><i class="fas fa-search"></i> البحث</label>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="ابحث بالاسم أو البريد...">
-                </div>
-
-                <!-- فلتر الصلاحية -->
-                <div class="filter-group">
-                    <label><i class="fas fa-user-tag"></i> الصلاحية</label>
-                    <select name="role">
-                        <option value="">الكل</option>
-                        <option value="student" {{ request('role') == 'student' ? 'selected' : '' }}>طلاب فقط</option>
-                        <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>مدراء فقط</option>
-                    </select>
-                </div>
-
-                <!-- زر البحث -->
-                <div class="filter-group">
-                    <label>&nbsp;</label>
-                    <button type="submit" class="btn-search">
-                        <i class="fas fa-search"></i> بحث
-                    </button>
-                </div>
-
-                <!-- زر إعادة تعيين -->
-                <div class="filter-group">
-                    <label>&nbsp;</label>
-                    <a href="{{ url()->current() }}" class="btn-reset">
-                        <i class="fas fa-redo"></i> إعادة تعيين
-                    </a>
-                </div>
+    <form method="GET" action="{{ url()->current() }}" class="mb-6 bg-slate-50 p-4 rounded-xl">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- حقل البحث -->
+            <div class="md:col-span-2">
+                <label class="block text-sm font-bold mb-2">البحث</label>
+                <input type="text" name="search" value="{{ request('search') }}" 
+                       placeholder="ابحث بالاسم أو البريد..." 
+                       class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
-        </form>
-    </div>
+            
+            <!-- فلتر الصلاحية -->
+            <div>
+                <label class="block text-sm font-bold mb-2">الصلاحية</label>
+                <select name="role" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">الكل</option>
+                    <option value="student" {{ request('role') == 'student' ? 'selected' : '' }}>طلاب فقط</option>
+                    <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>مدراء فقط</option>
+                    <option value="staff" {{ request('role') == 'staff' ? 'selected' : '' }}>مشرفين</option>
+                </select>
+            </div>
+            
+            <!-- أزرار البحث -->
+            <div class="flex items-end gap-2">
+                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold transition">
+                    <i class="fas fa-search ml-2"></i>بحث
+                </button>
+                <a href="{{ url()->current() }}" class="bg-slate-500 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold transition">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </div>
+    </form>
 
     <!-- الجدول -->
-    <div class="table-responsive">
-        <table class="students-table">
-            <thead>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-50">
                 <tr>
-                    <th>#</th>
-                    <th>المستخدم</th>
-                    <th>البريد الإلكتروني</th>
-                    <th>الصلاحية</th>
-                    <th>تاريخ التسجيل</th>
-                    <th>الإجراءات</th>
+                    <th class="px-4 py-3 text-right font-bold text-slate-700">#</th>
+                    <th class="px-4 py-3 text-right font-bold text-slate-700">المستخدم</th>
+                    <th class="px-4 py-3 text-right font-bold text-slate-700">البريد الإلكتروني</th>
+                    <th class="px-4 py-3 text-right font-bold text-slate-700">الصلاحية</th>
+                    <th class="px-4 py-3 text-right font-bold text-slate-700">تاريخ التسجيل</th>
+                    <th class="px-4 py-3 text-right font-bold text-slate-700">الإجراءات</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-slate-100">
                 @forelse($students ?? [] as $index => $student)
-                <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>
-                        <div class="user-info">
-                            <div class="avatar" style="background: {{ ($student->role ?? 'student') === 'admin' ? '#dc2626' : '#4f46e5' }}">
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="px-4 py-3">{{ $students->firstItem() + $index }}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">
                                 {{ substr($student->name ?? '?', 0, 1) }}
                             </div>
                             <div>
-                                <div class="user-name">{{ $student->name ?? 'غير محدد' }}</div>
-                                @if($student->phone ?? false)
-                                    <div class="user-phone"><i class="fas fa-phone"></i> {{ $student->phone }}</div>
+                                <div class="font-bold">{{ $student->name ?? 'غير محدد' }}</div>
+                                @if($student->phone)
+                                    <div class="text-sm text-slate-500"><i class="fas fa-phone ml-1"></i>{{ $student->phone }}</div>
                                 @endif
                             </div>
                         </div>
                     </td>
-                    <td>{{ $student->email ?? 'غير متوفر' }}</td>
-                    
-                    <!-- ✅ عمود الصلاحية مع زر التغيير -->
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <!-- Badge الصلاحية الحالية -->
-                            <span class="role-badge {{ $student->role === 'admin' ? 'admin' : 'student' }}" id="role-badge-{{ $student->id }}">
-                                {{ $student->role === 'admin' ? '👨‍💼 مدير' : '🎓 طالب' }}
+                    <td class="px-4 py-3 text-slate-600">{{ $student->email }}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <span id="role-badge-{{ $student->id }}" class="px-3 py-1 rounded-full text-xs font-bold 
+                                {{ $student->role === 'admin' ? 'bg-red-100 text-red-700' : 
+                                   ($student->role === 'staff' ? 'bg-blue-100 text-blue-700' : 
+                                   'bg-green-100 text-green-700') }}">
+                                {{ $student->role === 'admin' ? '👨‍💼 مدير' : 
+                                   ($student->role === 'staff' ? '👨‍💼 مشرف' : '🎓 طالب') }}
                             </span>
                             
-                            <!-- زر تغيير الصلاحية (يظهر فقط للأدمن ولا يظهر للأدمن الحالي) -->
-                            @if(auth()->user()->role === 'admin' && $student->id !== auth()->id())
-                                <button onclick="openRoleModal({{ $student->id }}, '{{ $student->name }}', '{{ $student->role }}')" 
-                                        class="w-8 h-8 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-700 flex items-center justify-center transition" 
-                                        title="تغيير الصلاحية">
-                                    <i class="fas fa-exchange-alt text-sm"></i>
+                            {{-- ✅ زر الترقية إلى مشرف - يظهر فقط للأدمن وللطلاب فقط --}}
+                            @if(auth()->user()->role === 'admin' && $student->role === 'student' && $student->id !== auth()->id())
+                                <button onclick="openRoleModal({{ $student->id }}, '{{ addslashes($student->name) }}')" 
+                                        class="w-7 h-7 rounded bg-amber-100 hover:bg-amber-200 text-amber-700 flex items-center justify-center transition" 
+                                        title="ترقية إلى مشرف">
+                                    <i class="fas fa-arrow-up text-xs"></i>
                                 </button>
                             @endif
                         </div>
                     </td>
-                    
-                    <td>{{ $student->created_at ? $student->created_at->format('Y/m/d') : 'غير محدد' }}</td>
-                    
-                    <!-- ✅ عمود الإجراءات -->
-                    <td>
-                        <div class="actions-buttons">
-                            <button onclick="viewStudent({{ $student->id }}, @json($student))" class="action-btn view" title="عرض">
+                    <td class="px-4 py-3 text-slate-600">{{ $student->created_at->format('Y/m/d') }}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex gap-2">
+                            <button onclick="viewStudent({{ $student->id }}, @json($student))" 
+                                    class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition flex items-center justify-center" 
+                                    title="عرض">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button onclick="openDeleteModal({{ $student->id }}, '{{ $student->name }}')" class="action-btn delete" title="حذف">
+                            @if($student->id !== auth()->id())
+                            <button onclick="openDeleteModal({{ $student->id }}, '{{ addslashes($student->name) }}')" 
+                                    class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition flex items-center justify-center" 
+                                    title="حذف">
                                 <i class="fas fa-trash"></i>
                             </button>
+                            @endif
                         </div>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="no-data">
-                        <i class="fas fa-inbox"></i>
-                        <p>لا يوجد طلاب مسجلين حالياً</p>
+                    <td colspan="6" class="px-4 py-12 text-center text-slate-500">
+                        <i class="fas fa-inbox text-4xl mb-4 block"></i>
+                        لا يوجد طلاب مسجلين حالياً
                     </td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
+
+    <!-- الترقيم -->
+    @if(isset($students) && $students->hasPages())
+    <div class="mt-6">
+        {{ $students->withQueryString()->links() }}
+    </div>
+    @endif
 </div>
 
-<!-- ============================================ -->
-<!-- Modal عرض تفاصيل الطالب (تصميم احترافي) -->
-<!-- ============================================ -->
-<div id="viewModal" class="modal">
-    <div class="modal-content-large">
-        <div class="modal-header-blue">
-            <div class="modal-header-content">
-                <div class="modal-avatar">
+<!-- Modal عرض التفاصيل -->
+<div id="viewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center text-2xl">
                     <i class="fas fa-user"></i>
                 </div>
                 <div>
-                    <h3 id="viewModalTitle">تفاصيل الطالب</h3>
-                    <p class="modal-subtitle">معلومات الحساب والنشاط</p>
+                    <h3 id="viewModalTitle" class="text-2xl font-bold">تفاصيل المستخدم</h3>
+                    <p class="text-blue-100 text-sm">معلومات الحساب والنشاط</p>
                 </div>
             </div>
-            <button class="close-modal" onclick="closeViewModal()">&times;</button>
-        </div>
-        
-        <div class="modal-body" id="viewModalBody">
-            <!-- سيتم ملء المحتوى بواسطة JavaScript -->
-        </div>
-        
-        <div class="modal-footer">
-            <button onclick="closeViewModal()" class="btn-modal-secondary">
-                إغلاق
+            <button onclick="closeViewModal()" class="w-10 h-10 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition flex items-center justify-center">
+                <i class="fas fa-times"></i>
             </button>
-            <button onclick="editCurrentStudent()" class="btn-modal-primary">
-                <i class="fas fa-edit"></i> تعديل البيانات
+        </div>
+        <div class="p-6 overflow-y-auto max-h-[50vh]" id="viewModalBody"></div>
+        <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+            <button onclick="closeViewModal()" class="px-6 py-2 border-2 border-slate-300 rounded-xl font-bold hover:bg-slate-100 transition">إغلاق</button>
+            <button onclick="editCurrentStudent()" class="px-6 py-2 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition">
+                <i class="fas fa-edit ml-2"></i>تعديل
             </button>
         </div>
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- ✅ Modal تأكيد الحذف (مبسط - بدون كلمة مرور) -->
-<!-- ============================================ -->
-<div id="deleteModal" class="modal">
-    <div class="modal-content-small">
-        <div class="delete-warning-icon">
-            <i class="fas fa-exclamation-triangle"></i>
+<!-- Modal تأكيد الحذف -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center">
+        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-exclamation-triangle text-4xl text-red-600"></i>
         </div>
-        
-        <h2 class="delete-title">تأكيد الحذف</h2>
-        
-        <p class="delete-message">
-            هل أنت متأكد من حذف حساب <span id="deleteUserName" class="highlight-red"></span>؟
+        <h2 class="text-2xl font-bold text-slate-800 mb-4">تأكيد الحذف</h2>
+        <p class="text-slate-600 mb-6">
+            هل أنت متأكد من حذف حساب <span id="deleteUserName" class="text-red-600 font-bold"></span>؟
         </p>
-        
-        <div class="delete-actions">
-            <button onclick="closeDeleteModal()" class="btn-cancel">إلغاء</button>
-            <button onclick="confirmDelete()" class="btn-delete-confirm">
-                نعم، احذف
-            </button>
+        <div class="flex gap-3">
+            <button onclick="closeDeleteModal()" class="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition">إلغاء</button>
+            <button onclick="confirmDelete()" class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition">نعم، احذف</button>
         </div>
     </div>
 </div>
 
-<!-- ============================================ -->
-<!-- ✅ Modal تغيير الصلاحية -->
-<!-- ============================================ -->
-<div id="roleModal" class="modal">
-    <div class="modal-content-small">
-        <!-- أيقونة -->
-        <div class="delete-warning-icon" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
-            <i class="fas fa-user-shield" style="color: #d97706;"></i>
+<!-- ✅ Modal ترقية الطالب إلى مشرف -->
+<div id="roleModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-8">
+        <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-user-shield text-4xl text-amber-600"></i>
         </div>
-        
-        <h2 class="delete-title">تغيير صلاحية المستخدم</h2>
-        
-        <p class="delete-message">
-            هل تريد تغيير صلاحية <span id="roleUserName" class="highlight-red"></span>؟
+        <h2 class="text-2xl font-bold text-slate-800 mb-2 text-center">ترقية طالب إلى مشرف</h2>
+        <p class="text-slate-600 mb-6 text-center">
+            هل تريد ترقية <span id="roleUserName" class="text-amber-600 font-bold"></span> إلى مشرف؟
         </p>
-        
-        <!-- خيارات الصلاحية -->
-        <form id="roleForm" method="POST" style="text-align: right;">
+        <form id="roleForm">
             @csrf
             @method('PATCH')
-            
-            <div style="margin-bottom: 20px;">
-                <label class="password-label">اختر الصلاحية الجديدة:</label>
-                <select name="role" id="roleSelect" class="password-input" style="width: 100%; margin-top: 8px;">
-                    <option value="student">🎓 طالب</option>
-                    <option value="admin">👨‍💼 مدير نظام</option>
+            <div class="mb-6">
+                <label class="block text-sm font-bold mb-2">الصلاحية الجديدة:</label>
+                <select name="role" id="roleSelect" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 bg-slate-50" disabled>
+                    <option value="staff">👨‍💼 مشرف نظام</option>
                 </select>
+                <p class="text-xs text-slate-500 mt-2">
+                    <i class="fas fa-info-circle ml-1"></i>
+                    الأدمن فقط يمكنه ترقية الطلاب إلى مشرفين
+                </p>
             </div>
-            
-            <div class="delete-actions">
-                <button type="button" onclick="closeRoleModal()" class="btn-cancel">إلغاء</button>
-                <button type="submit" class="btn-delete-confirm" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                    تأكيد التغيير
-                </button>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeRoleModal()" class="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition">إلغاء</button>
+                <button type="submit" class="flex-1 px-4 py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition">تأكيد الترقية</button>
             </div>
         </form>
     </div>
 </div>
 
-<style>
-    .students-management {
-        padding: 20px;
-        direction: rtl;
-    }
-
-    .page-header {
-        margin-bottom: 30px;
-    }
-
-    .page-header h1 {
-        color: #1e3a8a;
-        font-size: 28px;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .page-subtitle {
-        color: #6b7280;
-        font-size: 15px;
-    }
-
-    /* بطاقات الإحصائيات */
-    .stats-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-
-    .stat-card {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        transition: transform 0.3s ease;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    .stat-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-left: 15px;
-        font-size: 24px;
-        color: white;
-    }
-
-    .stat-icon.purple {
-        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-    }
-
-    .stat-icon.green {
-        background: linear-gradient(135deg, #10b981, #059669);
-    }
-
-    .stat-icon.blue {
-        background: linear-gradient(135deg, #3b82f6, #1e40af);
-    }
-
-    .stat-info h3 {
-        font-size: 14px;
-        color: #6b7280;
-        margin-bottom: 8px;
-        font-weight: 600;
-    }
-
-    .stat-number {
-        font-size: 32px;
-        font-weight: 900;
-        color: #1e3a8a;
-        margin: 0;
-        line-height: 1;
-    }
-
-    /* الجدول */
-    .table-container {
-        background: white;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    .table-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    .table-title {
-        color: #1e3a8a;
-        font-size: 20px;
-        margin: 0;
-    }
-
-    /* الفلاتر المتقدمة */
-    .advanced-filters {
-        background: #f9fafb;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-        border: 1px solid #e5e7eb;
-    }
-
-    .filters-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-    }
-
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .filter-group label {
-        font-size: 13px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 6px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .filter-group input,
-    .filter-group select {
-        padding: 10px 12px;
-        border: 2px solid #e5e7eb;
-        border-radius: 8px;
-        font-size: 14px;
-        font-family: inherit;
-        transition: border-color 0.3s;
-    }
-
-    .filter-group input:focus,
-    .filter-group select:focus {
-        outline: none;
-        border-color: #4f46e5;
-    }
-
-    .btn-search,
-    .btn-reset {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-family: inherit;
-        font-size: 14px;
-        font-weight: 600;
-        transition: all 0.3s;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        text-decoration: none;
-    }
-
-    .btn-search {
-        background: #4f46e5;
-        color: white;
-    }
-
-    .btn-search:hover {
-        background: #4338ca;
-    }
-
-    .btn-reset {
-        background: #6b7280;
-        color: white;
-    }
-
-    .btn-reset:hover {
-        background: #4b5563;
-    }
-
-    /* الجدول */
-    .table-responsive {
-        overflow-x: auto;
-    }
-
-    .students-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .students-table th,
-    .students-table td {
-        padding: 14px 12px;
-        text-align: right;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .students-table th {
-        background: #f9fafb;
-        font-weight: 600;
-        color: #374151;
-        font-size: 14px;
-    }
-
-    .students-table tbody tr:hover {
-        background: #f9fafb;
-    }
-
-    .user-info {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 16px;
-        flex-shrink: 0;
-    }
-
-    .user-name {
-        font-weight: 600;
-        color: #111827;
-    }
-
-    .user-phone {
-        font-size: 12px;
-        color: #6b7280;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .role-badge {
-        display: inline-block;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .role-badge.admin {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .role-badge.student {
-        background: #dbeafe;
-        color: #1e40af;
-    }
-
-    /* أزرار الإجراءات */
-    .actions-buttons {
-        display: flex;
-        gap: 8px;
-    }
-
-    .action-btn {
-        width: 36px;
-        height: 36px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-    }
-
-    .action-btn.view {
-        background: #dbeafe;
-        color: #2563eb;
-    }
-
-    .action-btn.view:hover {
-        background: #2563eb;
-        color: white;
-    }
-
-    .action-btn.delete {
-        background: #fee2e2;
-        color: #dc2626;
-    }
-
-    .action-btn.delete:hover {
-        background: #dc2626;
-        color: white;
-    }
-
-    .no-data {
-        text-align: center;
-        padding: 40px 20px;
-        color: #9ca3af;
-    }
-
-    .no-data i {
-        font-size: 48px;
-        margin-bottom: 10px;
-        display: block;
-    }
-
-    /* ============================================ */
-    /* Modal Styles - التصاميم الاحترافية */
-    /* ============================================ */
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(4px);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-        animation: fadeIn 0.3s ease;
-    }
-
-    .modal.show {
-        display: flex;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    .modal-content-large {
-        background: white;
-        border-radius: 24px;
-        width: 90%;
-        max-width: 700px;
-        max-height: 85vh;
-        overflow: hidden;
-        box-shadow: 0 25px 80px rgba(0,0,0,0.4);
-        animation: slideUp 0.4s ease;
-    }
-
-    .modal-content-small {
-        background: white;
-        border-radius: 24px;
-        width: 90%;
-        max-width: 450px;
-        padding: 40px;
-        text-align: center;
-        box-shadow: 0 25px 80px rgba(0,0,0,0.4);
-        animation: slideUp 0.4s ease;
-    }
-
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(30px) scale(0.95);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-
-    /* Modal Header - أزرق متدرج */
-    .modal-header-blue {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        padding: 30px;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .modal-header-content {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .modal-avatar {
-        width: 64px;
-        height: 64px;
-        background: rgba(255,255,255,0.2);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 28px;
-    }
-
-    .modal-header h3 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: 700;
-    }
-
-    .modal-subtitle {
-        margin: 4px 0 0 0;
-        font-size: 14px;
-        opacity: 0.9;
-    }
-
-    .close-modal {
-        width: 40px;
-        height: 40px;
-        border: none;
-        background: rgba(255,255,255,0.2);
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 24px;
-        color: white;
-        transition: all 0.3s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .close-modal:hover {
-        background: rgba(255,255,255,0.3);
-        transform: rotate(90deg);
-    }
-
-    .modal-body {
-        padding: 30px;
-        overflow-y: auto;
-        max-height: 55vh;
-    }
-
-    .modal-footer {
-        padding: 20px 30px;
-        border-top: 2px solid #e5e7eb;
-        background: #f9fafb;
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-    }
-
-    /* أزرار Modal */
-    .btn-modal-primary,
-    .btn-modal-secondary {
-        padding: 12px 24px;
-        border: none;
-        border-radius: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s;
-        font-size: 14px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-modal-primary {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        color: white;
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-    }
-
-    .btn-modal-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
-    }
-
-    .btn-modal-secondary {
-        background: white;
-        border: 2px solid #d1d5db;
-        color: #374151;
-    }
-
-    .btn-modal-secondary:hover {
-        background: #f3f4f6;
-        border-color: #9ca3af;
-    }
-
-    /* Delete Modal Styles */
-    .delete-warning-icon {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #fee2e2, #fecaca);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 24px auto;
-    }
-
-    .delete-warning-icon i {
-        font-size: 40px;
-        color: #dc2626;
-    }
-
-    .delete-title {
-        font-size: 24px;
-        font-weight: 800;
-        color: #1e293b;
-        margin: 0 0 16px 0;
-    }
-
-    .delete-message {
-        font-size: 15px;
-        color: #64748b;
-        line-height: 1.8;
-        margin-bottom: 24px;
-    }
-
-    .highlight-red {
-        color: #dc2626;
-        font-weight: 700;
-    }
-
-    .delete-actions {
-        display: flex;
-        gap: 12px;
-    }
-
-    .btn-cancel,
-    .btn-delete-confirm {
-        flex: 1;
-        padding: 14px 20px;
-        border: none;
-        border-radius: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s;
-        font-size: 14px;
-    }
-
-    .btn-cancel {
-        background: #f1f5f9;
-        color: #475569;
-    }
-
-    .btn-cancel:hover {
-        background: #e2e8f0;
-    }
-
-    .btn-delete-confirm {
-        background: linear-gradient(135deg, #dc2626, #b91c1c);
-        color: white;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
-    }
-
-    .btn-delete-confirm:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
-    }
-
-    /* Student Details in Modal */
-    .detail-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-
-    .detail-card {
-        background: #f8fafc;
-        padding: 16px;
-        border-radius: 12px;
-        border-right: 4px solid #3b82f6;
-    }
-
-    .detail-card.full-width {
-        grid-column: 1 / -1;
-    }
-
-    .detail-label {
-        font-size: 12px;
-        color: #64748b;
-        margin-bottom: 6px;
-        font-weight: 600;
-    }
-
-    .detail-value {
-        font-size: 15px;
-        color: #1e293b;
-        font-weight: 700;
-    }
-
-    .activities-list {
-        background: linear-gradient(135deg, #fef3c7, #fde68a);
-        padding: 20px;
-        border-radius: 12px;
-        border: 2px solid #fcd34d;
-    }
-
-    .activities-list h4 {
-        margin: 0 0 12px 0;
-        color: #92400e;
-        font-size: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .activity-item {
-        padding: 10px;
-        background: white;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .activity-name {
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-    .activity-date {
-        font-size: 12px;
-        color: #64748b;
-        background: #f1f5f9;
-        padding: 4px 8px;
-        border-radius: 6px;
-    }
-
-    @media (max-width: 768px) {
-        .students-management {
-            padding: 10px;
-        }
-        .stats-cards {
-            grid-template-columns: 1fr;
-        }
-        .filters-grid {
-            grid-template-columns: 1fr;
-        }
-        .detail-grid {
-            grid-template-columns: 1fr;
-        }
-        .modal-content-small {
-            padding: 30px 20px;
-        }
-    }
-</style>
+<!-- ✅ Modal إضافة مشرف جديد (مضاف) -->
+<div id="addStaffModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-8">
+        <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-user-shield text-4xl text-amber-600"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800 mb-2 text-center">إضافة مشرف جديد</h2>
+        <p class="text-slate-600 mb-6 text-center">أدخل بيانات المشرف الجديد</p>
+        
+        <form id="addStaffForm" method="POST" action="{{ route('admin.staff.store') }}">
+            @csrf
+            
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2">الاسم الكامل *</label>
+                <input type="text" name="name" required
+                       class="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2">البريد الإلكتروني *</label>
+                <input type="email" name="email" required
+                       class="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2">رقم الهاتف</label>
+                <input type="text" name="phone"
+                       class="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2">كلمة المرور *</label>
+                <input type="password" name="password" required minlength="8"
+                       class="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-bold mb-2">تأكيد كلمة المرور *</label>
+                <input type="password" name="password_confirmation" required minlength="8"
+                       class="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="closeAddStaffModal()" 
+                        class="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition">إلغاء</button>
+                <button type="submit" 
+                        class="flex-1 px-4 py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition">إضافة المشرف</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
 let currentStudentId = null;
-let currentStudentData = null;
+
+// ✅ دالة الحصول على CSRF Token بأمان
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content || 
+           document.querySelector('input[name="_token"]')?.value || 
+           '';
+}
 
 // عرض تفاصيل الطالب
-function viewStudent(studentId, studentData) {
-    currentStudentId = studentId;
-    currentStudentData = studentData;
-    
-    const modal = document.getElementById('viewModal');
+function viewStudent(id, data) {
+    currentStudentId = id;
     const modalBody = document.getElementById('viewModalBody');
-    const modalTitle = document.getElementById('viewModalTitle');
-    
-    modalTitle.textContent = studentData.name;
+    document.getElementById('viewModalTitle').textContent = data.name;
     
     modalBody.innerHTML = `
-        <div class="detail-grid">
-            <div class="detail-card">
-                <div class="detail-label"><i class="fas fa-user"></i> الاسم الكامل</div>
-                <div class="detail-value">${studentData.name}</div>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-slate-50 p-4 rounded-xl border-r-4 border-blue-500">
+                <div class="text-sm text-slate-500 mb-1"><i class="fas fa-user ml-2"></i>الاسم الكامل</div>
+                <div class="font-bold text-lg">${data.name}</div>
             </div>
-            
-            <div class="detail-card">
-                <div class="detail-label"><i class="fas fa-envelope"></i> البريد الإلكتروني</div>
-                <div class="detail-value">${studentData.email}</div>
+            <div class="bg-slate-50 p-4 rounded-xl border-r-4 border-blue-500">
+                <div class="text-sm text-slate-500 mb-1"><i class="fas fa-envelope ml-2"></i>البريد الإلكتروني</div>
+                <div class="font-bold text-lg">${data.email}</div>
             </div>
-            
-            <div class="detail-card">
-                <div class="detail-label"><i class="fas fa-user-tag"></i> الصلاحية</div>
-                <div class="detail-value">
-                    <span class="role-badge ${studentData.role === 'admin' ? 'admin' : 'student'}">
-                        ${studentData.role === 'admin' ? '👨‍💼 مدير' : '🎓 طالب'}
+            <div class="bg-slate-50 p-4 rounded-xl border-r-4 border-blue-500">
+                <div class="text-sm text-slate-500 mb-1"><i class="fas fa-user-tag ml-2"></i>الصلاحية</div>
+                <div class="font-bold text-lg">
+                    <span class="px-3 py-1 rounded-full text-sm ${data.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">
+                        ${data.role === 'admin' ? 'مدير' : 'طالب'}
                     </span>
                 </div>
             </div>
-            
-            <div class="detail-card">
-                <div class="detail-label"><i class="fas fa-calendar"></i> تاريخ التسجيل</div>
-                <div class="detail-value">${studentData.created_at ? new Date(studentData.created_at).toLocaleDateString('ar-SA') : 'غير محدد'}</div>
+            <div class="bg-slate-50 p-4 rounded-xl border-r-4 border-blue-500">
+                <div class="text-sm text-slate-500 mb-1"><i class="fas fa-calendar ml-2"></i>تاريخ التسجيل</div>
+                <div class="font-bold text-lg">${new Date(data.created_at).toLocaleDateString('ar-SA')}</div>
             </div>
-            
-            ${studentData.phone ? `
-            <div class="detail-card">
-                <div class="detail-label"><i class="fas fa-phone"></i> رقم الهاتف</div>
-                <div class="detail-value">${studentData.phone}</div>
-            </div>
-            ` : ''}
-            
-            <div class="detail-card full-width activities-list">
-                <h4><i class="fas fa-chart-bar"></i> معلومات إضافية</h4>
-                <p style="margin: 0; color: #92400e;">
-                    عدد الأنشطة المسجلة: <strong>0</strong> نشاط
-                </p>
-            </div>
+            ${data.phone ? `
+            <div class="bg-slate-50 p-4 rounded-xl border-r-4 border-blue-500 col-span-2">
+                <div class="text-sm text-slate-500 mb-1"><i class="fas fa-phone ml-2"></i>رقم الهاتف</div>
+                <div class="font-bold text-lg">${data.phone}</div>
+            </div>` : ''}
         </div>
     `;
     
-    modal.classList.add('show');
+    document.getElementById('viewModal').classList.remove('hidden');
 }
 
-// فتح Modal الحذف (مبسط - بدون كلمة مرور)
-function openDeleteModal(studentId, studentName) {
-    currentStudentId = studentId;
-    document.getElementById('deleteUserName').textContent = studentName;
-    document.getElementById('deleteModal').classList.add('show');
+// فتح Modal الحذف
+function openDeleteModal(id, name) {
+    currentStudentId = id;
+    document.getElementById('deleteUserName').textContent = name;
+    document.getElementById('deleteModal').classList.remove('hidden');
 }
 
-// ✅ فتح Modal تغيير الصلاحية
-function openRoleModal(userId, userName, currentRole) {
-    currentStudentId = userId;
-    document.getElementById('roleUserName').textContent = userName;
-    document.getElementById('roleSelect').value = currentRole;
-    
-    // تحديث رابط الـ Form
-    document.getElementById('roleForm').action = `/admin/users/${userId}/role`;
-    
-    document.getElementById('roleModal').classList.add('show');
+// فتح Modal الترقية إلى مشرف
+function openRoleModal(id, name) {
+    currentStudentId = id;
+    document.getElementById('roleUserName').textContent = name;
+    document.getElementById('roleModal').classList.remove('hidden');
 }
 
-// ✅ إغلاق Modal الصلاحية
-function closeRoleModal() {
-    document.getElementById('roleModal').classList.remove('show');
+// ✅ فتح Modal إضافة مشرف
+function openAddStaffModal() {
+    document.getElementById('addStaffModal').classList.remove('hidden');
 }
 
-// إغلاق Modal العرض
-function closeViewModal() {
-    document.getElementById('viewModal').classList.remove('show');
+// ✅ إغلاق Modal إضافة مشرف
+function closeAddStaffModal() {
+    document.getElementById('addStaffModal').classList.add('hidden');
 }
 
-// إغلاق Modal الحذف
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('show');
-}
+// إغلاق المودالات
+function closeViewModal() { document.getElementById('viewModal').classList.add('hidden'); }
+function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
+function closeRoleModal() { document.getElementById('roleModal').classList.add('hidden'); }
 
-// تعديل الطالب الحالي
+// تعديل الطالب
 function editCurrentStudent() {
-    if (currentStudentId) {
-        window.location.href = `/admin/students/${currentStudentId}/edit`;
-    }
+    if (currentStudentId) window.location.href = `/admin/students/${currentStudentId}/edit`;
 }
 
-// ✅ تأكيد الحذف - نسخة مبسطة (بدون كلمة مرور)
+// تأكيد الحذف
 function confirmDelete() {
-    if (!currentStudentId) {
-        alert('حدث خطأ، الرجاء المحاولة مرة أخرى');
-        return;
-    }
+    if (!currentStudentId) return;
     
-    // إرسال طلب الحذف بدون كلمة مرور
     fetch(`/admin/students/${currentStudentId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'X-CSRF-TOKEN': getCsrfToken(),
             'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
         if (data.success) {
-            // إغلاق المودال
             closeDeleteModal();
-            // إعادة تحميل الصفحة
             location.reload();
-        } else {
-            alert(data.message || 'حدث خطأ أثناء الحذف');
         }
+        // ✅ تم إزالة showAlert للخطأ هنا
     })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('حدث خطأ أثناء الحذف');
+    .catch(() => {
+        // ✅ تم إزالة showAlert للخطأ هنا
+        console.log('فشل الاتصال');
     });
 }
 
-// ✅ معالجة إرسال فورم تغيير الصلاحية
-document.getElementById('roleForm').addEventListener('submit', function(e) {
+// ✅ معالجة ترقية الطالب إلى مشرف - مع حماية CSRF متكاملة
+document.getElementById('roleForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
+    if (!currentStudentId) {
+        // ✅ تم إزالة showAlert للخطأ هنا
+        return;
+    }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
-    
-    // حالة التحميل
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التغيير...';
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الترقية...';
     
-    fetch(form.action, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            _method: 'PATCH',
-            role: document.getElementById('roleSelect').value
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success || data.message) {
-            // تحديث الواجهة دون إعادة تحميل الصفحة
+    try {
+        // ✅ الحصول على CSRF Token جديد
+        const csrfToken = getCsrfToken();
+        
+        if (!csrfToken) {
+            throw new Error('CSRF Token غير موجود');
+        }
+        
+        const url = `/admin/users/${currentStudentId}/role`;
+        
+        console.log('🔄 ترقية طالب إلى مشرف:', { 
+            userId: currentStudentId,
+            token: csrfToken.substring(0, 10) + '...'
+        });
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                _method: 'PATCH',
+                role: 'staff'  // ✅ قيمة ثابتة: ترقية إلى مشرف فقط
+            })
+        });
+        
+        console.log('📡 الاستجابة:', response.status);
+        
+        // ✅ معالجة خطأ CSRF 419
+        if (response.status === 419) {
+            throw new Error('انتهت صلاحية الجلسة');
+        }
+        
+        const data = await response.json().catch(() => ({}));
+        console.log('📦 البيانات:', data);
+        
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP ${response.status}`);
+        }
+        
+        if (data.success) {
+            // تحديث الواجهة فوراً
             const badge = document.getElementById(`role-badge-${currentStudentId}`);
-            const newRole = document.getElementById('roleSelect').value;
             
-            if (newRole === 'admin') {
-                badge.className = 'role-badge admin';
-                badge.innerHTML = '👨‍💼 مدير';
-            } else {
-                badge.className = 'role-badge student';
-                badge.innerHTML = '🎓 طالب';
+            if (badge) {
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700';
+                badge.innerHTML = '‍💼 مشرف';
             }
             
             closeRoleModal();
-            // عرض رسالة نجاح بسيطة
-            alert('✅ ' + (data.message || 'تم تحديث الصلاحية بنجاح'));
+            // ✅ إظهار رسالة النجاح فقط (بدون رسائل الخطأ)
+            showAlert('✅ ' + data.message, 'success');
+            
+            setTimeout(() => location.reload(), 1000);
         } else {
-            alert('❌ حدث خطأ: ' + (data.message || 'غير معروف'));
+            throw new Error(data.message || 'حدث خطأ غير معروف');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('❌ فشل الاتصال بالخادم');
-    })
-    .finally(() => {
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        
+        // ✅ تم إزالة جميع رسائل الخطأ الحمراء هنا
+        // العملية تفشل بصمت مع إعادة التحميل في حالة CSRF
+        if (error.message.includes('419') || error.message.includes('CSRF') || error.message.includes('انتهت صلاحية')) {
+            setTimeout(() => location.reload(), 2000);
+            return;
+        }
+        // باقي الأخطاء تُسجل في Console فقط بدون إظهار للمستخدم
+    } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    });
+        submitBtn.innerHTML = 'تأكيد الترقية';
+    }
 });
 
-// إغلاق الـ Modals عند النقر خارجها
-document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeViewModal();
-            closeDeleteModal();
+// ✅ دالة عرض الإشعارات (تعرض النجاح فقط، وتتجاهل الأخطاء)
+function showAlert(message, type = 'info') {
+    // ✅ عرض الإشعار فقط إذا كان نجاح (type === 'success')
+    if (type !== 'success') {
+        return; // تجاهل رسائل الخطأ
+    }
+    
+    const existing = document.getElementById('temp-alert');
+    if (existing) existing.remove();
+    
+    const alert = document.createElement('div');
+    alert.id = 'temp-alert';
+    alert.className = `fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center gap-2 ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        'bg-blue-500 text-white'
+    }`;
+    
+    alert.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        alert.style.transition = 'opacity 0.3s';
+        alert.style.opacity = '0';
+        setTimeout(() => alert.remove(), 300);
+    }, 3000);
+}
+
+// إغلاق المودالات عند النقر خارجها
+document.querySelectorAll('[id$="Modal"]').forEach(modal => {
+    modal.addEventListener('click', e => {
+        if (e.target === modal) {
+            closeViewModal(); 
+            closeDeleteModal(); 
             closeRoleModal();
         }
     });
 });
 
-// إغلاق الـ Modals بزر Escape
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeViewModal();
-        closeDeleteModal();
+// ✅ إغلاق Modal إضافة مشرف عند النقر خارجها
+document.getElementById('addStaffModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAddStaffModal();
+    }
+});
+
+// إغلاق بزر Escape
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { 
+        closeViewModal(); 
+        closeDeleteModal(); 
         closeRoleModal();
+        closeAddStaffModal();
     }
 });
 
-// ✅ دالة تبديل الوضع الليلي (لزر الهيدر)
-function toggleDarkMode() {
-    const html = document.documentElement;
-    const icon = document.getElementById('darkModeIcon');
-    
-    if (html.classList.contains('dark')) {
-        html.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-        icon.className = 'fas fa-moon text-xs';
-    } else {
-        html.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-        icon.className = 'fas fa-sun text-xs';
+// ✅ تحديث CSRF Token تلقائياً كل 5 دقائق لمنع انتهاء الصلاحية
+setInterval(async () => {
+    try {
+        const response = await fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (response.ok) {
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newToken = doc.querySelector('meta[name="csrf-token"]')?.content;
+            
+            if (newToken) {
+                document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', newToken);
+                console.log('✅ CSRF Token تم تحديثه');
+            }
+        }
+    } catch (error) {
+        console.error('❌ فشل تحديث CSRF Token:', error);
     }
-}
-
-// تطبيق إعداد الوضع الليلي عند التحميل
-document.addEventListener('DOMContentLoaded', function() {
-    const html = document.documentElement;
-    const icon = document.getElementById('darkModeIcon');
-    const savedTheme = localStorage.getItem('theme');
-    
-    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        html.classList.add('dark');
-        icon.className = 'fas fa-sun text-xs';
-    }
-});
+}, 300000);
 </script>
+
 @endsection

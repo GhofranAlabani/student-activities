@@ -121,7 +121,7 @@ class AdminDashboardController extends Controller
         ));
     }
 
-       /**
+    /**
      * تحديث صلاحية المستخدم (مشرف، مدير، طالب)
      */
     public function updateRole(Request $request, $id)
@@ -144,7 +144,7 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * حذف المشرف نهائياً
+     * حذف المشرف نهائياً ✅ (نسخة واحدة فقط)
      */
     public function destroyStaff($id)
     {
@@ -270,44 +270,57 @@ class AdminDashboardController extends Controller
      */
     public function showStaff()
     {
-        $staff = User::where('role', 'admin')
+        // عرض المستخدمين الذين صلاحياتهم admin أو staff (المشرفين والمديرين)
+        $staff = User::whereIn('role', ['admin', 'staff'])
+            ->where('id', '!=', auth()->id()) // استبعاد الأدمن الحالي من القائمة
             ->latest()
             ->paginate(15);
         
-        $totalStaff = User::where('role', 'admin')->count();
-        $activeStaff = User::where('role', 'admin')->count(); // يمكن تعديل الشرط لاحقاً
-        $totalAdmins = User::where('role', 'admin')->where('id', auth()->id())->count();
+        $totalStaff = User::whereIn('role', ['admin', 'staff'])->count();
+        $activeStaff = User::where('role', 'staff')->count();
+        $totalAdmins = User::where('role', 'admin')->count();
         
         return view('admin.staff', compact('staff', 'totalStaff', 'activeStaff', 'totalAdmins'));
     }
+    // عرض صفحة تعديل الطالب
+public function editStudent($id)
+{
+    $student = \App\Models\User::findOrFail($id);
+    return view('admin.students.edit', compact('student'));
+}
 
-    /**
-     * ✅ حذف مشرف
-     */
-    public function destroyStaff($id)
-    {
-        try {
-            $staff = User::findOrFail($id);
-            
-            // منع الأدمن من حذف نفسه
-            if ($staff->id === auth()->id()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'لا يمكنك حذف حسابك الحالي!'
-                ], 403);
-            }
-            
-            $staff->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'تم حذف المشرف بنجاح'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'حدث خطأ أثناء الحذف: ' . $e->getMessage()
-            ], 500);
-        }
+// تحديث بيانات الطالب
+public function updateStudent(Request $request, $id)
+{
+    $student = \App\Models\User::findOrFail($id);
+    
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+        'phone' => 'nullable|string|max:20',
+    ]);
+
+    $student->update([
+        'name' => $request->name,
+        'email' => $request->email,
+        'phone' => $request->phone,
+    ]);
+
+    return redirect()->route('admin.students')->with('success', '✅ تم تحديث بيانات الطالب بنجاح');
+}
+
+// حذف الطالب
+public function destroyStudent($id)
+{
+    $student = \App\Models\User::findOrFail($id);
+    
+    // منع حذف الذات
+    if ($student->id === auth()->id()) {
+        return back()->with('error', '❌ لا يمكنك حذف حسابك الخاص');
     }
+    
+    $student->delete();
+    
+    return redirect()->route('admin.students')->with('success', '✅ تم حذف الطالب بنجاح');
+}
 }
